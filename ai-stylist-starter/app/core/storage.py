@@ -1,0 +1,586 @@
+"""Storage service for user photos, wardrobe images, and try-on outputs.
+
+Design notes
+------------
+* Backends are hidden behind a ``StorageBackend`` protocol so that tests and
+  local sandboxes can use an in-memory implementation without needing boto3
+  or MinIO. The ``storage_backend`` setting is the single source of truth for
+  which backend is active.
+* ``image_key`` is the canonical storage reference. Public URLs are built
+  lazily from the key (either via ``s3_public_base_url`` or presigned), so
+  rotating URLs never requires a database write.
+* Validation is split into small single-purpose helpers (size, content-type,
+  extension, magic bytes) and orchestrated in ``_validate``. This keeps the
+  rules independently testable and makes it obvious which check failed.
+* Replace flow is upload-first, delete-old-after-success. The old object is
+  only removed once the new one is safely persisted.
+* Routes never touch boto3 or mime logic directly — they call
+  ``StorageService`` methods which return a ``StoredAsset`` dataclass.
+* Bucket provisioning is NOT done in ``__init__``. Docker-compose creates the
+  bucket via a one-shot ``minio/mc`` container. A separate explicit
+  ``ensure_bucket()`` helper exists for callers that need it (e.g. ops jobs).
+"""
+
+from __future__ import annotations
+
+import uuid
+from dataclasses import dataclass
+from typing import TYPE_CHECKING, Any, Iterable, Protocol
+
+if TYPE_CHECKING:  # pragma: no cover - typing only
+    from mypy_boto3_s3 import S3Client  # noqa: F401
+
+
+# Module-level settings are loaded lazily so tests can import this module
+# without pydantic-settings being installed. Default values mirror the
+# Settings class in app.core.config; the real object replaces them when
+# available.
+class _DefaultSettings:
+    storage_backend: str = "s3"
+    s3_endpoint_url: str = "http://minio:9000"
+    s3_region: str = "us-east-1"
+    s3_access_key: str = "minioadmin"
+    s3_secret_key: str = "minioadmin"
+    s3_bucket: str = "ai-stylist"
+    s3_force_path_style: bool = True
+    s3_public_base_url: str | None = None
+    s3_presign_expires: int = 3600
+    storage_max_bytes: int = 8 * 1024 * 1024
+    storage_allowed_mime: tuple[str, ...] = (
+        "image/jpeg",
+        "image/png",
+        "image/webp",
+    )
+    storage_allowed_ext: tuple[str, ...] = (
+        ".jpg",
+        ".jpeg",
+        ".png",
+        ".webp",
+    )
+
+
+_settings_cache: Any | None = None
+
+
+def _get_settings() -> Any:
+    """Return the real Settings object if importable, else defaults.
+
+    Deferring the import lets test environments load ``app.core.storage``
+    without pydantic-settings. The result is cached on first access.
+    """
+    global _settings_cache
+    if _settings_cache is not None:
+        return _settings_cache
+    try:
+        from app.core.config import settings as real_settings  # type: ignore
+
+        _settings_cache = real_settings
+    except Exception:
+        _settings_cache = _DefaultSettings()
+    return _settings_cache
+
+
+class _SettingsProxy:
+    """Attribute proxy so call sites can keep writing ``settings.foo``."""
+
+    def __getattr__(self, name: str) -> Any:
+        return getattr(_get_settings(), name)
+
+
+settings = _SettingsProxy()
+
+
+# ---------------------------------------------------------------- errors
+
+
+class StorageError(Exception):
+    """Base class for all storage-layer errors."""
+
+
+class StorageValidationError(StorageError):
+    """Raised when an upload fails validation (size/mime/extension/bytes)."""
+
+
+class StorageBackendError(StorageError):
+    """Raised when the underlying backend fails (network, auth, missing key)."""
+
+
+# ---------------------------------------------------------------- dataclass
+
+
+@dataclass(frozen=True)
+class StoredAsset:
+    """Canonical reference returned after a successful upload.
+
+    ``key`` is the source of truth in the database. ``url`` is a convenience
+    projection derived from the key and may change between reads (e.g. when
+    presigned URLs expire).
+    """
+
+    key: str
+    url: str
+    content_type: str
+    size: int
+
+
+# ---------------------------------------------------------------- mime/ext
+
+
+# Content-type → canonical extension. The canonical extension is chosen from
+# content-type only; client-supplied filenames are never trusted to pick it.
+_MIME_TO_EXT: dict[str, str] = {
+    "image/jpeg": ".jpg",
+    "image/png": ".png",
+    "image/webp": ".webp",
+}
+
+# Minimal magic-byte prefixes for the three formats we accept.
+_MAGIC_PREFIXES: tuple[tuple[str, bytes], ...] = (
+    ("image/jpeg", b"\xff\xd8\xff"),
+    ("image/png", b"\x89PNG\r\n\x1a\n"),
+    # WEBP files start with "RIFF....WEBP"
+    ("image/webp", b"RIFF"),
+)
+
+
+# ---------------------------------------------------------------- validation helpers
+
+
+def _check_size(data: bytes, max_bytes: int) -> int:
+    size = len(data)
+    if size == 0:
+        raise StorageValidationError("uploaded file is empty")
+    if size > max_bytes:
+        raise StorageValidationError(
+            f"uploaded file is {size} bytes, exceeds limit {max_bytes}"
+        )
+    return size
+
+
+def _check_content_type(content_type: str, allowed: Iterable[str]) -> str:
+    ct = (content_type or "").lower().split(";")[0].strip()
+    if ct not in set(allowed):
+        raise StorageValidationError(f"content-type {ct!r} is not allowed")
+    return ct
+
+
+def _extension_for(content_type: str) -> str:
+    ext = _MIME_TO_EXT.get(content_type)
+    if ext is None:
+        raise StorageValidationError(
+            f"no canonical extension for content-type {content_type!r}"
+        )
+    return ext
+
+
+def _check_filename_extension(
+    filename: str | None, allowed: Iterable[str]
+) -> None:
+    """If a filename was supplied, its extension must look like an image.
+
+    Client filenames are not used to derive the canonical extension, but we
+    still reject obvious mismatches like ``exploit.exe`` labelled as
+    ``image/jpeg`` — that is a strong signal the upload is adversarial.
+    """
+    if not filename:
+        return
+    lowered = filename.lower()
+    if "." not in lowered:
+        return
+    idx = lowered.rfind(".")
+    ext = lowered[idx:]
+    if ext not in set(allowed):
+        raise StorageValidationError(
+            f"filename extension {ext!r} is not allowed"
+        )
+
+
+def _check_magic_bytes(data: bytes, content_type: str) -> None:
+    """Minimal format sniffing — JPEG / PNG / WEBP only.
+
+    We only check short prefixes. This catches renamed executables and
+    mismatched mime/body pairs without turning into a full parser.
+    """
+    for mime, prefix in _MAGIC_PREFIXES:
+        if mime == content_type:
+            if not data.startswith(prefix):
+                raise StorageValidationError(
+                    f"file body does not match declared content-type {content_type!r}"
+                )
+            if mime == "image/webp":
+                # WEBP needs a "WEBP" marker at offset 8 after "RIFF<size>".
+                if len(data) < 12 or data[8:12] != b"WEBP":
+                    raise StorageValidationError(
+                        "file body is not a valid WEBP image"
+                    )
+            return
+    # Unknown mime should have been rejected earlier; be defensive.
+    raise StorageValidationError(
+        f"no magic-byte rule for content-type {content_type!r}"
+    )
+
+
+def _validate(
+    data: bytes,
+    content_type: str,
+    filename: str | None,
+) -> tuple[str, str, int]:
+    """Orchestrate the small validation helpers.
+
+    Returns ``(normalized_content_type, canonical_extension, size)``.
+    """
+    size = _check_size(data, settings.storage_max_bytes)
+    ct = _check_content_type(content_type, settings.storage_allowed_mime)
+    _check_filename_extension(filename, settings.storage_allowed_ext)
+    _check_magic_bytes(data, ct)
+    ext = _extension_for(ct)
+    return ct, ext, size
+
+
+# ---------------------------------------------------------------- backends
+
+
+class StorageBackend(Protocol):
+    """Minimal interface a storage backend must satisfy."""
+
+    def put(self, key: str, data: bytes, *, content_type: str) -> None: ...
+    def delete(self, key: str) -> None: ...
+    def exists(self, key: str) -> bool: ...
+    def public_url(self, key: str) -> str: ...
+
+
+class InMemoryStorageBackend:
+    """Dict-backed backend used by tests and ``storage_backend="memory"``.
+
+    Deterministic, side-effect free, requires no external services. It is
+    intentionally visible so callers know when it is active.
+    """
+
+    def __init__(self, *, public_base_url: str = "memory://ai-stylist") -> None:
+        self._objects: dict[str, tuple[bytes, str]] = {}
+        self._public_base_url = public_base_url.rstrip("/")
+
+    # --- StorageBackend ---------------------------------------------------
+
+    def put(self, key: str, data: bytes, *, content_type: str) -> None:
+        self._objects[key] = (bytes(data), content_type)
+
+    def delete(self, key: str) -> None:
+        self._objects.pop(key, None)
+
+    def exists(self, key: str) -> bool:
+        return key in self._objects
+
+    def public_url(self, key: str) -> str:
+        return f"{self._public_base_url}/{key}"
+
+    # --- test helpers -----------------------------------------------------
+
+    def get(self, key: str) -> tuple[bytes, str] | None:
+        return self._objects.get(key)
+
+    def keys(self) -> list[str]:
+        return sorted(self._objects)
+
+
+class S3StorageBackend:
+    """boto3-backed backend for MinIO (dev) and S3 (prod).
+
+    The bucket is NOT provisioned here — ops/infra creates it via
+    ``docker-compose`` (``createbuckets`` one-shot) or an explicit call to
+    :func:`ensure_bucket`. That keeps ``__init__`` side-effect free and makes
+    application startup independent of write privileges on the storage tier.
+    """
+
+    def __init__(
+        self,
+        *,
+        bucket: str | None = None,
+        endpoint_url: str | None = None,
+        region: str | None = None,
+        access_key: str | None = None,
+        secret_key: str | None = None,
+        public_base_url: str | None = None,
+        presign_expires: int | None = None,
+        force_path_style: bool | None = None,
+    ) -> None:
+        self.bucket = bucket or settings.s3_bucket
+        self._endpoint_url = endpoint_url or settings.s3_endpoint_url
+        self._region = region or settings.s3_region
+        self._access_key = access_key or settings.s3_access_key
+        self._secret_key = secret_key or settings.s3_secret_key
+        self._public_base_url = (
+            public_base_url
+            if public_base_url is not None
+            else settings.s3_public_base_url
+        )
+        self._presign_expires = (
+            presign_expires
+            if presign_expires is not None
+            else settings.s3_presign_expires
+        )
+        self._force_path_style = (
+            force_path_style
+            if force_path_style is not None
+            else settings.s3_force_path_style
+        )
+        self._client = None  # lazy
+
+    # --- client -----------------------------------------------------------
+
+    def _get_client(self):
+        if self._client is None:
+            import boto3  # lazy import — tests never load boto3
+            from botocore.client import Config
+
+            self._client = boto3.client(
+                "s3",
+                endpoint_url=self._endpoint_url,
+                region_name=self._region,
+                aws_access_key_id=self._access_key,
+                aws_secret_access_key=self._secret_key,
+                config=Config(
+                    s3={"addressing_style": "path" if self._force_path_style else "auto"},
+                    signature_version="s3v4",
+                ),
+            )
+        return self._client
+
+    # --- StorageBackend ---------------------------------------------------
+
+    def put(self, key: str, data: bytes, *, content_type: str) -> None:
+        try:
+            self._get_client().put_object(
+                Bucket=self.bucket,
+                Key=key,
+                Body=data,
+                ContentType=content_type,
+            )
+        except Exception as exc:  # pragma: no cover - network path
+            raise StorageBackendError(f"failed to put {key!r}: {exc}") from exc
+
+    def delete(self, key: str) -> None:
+        try:
+            self._get_client().delete_object(Bucket=self.bucket, Key=key)
+        except Exception as exc:  # pragma: no cover - network path
+            raise StorageBackendError(f"failed to delete {key!r}: {exc}") from exc
+
+    def exists(self, key: str) -> bool:
+        try:
+            self._get_client().head_object(Bucket=self.bucket, Key=key)
+            return True
+        except Exception:  # pragma: no cover - network path
+            return False
+
+    def public_url(self, key: str) -> str:
+        if self._public_base_url:
+            return f"{self._public_base_url.rstrip('/')}/{key}"
+        try:
+            return self._get_client().generate_presigned_url(
+                "get_object",
+                Params={"Bucket": self.bucket, "Key": key},
+                ExpiresIn=self._presign_expires,
+            )
+        except Exception as exc:  # pragma: no cover - network path
+            raise StorageBackendError(
+                f"failed to presign url for {key!r}: {exc}"
+            ) from exc
+
+    # --- explicit ops helper ---------------------------------------------
+
+    def ensure_bucket(self) -> None:
+        """Create the bucket if it doesn't exist.
+
+        Intentionally NOT called from ``__init__``. Invoke this from ops
+        tooling or a bootstrap script if you don't want to rely on the
+        docker-compose ``createbuckets`` one-shot.
+        """
+        client = self._get_client()
+        try:
+            client.head_bucket(Bucket=self.bucket)
+            return
+        except Exception:
+            pass
+        try:
+            client.create_bucket(Bucket=self.bucket)
+        except Exception as exc:  # pragma: no cover - network path
+            raise StorageBackendError(
+                f"failed to create bucket {self.bucket!r}: {exc}"
+            ) from exc
+
+
+# ---------------------------------------------------------------- service
+
+
+class StorageService:
+    """Centralized entry point for all object storage operations.
+
+    Routes call these methods; repositories never touch file bytes. The
+    service owns validation, key generation, and URL projection. The
+    underlying backend is selected once at construction time and is visible
+    via :pyattr:`backend`.
+    """
+
+    def __init__(self, backend: StorageBackend | None = None) -> None:
+        self.backend: StorageBackend = backend or _default_backend()
+
+    # ----- key helpers ----------------------------------------------------
+
+    @staticmethod
+    def wardrobe_key(user_id: uuid.UUID | str, item_id: uuid.UUID | str, ext: str) -> str:
+        return f"users/{user_id}/wardrobe/{item_id}{ext}"
+
+    @staticmethod
+    def user_photo_key(
+        user_id: uuid.UUID | str, slot: str, photo_id: uuid.UUID | str, ext: str
+    ) -> str:
+        slot_clean = slot.strip().lower()
+        if slot_clean not in {"front", "side", "portrait"}:
+            raise StorageValidationError(
+                f"user photo slot must be front/side/portrait, got {slot!r}"
+            )
+        return f"users/{user_id}/photos/{slot_clean}/{photo_id}{ext}"
+
+    @staticmethod
+    def tryon_key(user_id: uuid.UUID | str, job_id: uuid.UUID | str, ext: str) -> str:
+        return f"users/{user_id}/tryon/{job_id}{ext}"
+
+    # ----- uploads --------------------------------------------------------
+
+    def upload_wardrobe_image(
+        self,
+        user_id: uuid.UUID | str,
+        item_id: uuid.UUID | str,
+        *,
+        data: bytes,
+        content_type: str,
+        filename: str | None = None,
+    ) -> StoredAsset:
+        ct, ext, size = _validate(data, content_type, filename)
+        key = self.wardrobe_key(user_id, item_id, ext)
+        self.backend.put(key, data, content_type=ct)
+        return StoredAsset(
+            key=key,
+            url=self.backend.public_url(key),
+            content_type=ct,
+            size=size,
+        )
+
+    def upload_user_photo(
+        self,
+        user_id: uuid.UUID | str,
+        photo_id: uuid.UUID | str,
+        slot: str,
+        *,
+        data: bytes,
+        content_type: str,
+        filename: str | None = None,
+    ) -> StoredAsset:
+        ct, ext, size = _validate(data, content_type, filename)
+        key = self.user_photo_key(user_id, slot, photo_id, ext)
+        self.backend.put(key, data, content_type=ct)
+        return StoredAsset(
+            key=key,
+            url=self.backend.public_url(key),
+            content_type=ct,
+            size=size,
+        )
+
+    def upload_tryon_result(
+        self,
+        user_id: uuid.UUID | str,
+        job_id: uuid.UUID | str,
+        *,
+        data: bytes,
+        content_type: str,
+        filename: str | None = None,
+    ) -> StoredAsset:
+        ct, ext, size = _validate(data, content_type, filename)
+        key = self.tryon_key(user_id, job_id, ext)
+        self.backend.put(key, data, content_type=ct)
+        return StoredAsset(
+            key=key,
+            url=self.backend.public_url(key),
+            content_type=ct,
+            size=size,
+        )
+
+    # ----- mutations ------------------------------------------------------
+
+    def delete_object(self, key: str) -> None:
+        self.backend.delete(key)
+
+    def replace_wardrobe_image(
+        self,
+        user_id: uuid.UUID | str,
+        item_id: uuid.UUID | str,
+        *,
+        data: bytes,
+        content_type: str,
+        filename: str | None = None,
+        old_key: str | None = None,
+    ) -> StoredAsset:
+        """Upload-first, delete-old-after-success replace flow.
+
+        The new object is uploaded before the old one is removed. If the new
+        upload fails, the old object is left intact. The old object is only
+        deleted if its key differs from the new one (avoids deleting the
+        image we just wrote when the canonical key happens to be identical).
+        """
+        asset = self.upload_wardrobe_image(
+            user_id,
+            item_id,
+            data=data,
+            content_type=content_type,
+            filename=filename,
+        )
+        if old_key and old_key != asset.key:
+            try:
+                self.backend.delete(old_key)
+            except StorageBackendError:
+                # Upload succeeded — do not propagate cleanup failures.
+                pass
+        return asset
+
+    # ----- url projection -------------------------------------------------
+
+    def public_url(self, key: str) -> str:
+        return self.backend.public_url(key)
+
+
+# ---------------------------------------------------------------- defaults
+
+
+def _default_backend() -> StorageBackend:
+    """Pick the backend declared in settings.
+
+    Visible by design — callers can inspect ``storage_backend`` to understand
+    which backend is in use. ``"memory"`` is intended for tests and local
+    sandboxes only.
+    """
+    choice = (settings.storage_backend or "s3").lower()
+    if choice == "memory":
+        return InMemoryStorageBackend()
+    if choice == "s3":
+        return S3StorageBackend()
+    raise StorageError(f"unknown storage_backend {choice!r}")
+
+
+def get_storage_service() -> StorageService:
+    """FastAPI dependency seam — returns a ``StorageService`` bound to the
+    backend selected by the current settings.
+    """
+    return StorageService()
+
+
+__all__ = [
+    "StorageBackend",
+    "StorageBackendError",
+    "StorageError",
+    "StorageService",
+    "StorageValidationError",
+    "StoredAsset",
+    "InMemoryStorageBackend",
+    "S3StorageBackend",
+    "get_storage_service",
+]

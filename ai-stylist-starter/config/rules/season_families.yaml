@@ -1,0 +1,43 @@
+season_families:
+  spring:
+    conditions:
+      undertone: [warm, neutral-warm]
+      chroma: [bright, medium-bright]
+      depth: [light, medium]
+    weights:
+      undertone_match: 0.40
+      chroma_match: 0.30
+      depth_match: 0.15
+      contrast_match: 0.15
+  summer:
+    conditions:
+      undertone: [cool, neutral-cool, cool-neutral]
+      chroma: [soft, medium-soft]
+      contrast: [low, medium-low, medium]
+      depth: [light, medium-light, medium]
+    weights:
+      undertone_match: 0.35
+      chroma_match: 0.30
+      contrast_match: 0.20
+      depth_match: 0.15
+  autumn:
+    conditions:
+      undertone: [warm, neutral-warm]
+      chroma: [soft, medium-soft]
+      depth: [medium, medium-deep, deep]
+    weights:
+      undertone_match: 0.35
+      chroma_match: 0.30
+      depth_match: 0.25
+      contrast_match: 0.10
+  winter:
+    conditions:
+      undertone: [cool, neutral-cool, cool-neutral]
+      chroma: [bright, medium-bright, clear]
+      contrast: [medium-high, high]
+      depth: [medium, deep]
+    weights:
+      undertone_match: 0.35
+      contrast_match: 0.25
+      chroma_match: 0.25
+      depth_match: 0.15

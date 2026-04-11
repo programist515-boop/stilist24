@@ -1,0 +1,61 @@
+seasons_12:
+  light_spring:
+    undertone: [warm, neutral-warm]
+    depth: [light]
+    chroma: [bright, medium-bright]
+    contrast: [low, medium-low]
+  true_spring:
+    undertone: [warm]
+    depth: [light, medium]
+    chroma: [bright]
+    contrast: [medium]
+  bright_spring:
+    undertone: [neutral-warm, warm]
+    depth: [medium]
+    chroma: [bright, clear]
+    contrast: [medium-high, high]
+  light_summer:
+    undertone: [cool, cool-neutral]
+    depth: [light]
+    chroma: [soft, medium-soft]
+    contrast: [low]
+  true_summer:
+    undertone: [cool]
+    depth: [light, medium]
+    chroma: [soft]
+    contrast: [low, medium-low]
+  soft_summer:
+    undertone: [cool-neutral, neutral-cool]
+    depth: [medium-light, medium]
+    chroma: [soft]
+    contrast: [medium-low]
+  soft_autumn:
+    undertone: [neutral-warm, warm-neutral]
+    depth: [medium]
+    chroma: [soft]
+    contrast: [low, medium-low]
+  true_autumn:
+    undertone: [warm]
+    depth: [medium, medium-deep]
+    chroma: [soft, medium-soft]
+    contrast: [medium]
+  deep_autumn:
+    undertone: [warm, neutral-warm]
+    depth: [deep, medium-deep]
+    chroma: [soft, medium-soft]
+    contrast: [medium, medium-high]
+  deep_winter:
+    undertone: [cool, cool-neutral]
+    depth: [deep]
+    chroma: [clear, bright]
+    contrast: [high]
+  true_winter:
+    undertone: [cool]
+    depth: [medium, deep]
+    chroma: [clear, bright]
+    contrast: [high]
+  bright_winter:
+    undertone: [cool, neutral-cool]
+    depth: [medium]
+    chroma: [bright, clear]
+    contrast: [high]

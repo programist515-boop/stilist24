@@ -1,0 +1,47 @@
+garment_line_rules:
+  dramatic:
+    prefer:
+      line_type: [sharp, clean, elongated]
+      structure: [structured, sleek]
+      scale: [medium, large]
+      fit: [tailored, clean_skimming]
+    avoid:
+      line_type: [fussy, rounded]
+      scale: [tiny]
+      fit: [overly_cute, ornate]
+  natural:
+    prefer:
+      line_type: [relaxed, blunt, easy]
+      structure: [unstructured, semi_structured]
+      fit: [relaxed, easy_skimming]
+      texture: [textured, matte]
+    avoid:
+      line_type: [rigid_symmetry, tiny_ornate]
+      fit: [too_tight_tailored]
+  classic:
+    prefer:
+      line_type: [balanced, symmetrical, refined]
+      structure: [structured, moderate]
+      fit: [tailored, polished]
+      scale: [medium]
+    avoid:
+      line_type: [chaotic, extreme]
+      fit: [oversized, overly_draped]
+  gamine:
+    prefer:
+      line_type: [cropped, broken, animated, contrasting]
+      fit: [fitted, cropped, crisp]
+      scale: [small]
+      detail_density: [medium, high]
+    avoid:
+      line_type: [long_unbroken_vertical, broad_blunt]
+      fit: [heavy_drape, oversized]
+  romantic:
+    prefer:
+      line_type: [soft, rounded, ornate]
+      fit: [body_skimming, waist_emphasis]
+      structure: [soft]
+      fabric_drape: [fluid]
+    avoid:
+      line_type: [severe, boxy, blunt]
+      fit: [stiff_tailoring, rigid_oversized]

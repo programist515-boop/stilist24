@@ -1,0 +1,82 @@
+identity_subtypes:
+  dramatic:
+    rules:
+      - name: dramatic
+        when:
+          vertical_line: {min: 0.70}
+          softness: {max: 0.40}
+          curve_presence: {max: 0.40}
+        score_boost: 0.20
+      - name: soft_dramatic
+        when:
+          vertical_line: {min: 0.68}
+          softness: {min: 0.45}
+          curve_presence: {min: 0.45}
+        score_boost: 0.20
+  natural:
+    rules:
+      - name: flamboyant_natural
+        when:
+          vertical_line: {min: 0.62}
+          width: {min: 0.58}
+          bone_bluntness: {min: 0.52}
+        score_boost: 0.20
+      - name: soft_natural
+        when:
+          softness: {min: 0.52}
+          waist_definition: {min: 0.50}
+          width: {min: 0.45}
+        score_boost: 0.20
+      - name: natural
+        when:
+          width: {min: 0.48}
+          bone_bluntness: {min: 0.48}
+        score_boost: 0.10
+  classic:
+    rules:
+      - name: dramatic_classic
+        when:
+          symmetry: {min: 0.65}
+          sharpness_minus_softness: {min: 0.10}
+        score_boost: 0.20
+      - name: soft_classic
+        when:
+          symmetry: {min: 0.65}
+          softness_minus_sharpness: {min: 0.10}
+        score_boost: 0.20
+      - name: classic
+        when:
+          symmetry: {min: 0.60}
+          moderation: {min: 0.55}
+        score_boost: 0.10
+  gamine:
+    rules:
+      - name: flamboyant_gamine
+        when:
+          compactness: {min: 0.60}
+          bone_sharpness: {min: 0.50}
+          line_contrast: {min: 0.52}
+        score_boost: 0.20
+      - name: soft_gamine
+        when:
+          compactness: {min: 0.60}
+          softness: {min: 0.55}
+          waist_definition: {min: 0.50}
+        score_boost: 0.20
+      - name: gamine
+        when:
+          compactness: {min: 0.55}
+          line_contrast: {min: 0.50}
+        score_boost: 0.10
+  romantic:
+    rules:
+      - name: romantic
+        when:
+          softness: {min: 0.70}
+          facial_sharpness: {max: 0.25}
+        score_boost: 0.20
+      - name: theatrical_romantic
+        when:
+          softness: {min: 0.60}
+          facial_sharpness: {min: 0.25, max: 0.45}
+        score_boost: 0.20

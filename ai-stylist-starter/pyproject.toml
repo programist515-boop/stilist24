@@ -1,0 +1,29 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ai-stylist-starter"
+version = "0.1.0"
+description = "Starter backend for AI stylist"
+requires-python = ">=3.11"
+dependencies = [
+  "fastapi>=0.115.0",
+  "uvicorn[standard]>=0.30.0",
+  "sqlalchemy>=2.0.30",
+  "psycopg[binary]>=3.1.19",
+  "alembic>=1.13.2",
+  "pydantic>=2.8.2",
+  "pydantic-settings>=2.3.4",
+  "python-multipart>=0.0.9",
+  "pyyaml>=6.0.1",
+  "httpx>=0.27.0",
+  "python-jose[cryptography]>=3.3.0",
+  "passlib[bcrypt]>=1.7.4",
+  "boto3>=1.34.149",
+  "pytest>=8.2.2"
+]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["app*"]

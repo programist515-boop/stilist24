@@ -1,0 +1,18 @@
+outfit_rules:
+  score_weights:
+    color_harmony: 0.30
+    silhouette_balance: 0.25
+    line_consistency: 0.20
+    style_consistency: 0.15
+    occasion_fit: 0.10
+  penalties:
+    warm_cool_face_conflict: 0.18
+    too_many_focal_points: 0.12
+    conflicting_formality: 0.15
+    oversized_top_and_bottom_for_compact_user: 0.14
+    broken_vertical_for_long_line_type: 0.10
+  bonuses:
+    one_accent_plus_neutrals: 0.10
+    line_consistency_strong: 0.12
+    silhouette_supports_identity: 0.14
+    occasion_exact_match: 0.08

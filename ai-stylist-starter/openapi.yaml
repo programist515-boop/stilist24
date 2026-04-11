@@ -1,0 +1,180 @@
+openapi: 3.1.0
+info:
+  title: AI Stylist API
+  version: 0.1.0
+servers:
+  - url: http://localhost:8000
+paths:
+  /health:
+    get:
+      summary: Health check
+      responses:
+        "200":
+          description: OK
+  /auth/oauth:
+    post:
+      summary: OAuth login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [provider, token]
+              properties:
+                provider:
+                  type: string
+                  enum: [google, yandex, telegram]
+                token:
+                  type: string
+      responses:
+        "200":
+          description: Auth success
+  /auth/login:
+    post:
+      summary: Email login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email: { type: string }
+                password: { type: string }
+      responses:
+        "200":
+          description: Auth success
+  /user/analyze:
+    post:
+      summary: Analyze user photos
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [front_photo, side_photo, portrait_photo]
+              properties:
+                front_photo: { type: string, format: binary }
+                side_photo: { type: string, format: binary }
+                portrait_photo: { type: string, format: binary }
+      responses:
+        "200":
+          description: Analysis result
+  /color/drape:
+    post:
+      summary: Save draping answer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [pair_id, better]
+              properties:
+                pair_id: { type: string }
+                better:
+                  type: string
+                  enum: [left, right, equal]
+      responses:
+        "200":
+          description: Draping saved
+  /wardrobe/upload:
+    post:
+      summary: Upload wardrobe item
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [image]
+              properties:
+                image: { type: string, format: binary }
+                category: { type: string }
+      responses:
+        "200":
+          description: Item uploaded
+  /wardrobe/items:
+    get:
+      summary: List wardrobe items
+      responses:
+        "200":
+          description: Items
+  /wardrobe/confirm:
+    post:
+      summary: Confirm wardrobe item
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [item_id, attributes]
+              properties:
+                item_id: { type: string }
+                attributes: { type: object }
+      responses:
+        "200":
+          description: Item updated
+  /outfits/generate:
+    post:
+      summary: Generate outfits
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                occasion: { type: string }
+                season: { type: string }
+      responses:
+        "200":
+          description: Generated outfits
+  /tryon/generate:
+    post:
+      summary: Generate try-on image
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [user_photo_id, item_id]
+              properties:
+                user_photo_id: { type: string }
+                item_id: { type: string }
+      responses:
+        "200":
+          description: Try-on result
+  /feedback:
+    post:
+      summary: Save feedback event
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [event_type, payload]
+              properties:
+                event_type: { type: string }
+                payload: { type: object }
+      responses:
+        "200":
+          description: Feedback saved
+  /today:
+    get:
+      summary: Get daily outfit suggestions
+      responses:
+        "200":
+          description: Today outfits
+  /insights/weekly:
+    get:
+      summary: Get weekly insights
+      responses:
+        "200":
+          description: Weekly insights

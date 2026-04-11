@@ -1,0 +1,41 @@
+identity_families:
+  dramatic:
+    description: "Long vertical, sharp structure, narrowness, angularity"
+    score_formula:
+      vertical_line: 0.30
+      bone_sharpness: 0.25
+      narrowness: 0.15
+      facial_sharpness: 0.15
+      low_softness: 0.15
+  natural:
+    description: "Width, bluntness, relaxed line, moderate or long vertical"
+    score_formula:
+      width: 0.30
+      bone_bluntness: 0.25
+      relaxed_line: 0.20
+      vertical_line: 0.15
+      low_symmetry: 0.10
+  classic:
+    description: "Balance, symmetry, moderation, no strong extremes"
+    score_formula:
+      symmetry: 0.35
+      proportion_balance: 0.25
+      moderation: 0.20
+      low_line_contrast: 0.10
+      controlled_softness_or_sharpness: 0.10
+  gamine:
+    description: "Compactness, contrast, juxtaposition, small scale"
+    score_formula:
+      compactness: 0.30
+      line_contrast: 0.20
+      small_scale: 0.20
+      low_vertical_line: 0.15
+      feature_juxtaposition: 0.15
+  romantic:
+    description: "Softness, curve, rounded lines, lushness"
+    score_formula:
+      softness: 0.30
+      curve_presence: 0.25
+      facial_roundness: 0.20
+      waist_definition: 0.15
+      low_bone_sharpness: 0.10
