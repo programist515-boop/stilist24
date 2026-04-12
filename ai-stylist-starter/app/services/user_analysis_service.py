@@ -265,6 +265,49 @@ class UserAnalysisService:
             return self._now()
         return datetime.now(timezone.utc)
 
+    def _persist_style_profile(
+        self,
+        user_id: uuid.UUID,
+        *,
+        kibbe_type: str | None,
+        kibbe_confidence: float | None,
+        color_profile: dict | None,
+        style_vector: dict | None,
+    ) -> None:
+        """Upsert a ``StyleProfile`` row so downstream features can read it.
+
+        Uses a Postgres ``INSERT … ON CONFLICT DO UPDATE`` so a second
+        analysis overwrites the previous one atomically. If there is no
+        DB session (unit-test mode with ``db=None``), we silently skip.
+        """
+        if self.db is None:
+            return
+        from sqlalchemy.dialects.postgresql import insert as pg_insert
+
+        from app.models.style_profile import StyleProfile  # lazy
+
+        stmt = (
+            pg_insert(StyleProfile)
+            .values(
+                user_id=user_id,
+                kibbe_type=kibbe_type,
+                kibbe_confidence=kibbe_confidence,
+                color_profile_json=color_profile or {},
+                style_vector_json=style_vector or {},
+            )
+            .on_conflict_do_update(
+                index_elements=["user_id"],
+                set_={
+                    "kibbe_type": kibbe_type,
+                    "kibbe_confidence": kibbe_confidence,
+                    "color_profile_json": color_profile or {},
+                    "style_vector_json": style_vector or {},
+                },
+            )
+        )
+        self.db.execute(stmt)
+        self.db.commit()
+
     # ----- pure helpers --------------------------------------------------
 
     @staticmethod
@@ -383,11 +426,23 @@ class UserAnalysisService:
         features = self._get_features(user_id, photo_refs)
         identity = self._get_identity_engine().analyze(features)
         color = self._get_color_engine().analyze(_stub_color_axes())
+        style_vector = _stub_style_vector()
+
+        # Persist the computed analysis into ``style_profiles`` so
+        # downstream features (Recommendations, Today, Insights) can
+        # read it back without relying on the transient HTTP response.
+        self._persist_style_profile(
+            user_id,
+            kibbe_type=identity.get("main_type"),
+            kibbe_confidence=identity.get("confidence"),
+            color_profile=color,
+            style_vector=style_vector,
+        )
 
         return {
             "kibbe": identity,
             "color": color,
-            "style_vector": _stub_style_vector(),
+            "style_vector": style_vector,
             "analyzed_at": self._get_now().isoformat(),
             "photos": persisted,
         }
