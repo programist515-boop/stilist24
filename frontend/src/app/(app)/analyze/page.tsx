@@ -117,9 +117,14 @@ export default function AnalyzePage() {
                   Фото сохранены. Теперь их можно использовать в примерке.
                 </CardSubtitle>
               </div>
-              <Link href="/tryon">
-                <Button variant="secondary">Перейти к примерке</Button>
-              </Link>
+              <div className="flex flex-wrap gap-2">
+                <Link href="/recommendations">
+                  <Button variant="primary">Открыть рекомендации</Button>
+                </Link>
+                <Link href="/tryon">
+                  <Button variant="secondary">Перейти к примерке</Button>
+                </Link>
+              </div>
             </div>
           </Card>
           <AnalysisResultCard result={mutation.data} />
