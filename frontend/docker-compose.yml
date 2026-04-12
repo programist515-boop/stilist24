@@ -1,0 +1,27 @@
+# Standalone compose for the frontend.
+#
+# The backend stack lives in ../ai-stylist-starter/docker-compose.yml and is
+# expected to be running separately. The frontend talks to it from the
+# user's browser, so NEXT_PUBLIC_API_URL must be reachable from the host
+# (not from inside the container network).
+#
+# Run:
+#   docker compose up --build
+#
+# To point at a non-localhost backend, override the build arg:
+#   NEXT_PUBLIC_API_URL=https://api.example.com docker compose up --build
+
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:8000}
+    image: ai-stylist-frontend:latest
+    container_name: ai-stylist-frontend
+    ports:
+      - "3000:3000"
+    environment:
+      NODE_ENV: production
+    restart: unless-stopped

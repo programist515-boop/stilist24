@@ -1,12 +1,16 @@
 """Try-on orchestration service.
 
-Pipeline (single-item, synchronous):
+Pipeline (single-item, synchronous from the caller's POV — the FASHN
+provider itself runs async under the hood and the adapter polls it):
 
 1. Load the user photo by id and verify ownership.
 2. Load the wardrobe item by id and verify ownership.
-3. Resolve usable image URLs for both assets (prefer ``image_url``,
-   fall back to a URL projected from ``image_key`` via the storage
-   service).
+3. Resolve each asset to a provider-ready image string. The provider
+   cannot reach our local MinIO (``http://localhost:9000``), so we
+   embed the bytes as a ``data:<mime>;base64,<...>`` URI whenever we
+   can fetch them from storage. Falls back to the stored
+   ``image_url`` only if the bytes are not reachable — useful for
+   unit tests that hand us a stub asset.
 4. Persist a ``pending`` ``TryOnJob`` row so failures still leave a trace.
 5. Call the FASHN adapter (provider logic is fully isolated).
 6. Receive a ``FashnResult`` with the generated image bytes.
@@ -26,6 +30,7 @@ importable in environments without it.
 
 from __future__ import annotations
 
+import base64
 import uuid
 from typing import TYPE_CHECKING, Any, Awaitable, Callable
 
@@ -151,18 +156,40 @@ class TryOnService:
     # ----- pure helpers --------------------------------------------------
 
     @staticmethod
-    def _resolve_url(asset: Any, storage: StorageService) -> str | None:
-        """Pick a usable URL for an asset (wardrobe item or user photo).
+    def _resolve_provider_image(
+        asset: Any, storage: StorageService
+    ) -> str | None:
+        """Return a provider-ready image string for an asset.
 
-        Prefers the stored ``image_url`` because it has already been built by
-        the storage layer at upload time. Falls back to a freshly projected
-        URL from ``image_key`` for cases where the URL was never persisted
-        (e.g. legacy rows).
+        Preferred path: fetch the raw bytes from storage and embed them
+        as a ``data:<mime>;base64,<...>`` URI. The FASHN provider lives
+        on the public internet and cannot reach our dev MinIO
+        (``http://localhost:9000/...``), so a local URL is not a usable
+        transport. FASHN accepts data URIs directly, so this is also
+        the most robust option in prod — no public-URL plumbing is
+        required.
+
+        Fallback path: if the bytes are not reachable (no ``image_key``,
+        or a backend that can't serve them back — notably in unit tests
+        that seed only URL strings), return the stored ``image_url``.
+        The caller still treats a ``None`` return as a fatal
+        ``TryOnAssetError``.
         """
+        key = getattr(asset, "image_key", None)
+        if key:
+            try:
+                fetched = storage.get_object(key)
+            except Exception:
+                fetched = None
+            if fetched is not None:
+                data, content_type = fetched
+                if data:
+                    mime = content_type or "application/octet-stream"
+                    encoded = base64.b64encode(data).decode("ascii")
+                    return f"data:{mime};base64,{encoded}"
         url = getattr(asset, "image_url", None)
         if url:
             return url
-        key = getattr(asset, "image_key", None)
         if key:
             try:
                 return storage.public_url(key)
@@ -193,11 +220,13 @@ class TryOnService:
         if item is None or getattr(item, "user_id", None) != user_id:
             raise TryOnNotFoundError("wardrobe item not found")
 
-        # 3. Resolve usable image URLs.
-        person_url = self._resolve_url(photo, storage)
+        # 3. Resolve each asset to a provider-ready image string
+        # (base64 data URI when we can reach the bytes, stored URL
+        # otherwise — see ``_resolve_provider_image``).
+        person_url = self._resolve_provider_image(photo, storage)
         if not person_url:
             raise TryOnAssetError("user photo image is missing")
-        garment_url = self._resolve_url(item, storage)
+        garment_url = self._resolve_provider_image(item, storage)
         if not garment_url:
             raise TryOnAssetError("wardrobe image is missing")
 
@@ -260,6 +289,18 @@ class TryOnService:
         asset: Any,
         result: FashnResult,
     ) -> dict:
+        """Build the ``POST /tryon/generate`` response dict.
+
+        Shape is locked to :class:`app.schemas.tryon.TryOnJobOut`:
+
+        * ``error_message`` is emitted as ``None`` on the happy path so
+          the response shape matches the GET endpoint verbatim.
+        * ``created_at`` / ``updated_at`` are pulled from the ORM row
+          when present (real DB), and silently default to ``None`` when
+          the test stub doesn't set them. Both are surfaced as strings
+          via ``.isoformat()`` so the wire format is already ISO even
+          before ``response_model`` serialises it.
+        """
         return {
             "job_id": str(getattr(job, "id", "")),
             "status": getattr(job, "status", "succeeded"),
@@ -268,8 +309,26 @@ class TryOnService:
             "result_image_key": asset.key,
             "result_image_url": asset.url,
             "metadata": self._safe_metadata(result),
+            "error_message": getattr(job, "error_message", None),
             "note": TRY_ON_DISCLAIMER,
+            "created_at": self._to_iso(getattr(job, "created_at", None)),
+            "updated_at": self._to_iso(getattr(job, "updated_at", None)),
         }
+
+    @staticmethod
+    def _to_iso(value: Any) -> str | None:
+        """Render a datetime-like value as an ISO string (or pass through).
+
+        Real ORM rows hand us a :class:`datetime`; some test stubs
+        store strings; anything else (``None``, missing attribute)
+        returns ``None`` so the field stays nullable.
+        """
+        if value is None:
+            return None
+        isoformat = getattr(value, "isoformat", None)
+        if callable(isoformat):
+            return isoformat()
+        return str(value)
 
     # ----- helpers -------------------------------------------------------
 

@@ -1,0 +1,29 @@
+node_modules
+.next
+out
+dist
+build
+
+# env / secrets
+.env
+.env.local
+.env.*.local
+
+# vcs / editors
+.git
+.gitignore
+.vscode
+.idea
+*.swp
+
+# logs / caches
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.DS_Store
+Thumbs.db
+
+# docker / docs
+Dockerfile
+.dockerignore
+README.md

@@ -36,6 +36,17 @@ class Settings(BaseSettings):
         ".webp",
     )
 
+    # --- CORS --------------------------------------------------------------
+    # The browser frontend lives on a different origin than the API (in dev
+    # it's Next.js on :3000, the API is on :8000). Every request carries a
+    # custom ``X-User-Id`` header plus multipart bodies, which trigger a
+    # CORS preflight. Without the middleware the preflight returns 405 and
+    # the browser silently aborts the real request.
+    cors_allow_origins: list[str] = [
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+    ]
+
     # --- FASHN / Auth (unchanged) -----------------------------------------
     fashn_api_key: str = ""
     fashn_base_url: str = "https://api.fashn.ai"

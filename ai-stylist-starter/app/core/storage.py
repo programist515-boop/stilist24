@@ -247,6 +247,7 @@ class StorageBackend(Protocol):
     def delete(self, key: str) -> None: ...
     def exists(self, key: str) -> bool: ...
     def public_url(self, key: str) -> str: ...
+    def get_object(self, key: str) -> tuple[bytes, str] | None: ...
 
 
 class InMemoryStorageBackend:
@@ -274,10 +275,14 @@ class InMemoryStorageBackend:
     def public_url(self, key: str) -> str:
         return f"{self._public_base_url}/{key}"
 
+    def get_object(self, key: str) -> tuple[bytes, str] | None:
+        return self._objects.get(key)
+
     # --- test helpers -----------------------------------------------------
 
     def get(self, key: str) -> tuple[bytes, str] | None:
-        return self._objects.get(key)
+        """Back-compat alias for :meth:`get_object`."""
+        return self.get_object(key)
 
     def keys(self) -> list[str]:
         return sorted(self._objects)
@@ -385,6 +390,37 @@ class S3StorageBackend:
             raise StorageBackendError(
                 f"failed to presign url for {key!r}: {exc}"
             ) from exc
+
+    def get_object(self, key: str) -> tuple[bytes, str] | None:
+        """Fetch the raw bytes + content-type for a stored object.
+
+        Returns ``None`` when the key does not exist. Any other backend
+        error (network, auth, etc.) surfaces as :class:`StorageBackendError`
+        so the caller can distinguish "missing" from "broken".
+        """
+        try:
+            response = self._get_client().get_object(
+                Bucket=self.bucket, Key=key
+            )
+        except Exception as exc:  # pragma: no cover - network path
+            # boto3 raises ClientError with Code=NoSuchKey (or 404 via
+            # botocore). Distinguishing that from a real failure needs
+            # a string match because we don't import botocore here.
+            text = repr(exc)
+            if "NoSuchKey" in text or "404" in text:
+                return None
+            raise StorageBackendError(
+                f"failed to fetch object {key!r}: {exc}"
+            ) from exc
+        body = response.get("Body")
+        if body is None:
+            return None
+        data = body.read()
+        ct = (
+            response.get("ContentType")
+            or "application/octet-stream"
+        )
+        return data, ct
 
     # --- explicit ops helper ---------------------------------------------
 
@@ -546,6 +582,17 @@ class StorageService:
 
     def public_url(self, key: str) -> str:
         return self.backend.public_url(key)
+
+    def get_object(self, key: str) -> tuple[bytes, str] | None:
+        """Return ``(bytes, content_type)`` for a stored object.
+
+        Thin pass-through to :meth:`StorageBackend.get_object`. Used by
+        :class:`~app.services.tryon_service.TryOnService` to fetch a
+        reference photo or garment image and embed it as a base64 data
+        URI — the FASHN provider can't reach ``http://localhost:9000``
+        in local dev, so URLs are not a usable transport.
+        """
+        return self.backend.get_object(key)
 
 
 # ---------------------------------------------------------------- defaults

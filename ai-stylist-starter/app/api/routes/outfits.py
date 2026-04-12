@@ -7,7 +7,7 @@ from app.models.style_profile import StyleProfile
 from app.repositories.outfit_repository import OutfitRepository
 from app.repositories.personalization_repository import PersonalizationRepository
 from app.repositories.wardrobe_repository import WardrobeRepository
-from app.schemas.outfit import OutfitGenerateIn
+from app.schemas.outfit import OutfitGenerateIn, OutfitGenerateOut
 from app.services.outfit_engine import OutfitEngine
 
 router = APIRouter()
@@ -43,12 +43,19 @@ def _build_user_context(db: Session, user_id: uuid.UUID) -> dict:
     }
 
 
-@router.post("/generate")
+@router.post("/generate", response_model=OutfitGenerateOut)
 def generate_outfits(
     payload: OutfitGenerateIn,
     db: Session = Depends(get_db),
     user_id: uuid.UUID = Depends(get_current_user_id),
 ) -> dict:
+    """Generate labelled outfits from the caller's wardrobe.
+
+    Wire-level change: the top-level collection key was renamed from
+    ``items`` to ``outfits`` to remove the ambiguity with the per-outfit
+    ``items`` list (which holds wardrobe entries for that outfit). The
+    new shape is locked to :class:`OutfitGenerateOut`.
+    """
     wardrobe_repo = WardrobeRepository(db)
     outfit_repo = OutfitRepository(db)
 
@@ -64,4 +71,4 @@ def generate_outfits(
             explanation="; ".join(outfit.get("explanation", []) or []),
         )
 
-    return {"count": len(generated), "items": generated}
+    return {"outfits": generated, "count": len(generated)}

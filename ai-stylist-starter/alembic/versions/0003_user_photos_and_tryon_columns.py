@@ -5,16 +5,22 @@ and analysis) and extends ``tryon_jobs`` with the columns needed for
 provider tracking, structured errors, deterministic storage references,
 and explicit ``updated_at``.
 
-Revision ID: 0003_user_photos_and_tryon_columns
+Revision ID: 0003_user_photos_tryon
 Revises: 0002_wardrobe_image_key
 Create Date: 2026-04-11 00:00:00.000000
+
+Note on the short revision id: alembic's default ``alembic_version.version_num``
+column is ``VARCHAR(32)``. The original descriptive id
+``0003_user_photos_and_tryon_columns`` is 34 chars long and triggers a
+``StringDataRightTruncation`` on stamp. The id is kept deliberately short
+here so nothing else has to be touched.
 """
 from alembic import op
 import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
 
-revision = "0003_user_photos_and_tryon_columns"
+revision = "0003_user_photos_tryon"
 down_revision = "0002_wardrobe_image_key"
 branch_labels = None
 depends_on = None

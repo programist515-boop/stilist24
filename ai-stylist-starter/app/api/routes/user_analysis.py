@@ -1,46 +1,90 @@
-from fastapi import APIRouter, File, UploadFile
-from app.services.identity_engine import IdentityEngine
-from app.services.color_engine import ColorEngine
+"""Thin route layer for user analysis.
+
+The route has exactly one job: turn three :class:`UploadFile` handles into
+an ordered list of :class:`AnalysisPhotoUpload` objects and hand them to
+:class:`UserAnalysisService`. Every failure mode maps to an HTTP status
+code via a typed-exception catch block. No business logic, no direct
+storage or DB calls, no feature extraction.
+"""
+
+import uuid
+
+from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
+from sqlalchemy.orm import Session
+
+from app.api.deps import get_current_user_id, get_db
+from app.repositories.user_photo_repository import UserPhotoRepository
+from app.schemas.user_analysis import AnalyzedPhotoOut, UserAnalyzeResponse
+from app.services.user_analysis_service import (
+    AnalysisPhotoUpload,
+    UserAnalysisPersistenceError,
+    UserAnalysisService,
+    UserAnalysisStorageError,
+    UserAnalysisValidationError,
+)
 
 router = APIRouter()
 
 
-@router.post("/analyze")
+@router.get("/photos", response_model=list[AnalyzedPhotoOut])
+def list_user_photos(
+    db: Session = Depends(get_db),
+    user_id: uuid.UUID = Depends(get_current_user_id),
+) -> list[dict]:
+    """Return the caller's stored reference photos, freshest first.
+
+    This endpoint exists so the frontend does not have to rely on a
+    stale ``localStorage`` snapshot of the last ``/user/analyze``
+    response. Downstream screens (``/tryon``, "Today") always read
+    the live rows, so fixes to the storage URL (e.g. switching to a
+    browser-reachable ``S3_PUBLIC_BASE_URL``) take effect on the next
+    page load without forcing the user to re-run the analysis.
+    """
+    rows = UserPhotoRepository(db).list_by_user(user_id)
+    return [
+        {
+            "id": str(row.id),
+            "slot": row.slot,
+            "image_key": row.image_key,
+            "image_url": row.image_url,
+        }
+        for row in rows
+    ]
+
+
+@router.post("/analyze", response_model=UserAnalyzeResponse)
 async def analyze_user(
     front_photo: UploadFile = File(...),
     side_photo: UploadFile = File(...),
     portrait_photo: UploadFile = File(...),
+    db: Session = Depends(get_db),
+    user_id: uuid.UUID = Depends(get_current_user_id),
 ) -> dict:
-    # Stub feature extraction; replace with real CV pipeline.
-    user_features = {
-        "vertical_line": 0.42,
-        "compactness": 0.71,
-        "width": 0.40,
-        "bone_sharpness": 0.31,
-        "bone_bluntness": 0.22,
-        "softness": 0.74,
-        "curve_presence": 0.69,
-        "symmetry": 0.44,
-        "facial_sharpness": 0.28,
-        "facial_roundness": 0.67,
-        "waist_definition": 0.73,
-        "narrowness": 0.40,
-        "relaxed_line": 0.20,
-        "proportion_balance": 0.45,
-        "moderation": 0.40,
-        "line_contrast": 0.61,
-        "small_scale": 0.66,
-        "feature_juxtaposition": 0.58,
-        "controlled_softness_or_sharpness": 0.33,
-        "low_line_contrast": 0.39,
-    }
-    color_axes = {
-        "undertone": "cool-neutral",
-        "contrast": "medium-low",
-        "depth": "medium",
-        "chroma": "soft",
-    }
-    identity = IdentityEngine().analyze(user_features)
-    color = ColorEngine().analyze(color_axes)
-    style_vector = {"classic": 0.4, "romantic": 0.35, "natural": 0.25}
-    return {"kibbe": identity, "color": color, "style_vector": style_vector}
+    uploads = [
+        AnalysisPhotoUpload(
+            slot="front",
+            data=await front_photo.read(),
+            content_type=front_photo.content_type or "",
+            filename=front_photo.filename,
+        ),
+        AnalysisPhotoUpload(
+            slot="side",
+            data=await side_photo.read(),
+            content_type=side_photo.content_type or "",
+            filename=side_photo.filename,
+        ),
+        AnalysisPhotoUpload(
+            slot="portrait",
+            data=await portrait_photo.read(),
+            content_type=portrait_photo.content_type or "",
+            filename=portrait_photo.filename,
+        ),
+    ]
+    try:
+        return UserAnalysisService(db).analyze(user_id=user_id, uploads=uploads)
+    except UserAnalysisValidationError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    except UserAnalysisStorageError as exc:
+        raise HTTPException(status_code=502, detail=str(exc)) from exc
+    except UserAnalysisPersistenceError as exc:
+        raise HTTPException(status_code=500, detail=str(exc)) from exc

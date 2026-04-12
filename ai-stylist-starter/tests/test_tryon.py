@@ -26,6 +26,7 @@ from app.core.storage import (
     StorageService,
 )
 from app.services.fashn_adapter import (
+    FASHN_MODEL_NAME,
     FashnAdapter,
     FashnRequestError,
     FashnResponseError,
@@ -255,6 +256,10 @@ def test_response_shape_contract():
     response = _run(
         svc.generate(user_id=USER_ID, item_id=ITEM_ID, user_photo_id=PHOTO_ID)
     )
+    # Phase 3: contract pinned to ``TryOnJobOut``. ``error_message``,
+    # ``created_at``, ``updated_at`` are now always present — they're
+    # ``None`` on the happy path because the in-memory ``_Job`` stub
+    # does not model timestamp columns.
     assert set(response.keys()) == {
         "job_id",
         "status",
@@ -263,8 +268,14 @@ def test_response_shape_contract():
         "result_image_key",
         "result_image_url",
         "metadata",
+        "error_message",
         "note",
+        "created_at",
+        "updated_at",
     }
+    assert response["error_message"] is None
+    assert response["created_at"] is None
+    assert response["updated_at"] is None
 
 
 def test_disclaimer_is_module_level_constant():
@@ -435,27 +446,89 @@ def test_persistence_failure_after_storage_raises_persistence_error():
 # ---------------------------------------------------------------- adapter pure
 
 
-def test_payload_builder_is_pure_and_includes_category():
-    adapter = FashnAdapter(api_key="x", base_url="https://api.fashn.example")
+def test_payload_builder_wraps_inputs_and_normalises_category():
+    # Pin the mode explicitly so the test is independent of the
+    # default — if a future release changes ``FASHN_DEFAULT_MODE`` to
+    # something else, this test should still pass for an adapter that
+    # was asked to run in ``quality`` mode.
+    adapter = FashnAdapter(
+        api_key="x", base_url="https://api.fashn.example", mode="quality"
+    )
     payload = adapter.build_payload(
         person_image_url="https://example.com/person.jpg",
         garment_image_url="https://example.com/top.jpg",
         garment_category="top",
     )
     assert payload == {
-        "model_image": "https://example.com/person.jpg",
-        "garment_image": "https://example.com/top.jpg",
-        "category": "top",
+        "model_name": FASHN_MODEL_NAME,
+        "inputs": {
+            "model_image": "https://example.com/person.jpg",
+            "garment_image": "https://example.com/top.jpg",
+            # "top" → "tops" via the FASHN category vocabulary.
+            "category": "tops",
+            "mode": "quality",
+        },
     }
 
 
-def test_payload_builder_omits_category_when_unset():
+def test_payload_builder_defaults_to_quality_mode():
+    adapter = FashnAdapter(api_key="x", base_url="https://x")
+    payload = adapter.build_payload(
+        person_image_url="https://p",
+        garment_image_url="https://g",
+    )
+    # ``quality`` is the documented default in ``FASHN_DEFAULT_MODE``
+    # — any regression that silently falls back to ``balanced`` would
+    # visibly hurt the try-on result, so it gets its own test.
+    assert payload["inputs"]["mode"] == "quality"
+
+
+def test_payload_builder_honours_explicit_mode_override():
+    adapter = FashnAdapter(api_key="x", base_url="https://x", mode="performance")
+    payload = adapter.build_payload(
+        person_image_url="https://p", garment_image_url="https://g"
+    )
+    assert payload["inputs"]["mode"] == "performance"
+
+
+def test_payload_builder_defaults_category_to_auto_when_unset():
     adapter = FashnAdapter(api_key="x", base_url="https://api.fashn.example")
     payload = adapter.build_payload(
         person_image_url="https://p",
         garment_image_url="https://g",
     )
-    assert "category" not in payload
+    # FASHN's "let the model decide" default — no free-form category
+    # ever reaches the wire unmapped.
+    assert payload["inputs"]["category"] == "auto"
+
+
+def test_payload_builder_maps_common_category_synonyms():
+    adapter = FashnAdapter(api_key="x", base_url="https://x")
+    cases = {
+        "top": "tops",
+        "TOP": "tops",
+        "shirt": "tops",
+        "jacket": "tops",
+        "pants": "bottoms",
+        "jeans": "bottoms",
+        "skirt": "bottoms",
+        "dress": "one-pieces",
+        "jumpsuit": "one-pieces",
+        "tops": "tops",
+        "bottoms": "bottoms",
+        "one-pieces": "one-pieces",
+        "auto": "auto",
+        "": "auto",
+        None: "auto",
+        "unknown-category": "auto",
+    }
+    for raw, expected in cases.items():
+        payload = adapter.build_payload(
+            person_image_url="https://p",
+            garment_image_url="https://g",
+            garment_category=raw,
+        )
+        assert payload["inputs"]["category"] == expected, f"{raw!r} → {expected!r}"
 
 
 def test_payload_builder_rejects_empty_urls():
@@ -470,53 +543,92 @@ def test_payload_builder_rejects_empty_urls():
         )
 
 
-def test_extract_result_supports_shape_a_image_url_top_level():
+def test_extract_run_id_returns_prediction_id():
     adapter = FashnAdapter(api_key="x", base_url="https://x")
-    result = adapter.extract_result(
-        {"image_url": "https://r/a.jpg", "id": "prov-7"},
-        image_bytes=_jpeg_bytes(),
-        content_type="image/jpeg",
+    assert (
+        adapter.extract_run_id({"id": "pred-42", "error": None}) == "pred-42"
     )
-    assert result.image_url == "https://r/a.jpg"
-    assert result.provider_job_id == "prov-7"
 
 
-def test_extract_result_supports_shape_b_output_object():
-    adapter = FashnAdapter(api_key="x", base_url="https://x")
-    result = adapter.extract_result(
-        {"output": {"image_url": "https://r/b.jpg", "id": "prov-8"}},
-        image_bytes=_jpeg_bytes(),
-        content_type="image/jpeg",
-    )
-    assert result.image_url == "https://r/b.jpg"
-    assert result.provider_job_id == "prov-8"
-
-
-def test_extract_result_rejects_unknown_shape():
+def test_extract_run_id_rejects_non_dict_response():
     adapter = FashnAdapter(api_key="x", base_url="https://x")
     with pytest.raises(FashnResponseError):
-        adapter.extract_result(
-            {"images": ["https://r/c.jpg"]},
-            image_bytes=_jpeg_bytes(),
-            content_type="image/jpeg",
+        adapter.extract_run_id(["not", "a", "dict"])  # type: ignore[arg-type]
+
+
+def test_extract_run_id_rejects_missing_id():
+    adapter = FashnAdapter(api_key="x", base_url="https://x")
+    with pytest.raises(FashnResponseError):
+        adapter.extract_run_id({"error": None})
+    with pytest.raises(FashnResponseError):
+        adapter.extract_run_id({"id": "", "error": None})
+
+
+def test_extract_run_id_rejects_non_null_error_field():
+    adapter = FashnAdapter(api_key="x", base_url="https://x")
+    with pytest.raises(FashnResponseError):
+        adapter.extract_run_id(
+            {"id": "pred-1", "error": "quota exceeded"}
         )
 
 
-def test_extract_result_rejects_non_dict_response():
+def test_extract_status_payload_completed_with_output_urls():
+    adapter = FashnAdapter(api_key="x", base_url="https://x")
+    payload = adapter.extract_status_payload(
+        {
+            "id": "pred-7",
+            "status": "completed",
+            "output": ["https://cdn.fashn.ai/x/0.png"],
+            "error": None,
+        }
+    )
+    assert payload.status == "completed"
+    assert payload.output_urls == ("https://cdn.fashn.ai/x/0.png",)
+    assert payload.error_message is None
+
+
+def test_extract_status_payload_in_progress_with_null_output():
+    adapter = FashnAdapter(api_key="x", base_url="https://x")
+    payload = adapter.extract_status_payload(
+        {"id": "pred-7", "status": "processing", "output": None, "error": None}
+    )
+    assert payload.status == "processing"
+    assert payload.output_urls == ()
+    assert payload.error_message is None
+
+
+def test_extract_status_payload_failed_surfaces_error_object():
+    adapter = FashnAdapter(api_key="x", base_url="https://x")
+    payload = adapter.extract_status_payload(
+        {
+            "id": "pred-7",
+            "status": "failed",
+            "output": None,
+            "error": {"name": "ModelError", "message": "face not detected"},
+        }
+    )
+    assert payload.status == "failed"
+    assert payload.output_urls == ()
+    assert payload.error_message == "ModelError: face not detected"
+
+
+def test_extract_status_payload_rejects_non_dict_response():
     adapter = FashnAdapter(api_key="x", base_url="https://x")
     with pytest.raises(FashnResponseError):
-        adapter.extract_result(
-            ["not", "a", "dict"],  # type: ignore[arg-type]
-            image_bytes=_jpeg_bytes(),
-            content_type="image/jpeg",
+        adapter.extract_status_payload(
+            ["not", "a", "dict"]  # type: ignore[arg-type]
         )
 
 
-def test_extract_result_rejects_empty_image_url():
+def test_extract_status_payload_rejects_missing_status():
     adapter = FashnAdapter(api_key="x", base_url="https://x")
     with pytest.raises(FashnResponseError):
-        adapter.extract_result(
-            {"image_url": ""},
-            image_bytes=_jpeg_bytes(),
-            content_type="image/jpeg",
+        adapter.extract_status_payload({"id": "pred-1", "output": None})
+
+
+def test_extract_status_payload_rejects_non_list_output():
+    adapter = FashnAdapter(api_key="x", base_url="https://x")
+    with pytest.raises(FashnResponseError):
+        adapter.extract_status_payload(
+            {"id": "x", "status": "completed", "output": "not-a-list"}
         )

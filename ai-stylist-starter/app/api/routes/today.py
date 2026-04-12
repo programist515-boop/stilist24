@@ -3,12 +3,13 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_user_id, get_db
+from app.schemas.today import TodayResponse
 from app.services.today_service import TodayService
 
 router = APIRouter()
 
 
-@router.get("")
+@router.get("", response_model=TodayResponse)
 def get_today(
     weather: str | None = None,
     occasion: str | None = None,
