@@ -249,11 +249,23 @@ def default_feature_extractor(
 ) -> dict[str, float]:
     """Module-level entry point matching the service's seam signature.
 
+    Tries the real CV extractor first (MediaPipe Pose + FaceMesh).
+    Falls back to the deterministic ``StructuredFeatureExtractor`` if
+    the CV path raises for any reason (missing dependency, decode
+    failure, no landmarks, etc.).
+
     ``UserAnalysisService`` uses this as the default implementation of
     its ``feature_extractor`` seam. Tests can still inject any other
     callable with the same signature to stub the behaviour.
     """
-    return StructuredFeatureExtractor(user_id=user_id, photos=photos).extract()
+    try:
+        from app.services.cv_feature_extractor import cv_feature_extractor
+
+        return cv_feature_extractor(user_id, photos)
+    except Exception:
+        return StructuredFeatureExtractor(
+            user_id=user_id, photos=photos
+        ).extract()
 
 
 __all__ = [

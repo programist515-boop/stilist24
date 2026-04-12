@@ -73,6 +73,10 @@ redis_data/
 *.log
 logs/
 
+# --- MediaPipe model files (large binaries, downloaded at build time) ------
+*.task
+*.tflite
+
 # --- Local secrets / credentials (defense in depth) ------------------------
 *.pem
 *.key

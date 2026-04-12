@@ -8,3 +8,6 @@ COPY pyproject.toml /app/pyproject.toml
 RUN pip install --upgrade pip && pip install .
 
 COPY . /app
+
+# Download MediaPipe model files (pose + face landmarkers)
+RUN python scripts/download_models.py

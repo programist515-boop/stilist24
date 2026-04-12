@@ -182,9 +182,45 @@ def test_jitter_uses_blake2b_not_python_hash() -> None:
 # ---------------------------------------------------------------- seam entry point
 
 
-def test_default_feature_extractor_matches_class() -> None:
-    """Module-level ``default_feature_extractor`` must equal the class output."""
+def test_default_feature_extractor_returns_valid_schema() -> None:
+    """Module-level ``default_feature_extractor`` must return a valid 20-key vector.
+
+    Since STEP 14 the default seam tries the CV extractor first and falls
+    back to ``StructuredFeatureExtractor``. In test environments without
+    storage the CV path degrades gracefully (all slots → None), so the
+    result may differ from ``StructuredFeatureExtractor``. We only assert
+    schema validity and value range here — the CV-specific behaviour is
+    covered in ``test_cv_feature_extractor.py``.
+    """
     refs = _three_refs()
+    result = default_feature_extractor(USER_A, refs)
+    assert frozenset(result.keys()) == SCHEMA_KEYS
+    assert len(result) == 20
+    for key, val in result.items():
+        assert 0.0 <= val <= 1.0, f"{key}={val} outside [0,1]"
+
+
+def test_default_feature_extractor_falls_back_on_cv_import_error(
+    monkeypatch,
+) -> None:
+    """If the CV extractor import explodes, the fallback must produce
+    the same output as ``StructuredFeatureExtractor``.
+    """
+    import app.services.feature_extractor as mod
+
+    # Patch the import so cv_feature_extractor cannot be imported
+    import builtins
+
+    _real_import = builtins.__import__
+
+    def _block_cv(name, *args, **kwargs):
+        if "cv_feature_extractor" in name:
+            raise ImportError("blocked by test")
+        return _real_import(name, *args, **kwargs)
+
+    monkeypatch.setattr(builtins, "__import__", _block_cv)
+
+    refs = _three_refs()
+    via_fallback = default_feature_extractor(USER_A, refs)
     via_class = _extract(USER_A, refs)
-    via_entry = default_feature_extractor(USER_A, refs)
-    assert via_class == via_entry
+    assert via_fallback == via_class
