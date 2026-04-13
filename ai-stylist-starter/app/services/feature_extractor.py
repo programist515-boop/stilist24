@@ -40,9 +40,13 @@ What this module is NOT
 from __future__ import annotations
 
 import hashlib
+import json
+import logging
 import uuid
 from dataclasses import dataclass
 from typing import ClassVar
+
+logger = logging.getLogger(__name__)
 
 
 # ---------------------------------------------------------------- schema
@@ -240,6 +244,27 @@ class StructuredFeatureExtractor:
         return features
 
 
+# ---------------------------------------------------------------- diagnostics
+
+
+def feature_vector_fingerprint(features: dict[str, float]) -> str:
+    """Deterministic short hash of a feature vector.
+
+    Two identical vectors produce the same 12-char hex string.
+    Different vectors (even a single 0.001 change) produce different hashes.
+    Safe to log — contains no PII, just a structural fingerprint.
+    """
+    canonical = json.dumps(
+        {k: round(v, 6) for k, v in sorted(features.items())},
+        sort_keys=True,
+    )
+    return hashlib.sha256(canonical.encode()).hexdigest()[:12]
+
+
+# Pre-compute the BASELINE fingerprint so we can detect "all-baseline" vectors.
+_BASELINE_FINGERPRINT: str = feature_vector_fingerprint(BASELINE)
+
+
 # ---------------------------------------------------------------- default seam
 
 
@@ -258,14 +283,32 @@ def default_feature_extractor(
     its ``feature_extractor`` seam. Tests can still inject any other
     callable with the same signature to stub the behaviour.
     """
+    logger.info("feature_extractor: trying CVFeatureExtractor for user=%s", user_id)
     try:
         from app.services.cv_feature_extractor import cv_feature_extractor
 
-        return cv_feature_extractor(user_id, photos)
-    except Exception:
-        return StructuredFeatureExtractor(
+        result = cv_feature_extractor(user_id, photos)
+        fp = feature_vector_fingerprint(result)
+        logger.info(
+            "feature_extractor: source=cv_extractor fp=%s user=%s",
+            fp, user_id,
+        )
+        return result
+    except Exception as exc:
+        logger.warning(
+            "feature_extractor: CV failed (%s: %s), "
+            "falling back to StructuredFeatureExtractor user=%s",
+            type(exc).__name__, exc, user_id,
+        )
+        result = StructuredFeatureExtractor(
             user_id=user_id, photos=photos
         ).extract()
+        fp = feature_vector_fingerprint(result)
+        logger.info(
+            "feature_extractor: source=structured_fallback fp=%s user=%s",
+            fp, user_id,
+        )
+        return result
 
 
 __all__ = [
@@ -274,4 +317,5 @@ __all__ = [
     "SCHEMA_KEYS",
     "StructuredFeatureExtractor",
     "default_feature_extractor",
+    "feature_vector_fingerprint",
 ]

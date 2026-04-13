@@ -69,6 +69,17 @@ from app.services.feature_extractor import BASELINE, SCHEMA_KEYS, PhotoReference
 
 logger = logging.getLogger(__name__)
 
+
+class CVExtractionFailedError(Exception):
+    """Raised when CVFeatureExtractor cannot extract any usable metrics.
+
+    All three slots (front/side/portrait) returned None — either because
+    images could not be fetched/decoded, or because MediaPipe found no
+    landmarks in any of them.  The caller should fall back to an
+    alternative extractor.
+    """
+
+
 # ---------------------------------------------------------------- model paths
 
 _MODELS_DIR = Path(__file__).resolve().parent.parent.parent / "models"
@@ -128,17 +139,33 @@ def _load_image_from_bytes(data: bytes):
 
 def _fetch_image_bytes(photo: PhotoReference) -> bytes | None:
     """Fetch photo bytes from storage.  Returns None on failure."""
+    logger.info(
+        "cv_fetch: attempting slot=%s key=%s",
+        photo.slot, photo.image_key,
+    )
     try:
         from app.core.storage import StorageService
 
         storage = StorageService()
         result = storage.get_object(photo.image_key)
         if result is None:
-            logger.warning("cv_extractor: image not found for key %s", photo.image_key)
+            logger.warning(
+                "cv_fetch: MISS slot=%s key=%s (get_object returned None — "
+                "key does not exist in storage)",
+                photo.slot, photo.image_key,
+            )
             return None
-        return result[0]
+        data = result[0]
+        logger.info(
+            "cv_fetch: OK slot=%s key=%s size=%d bytes",
+            photo.slot, photo.image_key, len(data),
+        )
+        return data
     except Exception as exc:
-        logger.warning("cv_extractor: failed to fetch %s: %s", photo.image_key, exc)
+        logger.warning(
+            "cv_fetch: FAIL slot=%s key=%s error=%s: %s",
+            photo.slot, photo.image_key, type(exc).__name__, exc,
+        )
         return None
 
 
@@ -155,7 +182,10 @@ def _analyze_pose(image_rgb) -> dict[str, float] | None:
     import numpy as np
 
     if not _POSE_MODEL.exists():
-        logger.warning("cv_extractor: pose model not found at %s", _POSE_MODEL)
+        logger.warning(
+            "cv_pose: MODEL NOT FOUND path=%s models_dir_exists=%s",
+            _POSE_MODEL, _MODELS_DIR.exists(),
+        )
         return None
 
     landmarker = None
@@ -169,21 +199,41 @@ def _analyze_pose(image_rgb) -> dict[str, float] | None:
             min_pose_detection_confidence=0.5,
         )
         landmarker = mp.tasks.vision.PoseLandmarker.create_from_options(options)
+        logger.info("cv_pose: model loaded OK path=%s", _POSE_MODEL)
 
+        img_arr = np.asarray(image_rgb)
+        logger.info(
+            "cv_pose: image shape=%s dtype=%s",
+            img_arr.shape, img_arr.dtype,
+        )
         mp_image = mp.Image(
             image_format=mp.ImageFormat.SRGB,
-            data=np.asarray(image_rgb),
+            data=img_arr,
         )
         result = landmarker.detect(mp_image)
 
-        if not result.pose_landmarks or len(result.pose_landmarks) == 0:
+        n_poses = len(result.pose_landmarks) if result.pose_landmarks else 0
+        if n_poses == 0:
+            logger.warning("cv_pose: DETECTION EMPTY — 0 poses found in image")
             return None
 
-        # First detected pose — list of NormalizedLandmark objects
         lm = result.pose_landmarks[0]
-        return _compute_body_metrics(lm)
+        n_landmarks = len(lm)
+        logger.info("cv_pose: DETECTED poses=%d landmarks=%d", n_poses, n_landmarks)
+
+        metrics = _compute_body_metrics(lm)
+        logger.info(
+            "cv_pose: metrics keys=%s sample={vertical_line=%.3f, width=%.3f, symmetry=%.3f}",
+            sorted(metrics.keys())[:5],
+            metrics.get("vertical_line", -1),
+            metrics.get("width", -1),
+            metrics.get("symmetry", -1),
+        )
+        return metrics
     except Exception as exc:
-        logger.warning("cv_extractor: pose analysis failed: %s", exc)
+        logger.warning(
+            "cv_pose: EXCEPTION %s: %s", type(exc).__name__, exc,
+        )
         return None
     finally:
         if landmarker is not None:
@@ -340,7 +390,10 @@ def _analyze_face(image_rgb) -> dict[str, float] | None:
     import numpy as np
 
     if not _FACE_MODEL.exists():
-        logger.warning("cv_extractor: face model not found at %s", _FACE_MODEL)
+        logger.warning(
+            "cv_face: MODEL NOT FOUND path=%s models_dir_exists=%s",
+            _FACE_MODEL, _MODELS_DIR.exists(),
+        )
         return None
 
     landmarker = None
@@ -354,21 +407,39 @@ def _analyze_face(image_rgb) -> dict[str, float] | None:
             min_face_detection_confidence=0.5,
         )
         landmarker = mp.tasks.vision.FaceLandmarker.create_from_options(options)
+        logger.info("cv_face: model loaded OK path=%s", _FACE_MODEL)
 
+        img_arr = np.asarray(image_rgb)
+        logger.info(
+            "cv_face: image shape=%s dtype=%s",
+            img_arr.shape, img_arr.dtype,
+        )
         mp_image = mp.Image(
             image_format=mp.ImageFormat.SRGB,
-            data=np.asarray(image_rgb),
+            data=img_arr,
         )
         result = landmarker.detect(mp_image)
 
-        if not result.face_landmarks or len(result.face_landmarks) == 0:
+        n_faces = len(result.face_landmarks) if result.face_landmarks else 0
+        if n_faces == 0:
+            logger.warning("cv_face: DETECTION EMPTY — 0 faces found in image")
             return None
 
-        # First detected face — list of NormalizedLandmark objects
         lm = result.face_landmarks[0]
-        return _compute_face_metrics(lm)
+        n_landmarks = len(lm)
+        logger.info("cv_face: DETECTED faces=%d landmarks=%d", n_faces, n_landmarks)
+
+        metrics = _compute_face_metrics(lm)
+        logger.info(
+            "cv_face: metrics roundness=%.3f sharpness=%.3f",
+            metrics.get("facial_roundness", -1),
+            metrics.get("facial_sharpness", -1),
+        )
+        return metrics
     except Exception as exc:
-        logger.warning("cv_extractor: face analysis failed: %s", exc)
+        logger.warning(
+            "cv_face: EXCEPTION %s: %s", type(exc).__name__, exc,
+        )
         return None
     finally:
         if landmarker is not None:
@@ -553,20 +624,45 @@ class CVFeatureExtractor:
         if "portrait" in photos_by_slot:
             face = self._process_face(photos_by_slot["portrait"])
 
+        all_none = body_front is None and body_side is None and face is None
+        if all_none:
+            logger.warning(
+                "cv_extractor: ALL SLOTS FAILED — no usable metrics. "
+                "slots=%s. Check cv_fetch / cv_pose / cv_face logs above.",
+                sorted(photos_by_slot.keys()),
+            )
+            raise CVExtractionFailedError(
+                "CV extraction produced no usable metrics from any slot"
+            )
+
+        logger.info(
+            "cv_extractor: slot_results front=%s side=%s portrait=%s",
+            "OK(%d keys)" % len(body_front) if body_front else "NONE",
+            "OK(%d keys)" % len(body_side) if body_side else "NONE",
+            "OK(%d keys)" % len(face) if face else "NONE",
+        )
         return _merge_metrics(body_front, body_side, face)
 
     def _load_image(self, photo: PhotoReference):
         """Fetch + decode one photo.  Returns numpy RGB array or None."""
         data = self._image_fetcher(photo)
         if data is None:
+            logger.warning(
+                "cv_load: slot=%s — fetch returned None, skipping",
+                photo.slot,
+            )
             return None
         try:
-            return _load_image_from_bytes(data)
+            image = _load_image_from_bytes(data)
+            logger.info(
+                "cv_load: slot=%s decoded OK shape=%s",
+                photo.slot, image.shape,
+            )
+            return image
         except Exception as exc:
             logger.warning(
-                "cv_extractor: failed to decode image %s: %s",
-                photo.image_key,
-                exc,
+                "cv_load: slot=%s DECODE FAILED key=%s error=%s: %s",
+                photo.slot, photo.image_key, type(exc).__name__, exc,
             )
             return None
 
@@ -596,6 +692,7 @@ def cv_feature_extractor(
 
 
 __all__ = [
+    "CVExtractionFailedError",
     "CVFeatureExtractor",
     "cv_feature_extractor",
 ]

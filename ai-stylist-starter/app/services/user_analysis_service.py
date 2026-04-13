@@ -11,10 +11,13 @@ Pipeline (synchronous):
       and matches the DB row).
    b. Upload the bytes through :class:`StorageService.upload_user_photo`.
    c. Persist a ``UserPhoto`` row via :class:`UserPhotoRepository.create`.
-3. Compute the feature vector (currently a static stub — see
-   :func:`_stub_features`; real CV lives in a later step).
-4. Run :class:`IdentityEngine` and :class:`ColorEngine` on the feature
-   vector and a hardcoded color-axes dict (also stubbed).
+3. Compute the feature vector via the extractor seam (CV → structured
+   fallback → emergency stub).
+4. Run :class:`IdentityEngine` on the feature vector.  Extract colour
+   axes from photos via ``color_feature_extractor`` (real pixel-based
+   analysis); fall back to ``_derive_color_axes`` (heuristic bridge)
+   if photo extraction fails.  Feed axes into :class:`ColorEngine`.
+   Derive ``style_vector`` from the identity engine's family scores.
 5. Return a response with ``kibbe``, ``color``, ``style_vector``,
    ``analyzed_at``, and ``photos`` (always in canonical slot order).
 
@@ -41,6 +44,7 @@ without it.
 
 from __future__ import annotations
 
+import logging
 import uuid
 from dataclasses import dataclass
 from datetime import datetime, timezone
@@ -55,8 +59,11 @@ from app.services.color_engine import ColorEngine
 from app.services.feature_extractor import (
     PhotoReference,
     default_feature_extractor,
+    feature_vector_fingerprint,
 )
 from app.services.identity_engine import IdentityEngine
+
+logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:  # pragma: no cover - typing only
     from sqlalchemy.orm import Session
@@ -150,7 +157,7 @@ def _stub_features() -> dict[str, float]:
 
 
 def _stub_color_axes() -> dict[str, str]:
-    """Return the hardcoded color axes used until CV lands."""
+    """Emergency fallback color axes when nothing better is available."""
     return {
         "undertone": "cool-neutral",
         "contrast": "medium-low",
@@ -160,8 +167,102 @@ def _stub_color_axes() -> dict[str, str]:
 
 
 def _stub_style_vector() -> dict[str, float]:
-    """Return the hardcoded style vector used until CV lands."""
+    """Emergency fallback style vector when nothing better is available."""
     return {"classic": 0.4, "romantic": 0.35, "natural": 0.25}
+
+
+# ---------------------------------------------------------------- feature-derived helpers
+
+
+def _derive_color_axes(features: dict[str, float]) -> dict[str, str]:
+    """FALLBACK HEURISTIC BRIDGE — used when photo-based color extraction fails.
+
+    Maps geometric body features to colour-axis labels so that different
+    feature vectors at least produce different ``ColorEngine`` outputs.
+    The mapping is purely arithmetic (softness → chroma, line_contrast →
+    contrast, etc.) and has **no access to pixel-level skin, hair, or eye
+    colour data**.
+
+    This is NOT real colour detection.  The primary path is now
+    ``color_feature_extractor.extract_color_axes()`` which reads actual
+    photo pixels.  This function is the second-level fallback when the
+    photo-based pipeline fails (no face detected, bad image, etc.).
+
+    The output feeds into ``ColorEngine.analyze()`` which maps axes to
+    colour seasons via ``season_families.yaml``.
+    """
+    softness = features.get("softness", 0.5)
+    bone_sharpness = features.get("bone_sharpness", 0.5)
+    line_contrast = features.get("line_contrast", 0.5)
+    facial_roundness = features.get("facial_roundness", 0.5)
+
+    # undertone: soft + round → warm; sharp + angular → cool
+    warmth = (softness + facial_roundness) / 2.0
+    if warmth > 0.6:
+        undertone = "warm" if warmth > 0.75 else "neutral-warm"
+    elif warmth < 0.4:
+        undertone = "cool" if warmth < 0.25 else "cool-neutral"
+    else:
+        undertone = "neutral-warm" if warmth >= 0.5 else "cool-neutral"
+
+    # contrast: line_contrast maps directly
+    if line_contrast > 0.65:
+        contrast = "high" if line_contrast > 0.8 else "medium-high"
+    elif line_contrast < 0.35:
+        contrast = "low" if line_contrast < 0.2 else "medium-low"
+    else:
+        contrast = "medium"
+
+    # depth: bone_sharpness as proxy (sharp → deep, blunt → light)
+    if bone_sharpness > 0.6:
+        depth = "deep" if bone_sharpness > 0.75 else "medium-deep"
+    elif bone_sharpness < 0.4:
+        depth = "light" if bone_sharpness < 0.25 else "medium-light"
+    else:
+        depth = "medium"
+
+    # chroma: inverse of softness (soft features → soft chroma)
+    if softness > 0.6:
+        chroma = "soft" if softness > 0.75 else "medium-soft"
+    elif softness < 0.4:
+        chroma = "bright" if softness < 0.25 else "medium-bright"
+    else:
+        chroma = "medium-soft" if softness >= 0.5 else "medium-bright"
+
+    return {
+        "undertone": undertone,
+        "contrast": contrast,
+        "depth": depth,
+        "chroma": chroma,
+    }
+
+
+def _derive_style_vector(
+    family_scores: dict[str, float],
+) -> dict[str, float]:
+    """Derive initial style vector from kibbe family scores.
+
+    Uses the already-computed ``IdentityEngine.family_scores`` as a
+    natural basis: each kibbe family maps to a dominant style tag.
+    The result is normalised so weights sum to 1.0.
+
+    Downstream services (``ScoringService``, ``TodayService``,
+    ``PersonalizationService``) consume the same tag→weight dict,
+    so this slots in without API changes.
+
+    Tag names match the 5 kibbe families which are already the keys
+    used in ``garment_line_rules.yaml`` and ``recommendation_guides.yaml``.
+    """
+    if not family_scores:
+        return _stub_style_vector()
+
+    total = sum(family_scores.values()) or 1.0
+    return {
+        family: round(score / total, 3)
+        for family, score in sorted(
+            family_scores.items(), key=lambda kv: kv[1], reverse=True
+        )
+    }
 
 
 # ---------------------------------------------------------------- service
@@ -246,8 +347,18 @@ class UserAnalysisService:
         """
         extractor = self._feature_extractor or default_feature_extractor
         try:
-            return extractor(user_id, photos)
-        except Exception:
+            result = extractor(user_id, photos)
+            fp = feature_vector_fingerprint(result)
+            logger.info(
+                "user_analysis: extractor OK user=%s fp=%s",
+                user_id, fp,
+            )
+            return result
+        except Exception as exc:
+            logger.warning(
+                "user_analysis: extractor EXCEPTION user=%s error=%s: %s — using _stub_features()",
+                user_id, type(exc).__name__, exc,
+            )
             return _stub_features()
 
     def _get_identity_engine(self) -> IdentityEngine:
@@ -259,6 +370,51 @@ class UserAnalysisService:
         if self._color_engine is not None:
             return self._color_engine
         return ColorEngine()
+
+    def _get_color_axes(
+        self,
+        user_id: uuid.UUID,
+        photos: list[PhotoReference],
+        features: dict[str, float],
+    ) -> dict[str, str]:
+        """Resolve colour axes for ColorEngine.
+
+        Primary path: real photo-based extraction via
+        ``color_feature_extractor()`` — reads actual pixel data from
+        the user's portrait / front photos.
+
+        Fallback: ``_derive_color_axes(features)`` — a heuristic bridge
+        that derives colour from geometric body features.  Not real
+        colour detection.  Used when the photo-based pipeline fails
+        (no face, bad image, missing dependency, etc.).
+        """
+        try:
+            from app.services.color_feature_extractor import (
+                ColorExtractionFailedError,
+                color_feature_extractor,
+            )
+
+            axes = color_feature_extractor(user_id, photos)
+            logger.info(
+                "user_analysis: color_axes source=photo_extractor "
+                "user=%s axes=%s",
+                user_id, axes,
+            )
+            return axes
+
+        except Exception as exc:
+            logger.warning(
+                "user_analysis: color_axes photo extractor failed, "
+                "falling back to heuristic bridge user=%s error=%r",
+                user_id, exc,
+            )
+            axes = _derive_color_axes(features)
+            logger.info(
+                "user_analysis: color_axes source=heuristic_fallback "
+                "user=%s axes=%s",
+                user_id, axes,
+            )
+            return axes
 
     def _get_now(self) -> datetime:
         if self._now is not None:
@@ -424,9 +580,27 @@ class UserAnalysisService:
         ]
 
         features = self._get_features(user_id, photo_refs)
+        fp = feature_vector_fingerprint(features)
+
         identity = self._get_identity_engine().analyze(features)
-        color = self._get_color_engine().analyze(_stub_color_axes())
-        style_vector = _stub_style_vector()
+        # Photo-based colour extraction with heuristic fallback.
+        color_axes = self._get_color_axes(user_id, photo_refs, features)
+        color = self._get_color_engine().analyze(color_axes)
+        style_vector = _derive_style_vector(
+            identity.get("family_scores", {}),
+        )
+
+        logger.info(
+            "user_analysis: RESULT user=%s features_fp=%s "
+            "kibbe=%s confidence=%s color_axes=%s color_season=%s style_vector=%s",
+            user_id,
+            fp,
+            identity.get("main_type"),
+            identity.get("confidence"),
+            color_axes,
+            color.get("season_top_1"),
+            style_vector,
+        )
 
         # Persist the computed analysis into ``style_profiles`` so
         # downstream features (Recommendations, Today, Insights) can
@@ -437,6 +611,11 @@ class UserAnalysisService:
             kibbe_confidence=identity.get("confidence"),
             color_profile=color,
             style_vector=style_vector,
+        )
+        logger.info(
+            "user_analysis: style_profile persisted user=%s kibbe=%s",
+            user_id,
+            identity.get("main_type"),
         )
 
         return {

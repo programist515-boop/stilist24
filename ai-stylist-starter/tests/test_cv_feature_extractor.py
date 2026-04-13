@@ -18,9 +18,11 @@ import io
 import uuid
 
 import numpy as np
+import pytest
 from PIL import Image
 
 from app.services.cv_feature_extractor import (
+    CVExtractionFailedError,
     CVFeatureExtractor,
     _clamp01,
     _merge_metrics,
@@ -188,43 +190,21 @@ class TestMergeMetrics:
 class TestCVFeatureExtractorWithSyntheticImages:
     """Test CVFeatureExtractor with synthetic JPEG images.
 
-    MediaPipe may or may not detect a person in a plain-color image,
-    but the extractor must always return a valid 20-key vector regardless.
+    Plain-colour images contain no person, so MediaPipe detects 0
+    landmarks in every slot.  Since the fix for silent BASELINE
+    fallback, this now raises ``CVExtractionFailedError``.
     """
 
-    def test_returns_20_key_schema(self) -> None:
+    def test_all_blank_images_raise(self) -> None:
+        """Blank images → 0 landmarks → all slots None → exception."""
         data = _make_jpeg()
         fetcher = _make_fetcher({"front": data, "side": data, "portrait": data})
         ext = CVFeatureExtractor(image_fetcher=fetcher)
-        result = ext.extract(USER_A, _three_refs())
-        assert frozenset(result.keys()) == SCHEMA_KEYS
-        assert len(result) == 20
+        with pytest.raises(CVExtractionFailedError):
+            ext.extract(USER_A, _three_refs())
 
-    def test_all_values_in_unit_interval(self) -> None:
-        data = _make_jpeg()
-        fetcher = _make_fetcher({"front": data, "side": data, "portrait": data})
-        ext = CVFeatureExtractor(image_fetcher=fetcher)
-        result = ext.extract(USER_A, _three_refs())
-        for key, val in result.items():
-            assert isinstance(val, float), f"{key} is {type(val).__name__}"
-            assert 0.0 <= val <= 1.0, f"{key}={val} outside [0,1]"
-
-    def test_deterministic_output(self) -> None:
-        data = _make_jpeg()
-        fetcher = _make_fetcher({"front": data, "side": data, "portrait": data})
-        ext = CVFeatureExtractor(image_fetcher=fetcher)
-        refs = _three_refs()
-        a = ext.extract(USER_A, refs)
-        b = ext.extract(USER_A, refs)
-        assert a == b
-
-    def test_different_images_may_differ(self) -> None:
-        """Different colored images fed to the extractor.
-
-        Even if MediaPipe doesn't detect a person in either, the test
-        validates the pipeline runs without errors. If it does detect
-        landmarks in one but not the other, vectors will differ.
-        """
+    def test_different_blank_images_both_raise(self) -> None:
+        """Different coloured blanks both fail — neither has a person."""
         red = _make_jpeg(color=(255, 0, 0))
         blue = _make_jpeg(color=(0, 0, 255))
         refs = _three_refs()
@@ -235,61 +215,58 @@ class TestCVFeatureExtractorWithSyntheticImages:
         ext_blue = CVFeatureExtractor(
             image_fetcher=_make_fetcher({"front": blue, "side": blue, "portrait": blue})
         )
-        result_red = ext_red.extract(USER_A, refs)
-        result_blue = ext_blue.extract(USER_A, refs)
-        # Both must be valid
-        assert frozenset(result_red.keys()) == SCHEMA_KEYS
-        assert frozenset(result_blue.keys()) == SCHEMA_KEYS
+        with pytest.raises(CVExtractionFailedError):
+            ext_red.extract(USER_A, refs)
+        with pytest.raises(CVExtractionFailedError):
+            ext_blue.extract(USER_A, refs)
 
 
 class TestCVFeatureExtractorFailureFallback:
-    """When image fetching fails, the extractor gracefully degrades."""
+    """When all slots produce None, CVExtractionFailedError is raised."""
 
-    def test_all_fetches_fail_returns_baseline_derived(self) -> None:
+    def test_all_fetches_fail_raises(self) -> None:
         ext = CVFeatureExtractor(image_fetcher=_failing_fetcher)
-        result = ext.extract(USER_A, _three_refs())
-        assert frozenset(result.keys()) == SCHEMA_KEYS
-        # Should be equivalent to _merge_metrics(None, None, None)
-        expected = _merge_metrics(None, None, None)
-        assert result == expected
+        with pytest.raises(CVExtractionFailedError):
+            ext.extract(USER_A, _three_refs())
 
     def test_partial_fetch_failure_still_valid(self) -> None:
-        """If only one slot's image loads, the output is still valid."""
+        """If only one slot's image loads but MediaPipe finds nothing,
+        the result depends on whether that slot yielded metrics.
+        With blank images, pose detection returns None so all slots fail.
+        """
         data = _make_jpeg()
         fetcher = _make_fetcher({"front": data, "side": None, "portrait": None})
         ext = CVFeatureExtractor(image_fetcher=fetcher)
-        result = ext.extract(USER_A, _three_refs())
-        assert frozenset(result.keys()) == SCHEMA_KEYS
-        for val in result.values():
-            assert 0.0 <= val <= 1.0
+        # Blank image → 0 landmarks → front also None → all-None → raises
+        with pytest.raises(CVExtractionFailedError):
+            ext.extract(USER_A, _three_refs())
 
-    def test_corrupt_image_bytes_handled(self) -> None:
-        """Corrupt bytes should not crash — extractor degrades gracefully."""
+    def test_corrupt_image_bytes_raise(self) -> None:
+        """Corrupt bytes → decode fails → all slots None → raises."""
         fetcher = _make_fetcher({
             "front": b"not-a-jpeg",
             "side": b"also-not-valid",
             "portrait": b"\x00\x01\x02",
         })
         ext = CVFeatureExtractor(image_fetcher=fetcher)
-        result = ext.extract(USER_A, _three_refs())
-        assert frozenset(result.keys()) == SCHEMA_KEYS
+        with pytest.raises(CVExtractionFailedError):
+            ext.extract(USER_A, _three_refs())
 
-    def test_empty_photo_list(self) -> None:
+    def test_empty_photo_list_raises(self) -> None:
         ext = CVFeatureExtractor(image_fetcher=_failing_fetcher)
-        result = ext.extract(USER_A, [])
-        assert frozenset(result.keys()) == SCHEMA_KEYS
+        with pytest.raises(CVExtractionFailedError):
+            ext.extract(USER_A, [])
 
 
 # ================================================================ module-level entry point
 
 
 class TestModuleEntryPoint:
-    def test_cv_feature_extractor_callable(self) -> None:
-        """The module-level ``cv_feature_extractor`` function works
-        with a custom image_fetcher via the class."""
+    def test_cv_feature_extractor_raises_on_blank_images(self) -> None:
+        """Module-level ``cv_feature_extractor`` also raises when all
+        slots fail (blank images → 0 landmarks)."""
         data = _make_jpeg()
         fetcher = _make_fetcher({"front": data, "side": data, "portrait": data})
         ext = CVFeatureExtractor(image_fetcher=fetcher)
-        result = ext.extract(USER_A, _three_refs())
-        assert frozenset(result.keys()) == SCHEMA_KEYS
-        assert all(0.0 <= v <= 1.0 for v in result.values())
+        with pytest.raises(CVExtractionFailedError):
+            ext.extract(USER_A, _three_refs())
