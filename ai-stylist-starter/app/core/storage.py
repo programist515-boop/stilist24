@@ -50,12 +50,14 @@ class _DefaultSettings:
         "image/jpeg",
         "image/png",
         "image/webp",
+        "image/avif",
     )
     storage_allowed_ext: tuple[str, ...] = (
         ".jpg",
         ".jpeg",
         ".png",
         ".webp",
+        ".avif",
     )
 
 
@@ -132,6 +134,7 @@ _MIME_TO_EXT: dict[str, str] = {
     "image/jpeg": ".jpg",
     "image/png": ".png",
     "image/webp": ".webp",
+    "image/avif": ".avif",
 }
 
 # Minimal magic-byte prefixes for the three formats we accept.
@@ -140,6 +143,10 @@ _MAGIC_PREFIXES: tuple[tuple[str, bytes], ...] = (
     ("image/png", b"\x89PNG\r\n\x1a\n"),
     # WEBP files start with "RIFF....WEBP"
     ("image/webp", b"RIFF"),
+    # AVIF: ISOBMFF container — first 4 bytes are box size (variable),
+    # bytes 4-8 must be "ftyp".  We use a dummy prefix and rely on the
+    # secondary check below.
+    ("image/avif", b""),
 )
 
 
@@ -196,14 +203,14 @@ def _check_filename_extension(
 
 
 def _check_magic_bytes(data: bytes, content_type: str) -> None:
-    """Minimal format sniffing — JPEG / PNG / WEBP only.
+    """Minimal format sniffing — JPEG / PNG / WEBP / AVIF.
 
     We only check short prefixes. This catches renamed executables and
     mismatched mime/body pairs without turning into a full parser.
     """
     for mime, prefix in _MAGIC_PREFIXES:
         if mime == content_type:
-            if not data.startswith(prefix):
+            if prefix and not data.startswith(prefix):
                 raise StorageValidationError(
                     f"file body does not match declared content-type {content_type!r}"
                 )
@@ -212,6 +219,12 @@ def _check_magic_bytes(data: bytes, content_type: str) -> None:
                 if len(data) < 12 or data[8:12] != b"WEBP":
                     raise StorageValidationError(
                         "file body is not a valid WEBP image"
+                    )
+            if mime == "image/avif":
+                # AVIF is an ISOBMFF container: bytes 4–8 must be "ftyp".
+                if len(data) < 12 or data[4:8] != b"ftyp":
+                    raise StorageValidationError(
+                        "file body is not a valid AVIF image"
                     )
             return
     # Unknown mime should have been rejected earlier; be defensive.
