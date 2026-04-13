@@ -8,7 +8,7 @@ WORKDIR /app
 # that opencv-contrib-python (pulled by mediapipe) needs at import time.
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
-        libglib2.0-0 libgl1 libsm6 libxext6 libxrender1 \
+        libglib2.0-0 libgl1 libgles2 libegl1 libsm6 libxext6 libxrender1 \
     && rm -rf /var/lib/apt/lists/*
 
 COPY pyproject.toml /app/pyproject.toml
