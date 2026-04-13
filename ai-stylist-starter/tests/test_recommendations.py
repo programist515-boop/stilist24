@@ -13,11 +13,14 @@ if the Russian strings get rewritten.
 
 import uuid
 
+import re
+
 from app.services.recommendation_guide_service import (
     KIBBE_FAMILIES,
     SECTION_ORDER,
     RecommendationGuideService,
     _color_profile_summary,
+    _normalize_fashion_terms,
     _resolve_family,
     _top_style_tags,
 )
@@ -371,3 +374,173 @@ def test_service_against_real_yaml_returns_ordered_sections():
     assert [s["key"] for s in result["sections"]] == list(SECTION_ORDER)
     assert result["summary"]
     assert result["closing_note"]
+
+
+# ------------------------------------------------ l10n safeguard unit tests
+
+
+def test_normalize_replaces_single_english_term():
+    assert _normalize_fashion_terms("Шёлк charmeuse") == "Шёлк шармёз"
+
+
+def test_normalize_replaces_multiple_terms():
+    text = "Blazer с puff-рукавом и paisley"
+    result = _normalize_fashion_terms(text)
+    assert "блейзер" in result.lower()
+    assert "пышный" in result.lower()
+    assert "пейсли" in result.lower()
+    # No English left
+    assert "blazer" not in result.lower()
+    assert "puff" not in result.lower()
+    assert "paisley" not in result.lower()
+
+
+def test_normalize_case_insensitive():
+    assert "блейзер" in _normalize_fashion_terms("BLAZER").lower()
+    assert "пейсли" in _normalize_fashion_terms("Paisley").lower()
+
+
+def test_normalize_empty_and_none():
+    assert _normalize_fashion_terms("") == ""
+    assert _normalize_fashion_terms("Чистый русский текст") == "Чистый русский текст"
+
+
+def test_normalize_long_term_before_short():
+    # "polo shirt" must match as a whole, not "polo" separately.
+    result = _normalize_fashion_terms("Polo shirt из хлопка")
+    assert "рубашка-поло" in result.lower()
+
+
+def test_normalize_tie_dye():
+    assert _normalize_fashion_terms("tie-dye принт") == "тай-дай принт"
+
+
+def test_normalize_sweetheart_neckline():
+    result = _normalize_fashion_terms("Sweetheart neckline мягкий")
+    assert "вырез «сердечком»" in result.lower()
+
+
+def test_normalize_double_breasted():
+    result = _normalize_fashion_terms("Double-breasted жакет")
+    assert "двубортный" in result.lower()
+
+
+# ------------------------------------------------ l10n safeguard in _build_sections
+
+
+def _guides_with_english_terms() -> dict:
+    """Stub guides that deliberately contain English fashion terms."""
+    sections = [
+        {
+            "key": "fabrics",
+            "title": "Ткани",
+            "description": "Выбирайте charmeuse и velour",
+            "recommended": ["Blazer из кожи", "Polo shirt"],
+            "avoid": ["Puff-рукава"],
+        },
+    ]
+    return {
+        "dramatic": {
+            "style_key": "test",
+            "summary": "Носите blazer с paisley принтом",
+            "closing_note": "Избегайте oversize bomber",
+            "sections": sections,
+        },
+    }
+
+
+def test_build_sections_normalizes_english_terms():
+    service = _make_service(
+        kibbe="dramatic",
+        guides=_guides_with_english_terms(),
+    )
+    result = service.get_guide(USER_ID)
+
+    # Summary and closing_note should be normalized
+    assert "blazer" not in result["summary"].lower()
+    assert "блейзер" in result["summary"].lower()
+    assert "пейсли" in result["summary"].lower()
+
+    assert "oversize" not in result["closing_note"].lower()
+    assert "оверсайз" in result["closing_note"].lower()
+    assert "бомбер" in result["closing_note"].lower()
+
+    # Section fields should be normalized
+    fabrics = [s for s in result["sections"] if s["key"] == "fabrics"]
+    assert len(fabrics) == 1
+    section = fabrics[0]
+    assert "charmeuse" not in section["description"].lower()
+    assert "шармёз" in section["description"].lower()
+    assert "велюр" in section["description"].lower()
+    assert any("блейзер" in r.lower() for r in section["recommended"])
+    assert any("рубашка-поло" in r.lower() for r in section["recommended"])
+    assert any("пышный" in a.lower() for a in section["avoid"])
+
+
+# ------------------------------------------------ YAML l10n regression
+
+
+#: Regex that matches 3+ consecutive ASCII letters — i.e. an English word.
+#: Excludes YAML structural keys which are internal, not user-facing.
+_YAML_STRUCTURAL_KEYS = {
+    "key", "title", "description", "recommended", "avoid",
+    "sections", "summary", "closing_note", "style_key",
+    "recommendation_guides",
+}
+
+
+def test_real_yaml_contains_no_english_in_user_text():
+    """Regression: all user-facing text in the YAML must be Russian.
+
+    Scans every string value in the recommendation_guides YAML and
+    asserts no 3+-letter English words remain (ignoring structural keys
+    and Kibbe family names which are internal identifiers).
+    """
+    from app.services.recommendation_guide_service import _load_guides
+
+    _load_guides.cache_clear()
+    guides = _load_guides()
+
+    english_word_re = re.compile(r"[a-zA-Z]{3,}")
+
+    violations: list[str] = []
+
+    for family, bundle in guides.items():
+        if not isinstance(bundle, dict):
+            continue
+
+        # Check summary and closing_note
+        for field in ("summary", "closing_note", "style_key"):
+            text = str(bundle.get(field) or "")
+            for match in english_word_re.finditer(text):
+                word = match.group(0).lower()
+                if word not in _YAML_STRUCTURAL_KEYS and word not in KIBBE_FAMILIES:
+                    violations.append(f"{family}.{field}: '{match.group(0)}'")
+
+        # Check sections
+        for section in bundle.get("sections") or []:
+            if not isinstance(section, dict):
+                continue
+            section_key = section.get("key", "?")
+            for field in ("title", "description"):
+                text = str(section.get(field) or "")
+                for match in english_word_re.finditer(text):
+                    word = match.group(0).lower()
+                    if word not in _YAML_STRUCTURAL_KEYS and word not in KIBBE_FAMILIES:
+                        violations.append(
+                            f"{family}.{section_key}.{field}: '{match.group(0)}'"
+                        )
+            for list_field in ("recommended", "avoid"):
+                for item in section.get(list_field) or []:
+                    text = str(item)
+                    for match in english_word_re.finditer(text):
+                        word = match.group(0).lower()
+                        if word not in _YAML_STRUCTURAL_KEYS and word not in KIBBE_FAMILIES:
+                            violations.append(
+                                f"{family}.{section_key}.{list_field}: '{match.group(0)}'"
+                            )
+
+    assert violations == [], (
+        "English terms found in user-facing YAML text:\n"
+        + "\n".join(f"  - {v}" for v in violations)
+    )

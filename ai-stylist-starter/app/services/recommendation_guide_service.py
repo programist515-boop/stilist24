@@ -25,10 +25,78 @@ from functools import lru_cache
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Callable
 
+import re
+
 import yaml
 
 if TYPE_CHECKING:  # pragma: no cover - typing only
     from sqlalchemy.orm import Session
+
+
+# ---------------------------------------------------------------- l10n guard
+
+#: English fashion terms → Russian equivalents. This mapping serves as a
+#: safety net: even if someone puts an English term back into the YAML,
+#: the service will normalise it before the response reaches the client.
+#: Keys are **lowercase** so matching is case-insensitive.
+_EN_TO_RU: dict[str, str] = {
+    "bias cut": "косого кроя",
+    "blazer": "блейзер",
+    "bodysuit": "боди",
+    "bomber": "бомбер",
+    "box jacket": "жакет-бокс",
+    "charmeuse": "шармёз",
+    "chesterfield coat": "пальто-честерфилд",
+    "classic fit": "классического кроя",
+    "cleavage": "декольте",
+    "couture": "кутюрный",
+    "crisp": "жёсткий отложной",
+    "cute": "кукольный",
+    "double-breasted": "двубортный",
+    "foulard": "фулард",
+    "off-shoulder": "с открытыми плечами",
+    "one-shoulder": "на одно плечо",
+    "oversize": "оверсайз",
+    "pailettes": "пайетки",
+    "paisley": "пейсли",
+    "peter-pan": "питер-пэн",
+    "polka-dot": "в горошек",
+    "polo shirt": "рубашка-поло",
+    "puff": "пышный",
+    "reefer": "бушлат",
+    "ruffle": "оборка",
+    "scoop neck": "округлый вырез",
+    "single-breasted": "однобортный",
+    "square neckline": "квадратный вырез",
+    "sweetheart neckline": "вырез «сердечком»",
+    "tie-dye": "тай-дай",
+    "velour": "велюр",
+    "wrap-coat": "пальто-халат",
+    "wrap-top": "топ с запáхом",
+}
+
+#: Pre-compiled regex: longer terms first so "polo shirt" matches before
+#: "polo". Pattern is case-insensitive.
+_EN_TERM_RE: re.Pattern[str] = re.compile(
+    "|".join(re.escape(t) for t in sorted(_EN_TO_RU, key=len, reverse=True)),
+    re.IGNORECASE,
+)
+
+
+def _normalize_fashion_terms(text: str) -> str:
+    """Replace any remaining English fashion terms with Russian equivalents.
+
+    This is a **backend safeguard** — the primary fix is in the YAML
+    source itself. This function catches stray English terms that may
+    sneak back in via copy-paste or future YAML edits.
+    """
+    if not text:
+        return text
+
+    def _replace(m: re.Match) -> str:
+        return _EN_TO_RU[m.group(0).lower()]
+
+    return _EN_TERM_RE.sub(_replace, text)
 
 
 # ---------------------------------------------------------------- constants
@@ -201,20 +269,22 @@ def _build_sections(raw_sections: list[Any]) -> list[dict]:
         title = str(entry.get("title") or "").strip()
         if not key or not title:
             continue
-        description = str(entry.get("description") or "").strip()
+        description = _normalize_fashion_terms(
+            str(entry.get("description") or "").strip()
+        )
         recommended = [
-            str(x).strip()
+            _normalize_fashion_terms(str(x).strip())
             for x in (entry.get("recommended") or [])
             if str(x).strip()
         ]
         avoid = [
-            str(x).strip()
+            _normalize_fashion_terms(str(x).strip())
             for x in (entry.get("avoid") or [])
             if str(x).strip()
         ]
         by_key[key] = {
             "key": key,
-            "title": title,
+            "title": _normalize_fashion_terms(title),
             "description": description,
             "recommended": recommended,
             "avoid": avoid,
@@ -352,8 +422,12 @@ class RecommendationGuideService:
             }
 
         style_key = str(bundle.get("style_key") or "").strip() or None
-        summary = str(bundle.get("summary") or "").strip()
-        closing_note = str(bundle.get("closing_note") or "").strip()
+        summary = _normalize_fashion_terms(
+            str(bundle.get("summary") or "").strip()
+        )
+        closing_note = _normalize_fashion_terms(
+            str(bundle.get("closing_note") or "").strip()
+        )
         sections = _build_sections(bundle.get("sections") or [])
 
         if top_tags:
@@ -382,4 +456,5 @@ __all__ = [
     "KIBBE_FAMILIES",
     "RecommendationGuideService",
     "SECTION_ORDER",
+    "_normalize_fashion_terms",
 ]
