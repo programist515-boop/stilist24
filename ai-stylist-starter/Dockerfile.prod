@@ -1,0 +1,18 @@
+# Production image for the FastAPI backend. Mirrors the dev Dockerfile
+# (OpenCV/MediaPipe system deps + baked-in model files) but image-only:
+# no source mount, no --reload, runs via entrypoint.sh.
+FROM python:3.11-slim
+
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
+WORKDIR /app
+
+RUN apt-get update && apt-get install -y --no-install-recommends libglib2.0-0 libgl1 libgles2 libegl1 libsm6 libxext6 libxrender1 curl && rm -rf /var/lib/apt/lists/*
+
+COPY pyproject.toml /app/pyproject.toml
+RUN pip install --upgrade pip && pip install .
+
+COPY . /app
+
+RUN python scripts/download_models.py
+RUN chmod +x /app/entrypoint.sh

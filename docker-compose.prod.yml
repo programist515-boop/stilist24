@@ -1,0 +1,99 @@
+# Production stack for stilist24.com.
+#
+# Project name: stilist24com (see --env-file / -p in the CI deploy step).
+# Ports exposed to host: 8002 (api), 3002 (web).
+# db/redis/minio are internal-only — no host ports published.
+#
+# .env.prod is generated at deploy time from GitHub Secrets; all sensitive
+# values (JWT_SECRET, POSTGRES_PASSWORD, S3 keys, NEXT_PUBLIC_API_URL) come
+# from there — nothing sensitive is committed.
+
+services:
+  api:
+    image: stilist24com-api:latest
+    build:
+      context: ./ai-stylist-starter
+      dockerfile: Dockerfile.prod
+    command: ["sh", "/app/entrypoint.sh"]
+    env_file:
+      - .env.prod
+    environment:
+      PYTHONPATH: /app
+    ports:
+      - "8002:8002"
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+      minio:
+        condition: service_started
+      createbuckets:
+        condition: service_completed_successfully
+    restart: always
+
+  web:
+    image: stilist24com-web:latest
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
+    environment:
+      NODE_ENV: production
+    ports:
+      - "3002:3000"
+    depends_on:
+      - api
+    restart: always
+
+  db:
+    image: postgres:16-alpine
+    restart: always
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-aistylist}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  redis:
+    image: redis:7-alpine
+    restart: always
+    volumes:
+      - redis_data:/data
+
+  minio:
+    image: minio/minio:latest
+    restart: always
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${S3_ACCESS_KEY:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${S3_SECRET_KEY:-minioadmin}
+    volumes:
+      - minio_data:/data
+
+  createbuckets:
+    image: minio/mc:latest
+    depends_on:
+      - minio
+    restart: on-failure
+    entrypoint: >
+      /bin/sh -c "
+      until (/usr/bin/mc alias set local http://minio:9000 ${S3_ACCESS_KEY:-minioadmin} ${S3_SECRET_KEY:-minioadmin}) do
+        echo waiting for minio && sleep 2;
+      done;
+      /usr/bin/mc mb --ignore-existing local/${S3_BUCKET:-ai-stylist};
+      /usr/bin/mc anonymous set download local/${S3_BUCKET:-ai-stylist} || true;
+      exit 0;
+      "
+
+volumes:
+  postgres_data:
+  redis_data:
+  minio_data:
