@@ -103,7 +103,17 @@ jobs:
             EOF
             chmod 600 .env.prod
 
-            docker compose -p stilist24com -f docker-compose.prod.yml --env-file .env.prod up -d --build
+            # Retry docker build: Docker Hub TLS handshakes occasionally flake.
+            attempt=1
+            until docker compose -p stilist24com -f docker-compose.prod.yml --env-file .env.prod up -d --build; do
+              if [ $attempt -ge 3 ]; then
+                echo "docker compose up failed after $attempt attempts"
+                exit 1
+              fi
+              attempt=$((attempt + 1))
+              echo "Build failed, retrying (attempt $attempt)..."
+              sleep 10
+            done
             docker image prune -f
 
             echo "Waiting for API health..."
