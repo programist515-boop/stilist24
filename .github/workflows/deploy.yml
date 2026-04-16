@@ -100,6 +100,7 @@ jobs:
             JWT_ALGORITHM=HS256
             JWT_ACCESS_MINUTES=60
             NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
+            S3_PUBLIC_BASE_URL=https://stilist24.com/s3
             EOF
             chmod 600 .env.prod
 
