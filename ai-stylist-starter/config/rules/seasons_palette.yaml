@@ -1,0 +1,384 @@
+seasons_palette:
+  light_spring:
+    canonical_colors:
+      - "#F4C2A1"  # peach
+      - "#A8D8A8"  # mint green
+      - "#B5D5E8"  # powder blue
+      - "#F9E0B0"  # light gold
+    best_neutrals:
+      - "#F9EFE3"
+      - "#EDD9C0"
+      - "#D4B896"
+      - "#F5E6D3"
+      - "#C8A882"
+    accent_colors:
+      - "#E8735A"
+      - "#F4A460"
+      - "#E9967A"
+      - "#FFD700"
+      - "#98D3A5"
+      - "#A8C8A0"
+      - "#FFB6C1"
+      - "#FFDAB9"
+    avoid_colors:
+      - "#000000"  # black
+      - "#4B0082"  # indigo
+      - "#8B0000"  # dark red
+      - "#2F4F4F"  # dark slate
+      - "#556B2F"  # dark olive
+      - "#4A4A4A"  # charcoal
+    metals:
+      - "#FFD700"
+      - "#D4AF37"
+
+  true_spring:
+    canonical_colors:
+      - "#FF7F50"  # coral
+      - "#32CD32"  # lime green
+      - "#FFD700"  # golden yellow
+      - "#FF6B35"  # warm orange-red
+    best_neutrals:
+      - "#F7E7D3"
+      - "#E8D5B7"
+      - "#D4B896"
+      - "#C19A6B"
+      - "#FAEBD7"
+    accent_colors:
+      - "#FF7043"
+      - "#FFA500"
+      - "#FF6B35"
+      - "#32CD32"
+      - "#00CED1"
+      - "#FFD700"
+      - "#FF4500"
+      - "#7CFC00"
+    avoid_colors:
+      - "#000000"  # black
+      - "#4B0082"  # indigo
+      - "#808080"  # grey
+      - "#6B6B6B"  # medium grey
+      - "#2F4F4F"  # dark slate
+      - "#191970"  # midnight blue
+    metals:
+      - "#FFD700"
+      - "#B8860B"
+
+  bright_spring:
+    canonical_colors:
+      - "#FF4500"  # orange-red
+      - "#00FF7F"  # spring green
+      - "#1E90FF"  # dodger blue
+      - "#FF69B4"  # hot pink
+    best_neutrals:
+      - "#FFFAFA"
+      - "#F5F5DC"
+      - "#D4C5A9"
+      - "#B8B8B8"
+      - "#E8D8C0"
+    accent_colors:
+      - "#FF4500"
+      - "#00FF7F"
+      - "#1E90FF"
+      - "#FFD700"
+      - "#FF69B4"
+      - "#00BFFF"
+      - "#FF6347"
+      - "#7FFF00"
+    avoid_colors:
+      - "#8B7355"  # tan brown
+      - "#CD853F"  # peru brown
+      - "#D2B48C"  # dusty tan
+      - "#A0896A"  # muted beige
+      - "#BDB76B"  # dark khaki
+      - "#9B8B7B"  # warm taupe
+    metals:
+      - "#FFD700"
+      - "#C0C0C0"
+
+  light_summer:
+    canonical_colors:
+      - "#B0C4DE"  # light steel blue
+      - "#DDA0DD"  # plum
+      - "#9370DB"  # medium purple
+      - "#7BC4E2"  # sky blue
+    best_neutrals:
+      - "#F0EFF4"
+      - "#E8E8F0"
+      - "#D3D3E0"
+      - "#C8C8D8"
+      - "#B8B8C8"
+    accent_colors:
+      - "#9370DB"
+      - "#DDA0DD"
+      - "#B0C4DE"
+      - "#87CEEB"
+      - "#98AFC7"
+      - "#C9A0DC"
+      - "#B695C0"
+      - "#7BC4E2"
+    avoid_colors:
+      - "#FF4500"  # orange-red
+      - "#FFD700"  # golden yellow
+      - "#FF7043"  # warm orange
+      - "#B8860B"  # dark gold
+      - "#8B4513"  # saddle brown
+      - "#D2691E"  # chocolate
+    metals:
+      - "#C0C0C0"
+      - "#A9A9A9"
+
+  true_summer:
+    canonical_colors:
+      - "#6495ED"  # cornflower blue
+      - "#9370DB"  # medium purple
+      - "#7B68EE"  # medium slate blue
+      - "#80B3B3"  # muted teal
+    best_neutrals:
+      - "#E8E8F0"
+      - "#D0D0E0"
+      - "#B8C8D0"
+      - "#C8BED0"
+      - "#A0B0C0"
+    accent_colors:
+      - "#6495ED"
+      - "#9370DB"
+      - "#7B68EE"
+      - "#B0C4DE"
+      - "#DDA0DD"
+      - "#80B3B3"
+      - "#778899"
+      - "#8FBC8F"
+    avoid_colors:
+      - "#FF7F00"  # orange
+      - "#FFD700"  # yellow
+      - "#FF6347"  # tomato
+      - "#8B4513"  # brown
+      - "#B8860B"  # dark gold
+      - "#CD853F"  # warm tan
+    metals:
+      - "#C0C0C0"
+      - "#708090"
+
+  soft_summer:
+    canonical_colors:
+      - "#C3B1E1"  # soft lavender
+      - "#A8C0B8"  # sage
+      - "#9CABB8"  # grey-blue
+      - "#C0A8A8"  # dusty rose
+    best_neutrals:
+      - "#D8D0C8"
+      - "#C8C0B8"
+      - "#B8B0A8"
+      - "#D0C8C0"
+      - "#E0D8D0"
+    accent_colors:
+      - "#C3B1E1"
+      - "#A8C0B8"
+      - "#B8A898"
+      - "#9CABB8"
+      - "#A8B8A0"
+      - "#C0A8A8"
+      - "#B0A8C0"
+      - "#989898"
+    avoid_colors:
+      - "#FF4500"  # orange
+      - "#FFD700"  # bright yellow
+      - "#8B0000"  # dark red
+      - "#FF1493"  # deep pink
+      - "#000000"  # black
+      - "#FFFFFF"  # stark white
+    metals:
+      - "#C0C0C0"
+      - "#B0A898"
+
+  soft_autumn:
+    canonical_colors:
+      - "#B87333"  # copper
+      - "#CD853F"  # warm tan
+      - "#A0B090"  # soft sage
+      - "#8B9B8B"  # muted green
+    best_neutrals:
+      - "#D4C4A8"
+      - "#C8B898"
+      - "#B8A888"
+      - "#D8C8B0"
+      - "#C0B0A0"
+    accent_colors:
+      - "#B87333"
+      - "#CD853F"
+      - "#8B7355"
+      - "#A0B090"
+      - "#B0A060"
+      - "#9B8B7B"
+      - "#8B9B8B"
+      - "#C8A88B"
+    avoid_colors:
+      - "#000000"  # black
+      - "#FFFFFF"  # stark white
+      - "#FF0000"  # pure red
+      - "#0000FF"  # pure blue
+      - "#FF69B4"  # hot pink
+      - "#1E90FF"  # bright blue
+    metals:
+      - "#B8860B"
+      - "#C0A060"
+
+  true_autumn:
+    canonical_colors:
+      - "#B22222"  # firebrick red
+      - "#8B4513"  # saddle brown
+      - "#556B2F"  # dark olive
+      - "#D2691E"  # chocolate
+    best_neutrals:
+      - "#C8A878"
+      - "#B89868"
+      - "#A88858"
+      - "#D4B888"
+      - "#E8D0A8"
+    accent_colors:
+      - "#B22222"
+      - "#8B4513"
+      - "#D2691E"
+      - "#556B2F"
+      - "#8B6914"
+      - "#A0522D"
+      - "#6B8E23"
+      - "#CD853F"
+    avoid_colors:
+      - "#000000"  # black
+      - "#C0C0C0"  # silver
+      - "#1E90FF"  # bright blue
+      - "#FF69B4"  # hot pink
+      - "#E8E8E8"  # light grey
+      - "#9370DB"  # purple
+    metals:
+      - "#B8860B"
+      - "#8B6914"
+
+  deep_autumn:
+    canonical_colors:
+      - "#8B0000"  # dark red
+      - "#556B2F"  # dark olive
+      - "#8B4513"  # saddle brown
+      - "#704214"  # dark amber
+    best_neutrals:
+      - "#4A3728"
+      - "#6B4F3A"
+      - "#8B6347"
+      - "#3D2B1F"
+      - "#A07850"
+    accent_colors:
+      - "#8B0000"
+      - "#800000"
+      - "#556B2F"
+      - "#8B4513"
+      - "#2E4A1A"
+      - "#704214"
+      - "#A0522D"
+      - "#4E3B2A"
+    avoid_colors:
+      - "#E8E8E8"  # light grey
+      - "#F0EFF4"  # lavender white
+      - "#FFB6C1"  # light pink
+      - "#87CEEB"  # sky blue
+      - "#FFDAB9"  # peach
+      - "#C0C0C0"  # silver
+    metals:
+      - "#B8860B"
+      - "#8B7355"
+
+  deep_winter:
+    canonical_colors:
+      - "#DC143C"  # crimson
+      - "#0000CD"  # medium blue
+      - "#4B0082"  # indigo
+      - "#006400"  # dark green
+    best_neutrals:
+      - "#1C1C1C"
+      - "#2C2C2C"
+      - "#F5F5F5"
+      - "#808080"
+      - "#0A0A0A"
+    accent_colors:
+      - "#DC143C"
+      - "#0000CD"
+      - "#4B0082"
+      - "#006400"
+      - "#800080"
+      - "#C0C0C0"
+      - "#FF1493"
+      - "#00008B"
+    avoid_colors:
+      - "#F4A460"  # sandy brown
+      - "#D2B48C"  # tan
+      - "#CD853F"  # peru
+      - "#DEB887"  # burlywood
+      - "#F5DEB3"  # wheat
+      - "#FAEBD7"  # antique white
+    metals:
+      - "#C0C0C0"
+      - "#708090"
+
+  true_winter:
+    canonical_colors:
+      - "#DC143C"  # crimson
+      - "#0000FF"  # pure blue
+      - "#8B008B"  # dark magenta
+      - "#006B3C"  # dark green
+    best_neutrals:
+      - "#000000"
+      - "#FFFFFF"
+      - "#808080"
+      - "#C0C0C0"
+      - "#1A1A2E"
+    accent_colors:
+      - "#DC143C"
+      - "#0000FF"
+      - "#8B008B"
+      - "#006B3C"
+      - "#FF0000"
+      - "#00CED1"
+      - "#9400D3"
+      - "#FF69B4"
+    avoid_colors:
+      - "#D2691E"  # chocolate
+      - "#CD853F"  # peru tan
+      - "#F4A460"  # sandy
+      - "#B8860B"  # dark gold
+      - "#8B4513"  # brown
+      - "#A0522D"  # sienna
+    metals:
+      - "#C0C0C0"
+      - "#E8E8E8"
+
+  bright_winter:
+    canonical_colors:
+      - "#FF0000"  # pure red
+      - "#0000FF"  # pure blue
+      - "#FF00FF"  # magenta
+      - "#00FFFF"  # cyan
+    best_neutrals:
+      - "#FFFFFF"
+      - "#F0F0F0"
+      - "#000000"
+      - "#404040"
+      - "#C0C0C0"
+    accent_colors:
+      - "#FF0000"
+      - "#0000FF"
+      - "#FF00FF"
+      - "#00FFFF"
+      - "#FFFF00"
+      - "#FF1493"
+      - "#00FF00"
+      - "#8B008B"
+    avoid_colors:
+      - "#8B7355"  # warm tan
+      - "#CD853F"  # peru
+      - "#D2B48C"  # tan
+      - "#A0896A"  # muted beige
+      - "#C8A882"  # sand
+      - "#DEB887"  # burlywood
+    metals:
+      - "#C0C0C0"
+      - "#E0E0E0"

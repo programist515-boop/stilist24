@@ -47,6 +47,11 @@ class Settings(BaseSettings):
         "http://127.0.0.1:3000",
     ]
 
+    # --- Feature flags ----------------------------------------------------
+    # Use OutfitGenerator (new explainable pipeline) instead of legacy OutfitEngine.
+    # Set USE_NEW_OUTFIT_ENGINE=false in .env to revert to the old engine.
+    use_new_outfit_engine: bool = True
+
     # --- FASHN / Auth (unchanged) -----------------------------------------
     fashn_api_key: str = ""
     fashn_base_url: str = "https://api.fashn.ai"

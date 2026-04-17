@@ -1,0 +1,24 @@
+templates:
+  - name: top_bottom_shoes
+    required: [top, bottom, shoes]
+    optional: []
+
+  - name: top_bottom_shoes_accessory
+    required: [top, bottom, shoes]
+    optional: [accessory]
+
+  - name: top_bottom_shoes_outerwear
+    required: [top, bottom, shoes]
+    optional: [outerwear]
+
+  - name: dress_shoes
+    required: [dress, shoes]
+    optional: []
+
+  - name: dress_shoes_accessory
+    required: [dress, shoes]
+    optional: [accessory]
+
+  - name: dress_shoes_outerwear
+    required: [dress, shoes]
+    optional: [outerwear]

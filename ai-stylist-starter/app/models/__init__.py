@@ -7,6 +7,8 @@ from app.models.outfit import Outfit
 from app.models.tryon_job import TryOnJob
 from app.models.personalization_profile import PersonalizationProfile
 from app.models.user_event import UserEvent
+from app.models.wear_log import WearLog
+from app.models.shopping_candidate import ShoppingCandidate
 
 __all__ = [
     "User",
@@ -18,4 +20,6 @@ __all__ = [
     "TryOnJob",
     "PersonalizationProfile",
     "UserEvent",
+    "WearLog",
+    "ShoppingCandidate",
 ]

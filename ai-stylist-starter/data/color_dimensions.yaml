@@ -1,0 +1,109 @@
+# Color dimensions framework for 12-season palette analysis.
+# Each season is characterized by 4 independent axes.
+# These are used by ColorEngine and the manual override flow.
+
+dimensions:
+  warm_cool:
+    description: "Undertone temperature — warm (yellow/golden base) vs cool (blue/pink base)"
+    values: [warm, neutral-warm, warm-neutral, neutral, cool-neutral, neutral-cool, cool]
+
+  depth:
+    description: "Overall lightness/darkness of natural coloring"
+    values: [light, medium-light, medium, medium-deep, deep]
+
+  chroma:
+    description: "Saturation/clarity of coloring — soft/muted vs bright/vivid"
+    values: [soft, medium-soft, medium-bright, bright, clear]
+
+  contrast:
+    description: "Contrast between hair, eyes, and skin"
+    values: [low, medium-low, medium, medium-high, high]
+
+# Dominant dimension value per season (single representative value for UI display)
+season_dimensions:
+  light_spring:
+    warm_cool: warm
+    depth: light
+    chroma: medium-bright
+    contrast: low
+
+  true_spring:
+    warm_cool: warm
+    depth: medium
+    chroma: bright
+    contrast: medium
+
+  bright_spring:
+    warm_cool: neutral-warm
+    depth: medium
+    chroma: bright
+    contrast: medium-high
+
+  light_summer:
+    warm_cool: cool
+    depth: light
+    chroma: soft
+    contrast: low
+
+  true_summer:
+    warm_cool: cool
+    depth: medium
+    chroma: soft
+    contrast: medium-low
+
+  soft_summer:
+    warm_cool: cool-neutral
+    depth: medium
+    chroma: soft
+    contrast: medium-low
+
+  soft_autumn:
+    warm_cool: neutral-warm
+    depth: medium
+    chroma: soft
+    contrast: low
+
+  true_autumn:
+    warm_cool: warm
+    depth: medium-deep
+    chroma: medium-soft
+    contrast: medium
+
+  deep_autumn:
+    warm_cool: warm
+    depth: deep
+    chroma: medium-soft
+    contrast: medium-high
+
+  deep_winter:
+    warm_cool: cool
+    depth: deep
+    chroma: clear
+    contrast: high
+
+  true_winter:
+    warm_cool: cool
+    depth: deep
+    chroma: clear
+    contrast: high
+
+  bright_winter:
+    warm_cool: cool
+    depth: medium
+    chroma: bright
+    contrast: high
+
+# Season groupings for adjacency and manual correction UI
+season_families:
+  spring: [light_spring, true_spring, bright_spring]
+  summer: [light_summer, true_summer, soft_summer]
+  autumn: [soft_autumn, true_autumn, deep_autumn]
+  winter: [deep_winter, true_winter, bright_winter]
+
+# Cross-family bridges: seasons that share 2+ axes across family boundaries
+bridges:
+  - [light_spring, light_summer]     # both light
+  - [bright_spring, bright_winter]   # both bright+high contrast
+  - [soft_summer, soft_autumn]       # both soft/muted
+  - [deep_autumn, deep_winter]       # both deep
+  - [true_spring, true_autumn]       # both warm+medium

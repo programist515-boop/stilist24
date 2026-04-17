@@ -18,13 +18,16 @@ contradict the requested weather.
 import uuid
 from typing import TYPE_CHECKING, Any, Callable, Iterable
 
+from app.services.explainer import Explanation, explain_outfit
 from app.services.outfit_engine import OutfitEngine
 from app.services.scoring_service import cosine_like
+from app.services.user_context import build_user_context
 
 if TYPE_CHECKING:  # pragma: no cover
     from sqlalchemy.orm import Session
 
     from app.models.style_profile import StyleProfile
+    from app.services.outfits.outfit_generator import OutfitGenerator
 
 
 # Weather → season hints. Unknown values are echoed back and ignored.
@@ -74,11 +77,13 @@ class TodayService:
         db: "Session | None" = None,
         *,
         outfit_engine: OutfitEngine | None = None,
+        outfit_generator: "OutfitGenerator | None" = None,
         wardrobe_loader: Callable[[uuid.UUID], list[dict]] | None = None,
         style_profile_loader: Callable[[uuid.UUID], Any] | None = None,
         personalization_loader: Callable[[uuid.UUID], Any] | None = None,
     ) -> None:
         self.db = db
+        self._outfit_generator = outfit_generator
         self.outfit_engine = outfit_engine or OutfitEngine()
         self._wardrobe_loader = wardrobe_loader
         self._style_profile_loader = style_profile_loader
@@ -120,22 +125,7 @@ class TodayService:
     def _build_user_context(self, user_id: uuid.UUID) -> tuple[dict, float]:
         style = self._load_style_profile(user_id)
         perso = self._load_personalization(user_id)
-        user_context = {
-            "identity_family": getattr(style, "kibbe_type", None)
-            if style
-            else None,
-            "color_profile": (
-                getattr(style, "color_profile_json", None) or {}
-            )
-            if style
-            else {},
-            "style_vector": (
-                getattr(perso, "style_vector_json", None) or {}
-            )
-            if perso
-            else {},
-            "lifestyle": [],
-        }
+        user_context = build_user_context(style, perso)
         experimentation_score = float(
             getattr(perso, "experimentation_score", 0.3) or 0.3
         )
@@ -162,12 +152,20 @@ class TodayService:
 
         user_context, experimentation_score = self._build_user_context(user_id)
 
-        pool = self.outfit_engine.generate(
-            items,
-            user_context=user_context,
-            occasion=occasion,
-            top_n=self.POOL_SIZE,
-        )
+        if self._outfit_generator is not None:
+            pool = self._outfit_generator.generate(
+                items,
+                user_profile=user_context,
+                occasion=occasion,
+                top_n=self.POOL_SIZE,
+            )
+        else:
+            pool = self.outfit_engine.generate(
+                items,
+                user_context=user_context,
+                occasion=occasion,
+                top_n=self.POOL_SIZE,
+            )
 
         if weather:
             pool = self._apply_weather_hint(pool, weather, notes)
@@ -298,6 +296,8 @@ class TodayService:
                     "label": label,
                     "outfit": picked["outfit"],
                     "reasons": picked["reasons"],
+                    "actions": picked.get("actions", []),
+                    "explanation": picked.get("explanation", {}),
                 }
             )
         return results
@@ -307,15 +307,17 @@ class TodayService:
     @staticmethod
     def _rule_fit(outfit: dict) -> float:
         scores = outfit.get("scores") or {}
-        return _mean(
-            scores.get(k, 0.0)
-            for k in (
-                "color_harmony",
-                "silhouette_balance",
-                "line_consistency",
-                "style_consistency",
-            )
-        )
+        # Support both OutfitEngine keys and OutfitGenerator keys
+        silhouette = scores.get("silhouette_balance") if "silhouette_balance" in scores else scores.get("silhouette", 0.0)
+        preference = scores.get("preference", 0.0)
+        line_c = scores.get("line_consistency", preference)
+        style_c = scores.get("style_consistency", preference)
+        return _mean([
+            scores.get("color_harmony", 0.0),
+            silhouette,
+            line_c,
+            style_c,
+        ])
 
     @staticmethod
     def _visual_risk(outfit: dict) -> float:
@@ -330,7 +332,10 @@ class TodayService:
     @staticmethod
     def _experimentation(outfit: dict) -> float:
         scores = outfit.get("scores") or {}
-        style_consistency = float(scores.get("style_consistency", 1.0))
+        # Support both OutfitEngine ("style_consistency") and OutfitGenerator ("preference") keys
+        style_consistency = float(
+            scores.get("style_consistency") if "style_consistency" in scores else scores.get("preference", 1.0)
+        )
         items = outfit.get("items") or []
         n = max(len(items), 1)
         statement = sum(
@@ -422,9 +427,12 @@ class TodayService:
             sig = OutfitEngine._base_signature(candidate["outfit"])
             if sig in used_signatures:
                 continue
+            outfit = candidate["outfit"]
             return {
-                "outfit": candidate["outfit"],
+                "outfit": outfit,
                 "reasons": reason_builder(candidate),
+                "actions": _outfit_actions(outfit, label),
+                "explanation": explain_outfit(outfit).to_dict(),
             }
         return None
 
@@ -458,3 +466,22 @@ class TodayService:
             f"by user score {a['user_experimentation']:.2f}",
             f"expressive: overall={a['overall']:.2f}",
         ]
+
+
+def _outfit_actions(outfit: dict, label: str) -> list[str]:
+    """Generate context-aware action labels for a Today outfit slot."""
+    actions = ["Wear today", "Save outfit"]
+    cats = {it.get("category") for it in outfit.get("items", [])}
+    # Normalise plural/singular
+    has_top = bool({"top", "tops"} & cats)
+    has_shoes = bool({"shoes"} & cats)
+    has_outerwear = bool({"outerwear"} & cats)
+    if has_top:
+        actions.append("Replace top")
+    if has_shoes:
+        actions.append("Replace shoes")
+    if has_outerwear:
+        actions.append("Remove outerwear")
+    if label == "expressive":
+        actions.append("Too bold? Try balanced")
+    return actions

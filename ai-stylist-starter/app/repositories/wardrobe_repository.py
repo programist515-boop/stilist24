@@ -1,5 +1,5 @@
 import uuid
-from sqlalchemy import select
+from sqlalchemy import select, update
 from sqlalchemy.orm import Session
 
 from app.models.wardrobe_item import WardrobeItem
@@ -46,6 +46,17 @@ class WardrobeRepository:
             .order_by(WardrobeItem.created_at.desc())
         )
         return list(self.db.execute(stmt).scalars().all())
+
+    def increment_wear_count(self, item_id: uuid.UUID) -> WardrobeItem | None:
+        stmt = (
+            update(WardrobeItem)
+            .where(WardrobeItem.id == item_id)
+            .values(wear_count=WardrobeItem.wear_count + 1)
+            .returning(WardrobeItem)
+        )
+        result = self.db.execute(stmt).scalars().first()
+        self.db.commit()
+        return result
 
     def update(self, item_id: uuid.UUID, **fields) -> WardrobeItem | None:
         item = self.get_by_id(item_id)

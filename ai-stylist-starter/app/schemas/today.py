@@ -30,11 +30,10 @@ from pydantic import BaseModel, ConfigDict
 class TodayOutfit(BaseModel):
     """One labelled Today suggestion.
 
-    ``label`` is one of ``"safe"``, ``"balanced"``, ``"expressive"`` —
-    documented in :data:`app.services.today_service.SLOT_ORDER`. The
-    schema stays open (``label: str``) because the selection vocabulary
-    may grow in later steps (``bold``, ``weather_safe``, etc.) without
-    a schema bump.
+    ``label`` is one of ``"safe"``, ``"balanced"``, ``"expressive"``.
+    ``actions`` lists the context-aware CTA strings the frontend should
+    surface (e.g. "Wear today", "Replace top").
+    ``explanation`` is the UI-ready summary produced by the explainer.
     """
 
     model_config = ConfigDict(extra="forbid")
@@ -42,6 +41,8 @@ class TodayOutfit(BaseModel):
     label: str
     outfit: dict[str, Any]
     reasons: list[str]
+    actions: list[str] = []
+    explanation: dict[str, Any] = {}
 
 
 class TodayResponse(BaseModel):

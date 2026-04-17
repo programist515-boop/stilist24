@@ -3,12 +3,12 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_user_id, get_db
-from app.models.style_profile import StyleProfile
+from app.api.errors import ApiError, ErrorCode
 from app.repositories.outfit_repository import OutfitRepository
-from app.repositories.personalization_repository import PersonalizationRepository
 from app.repositories.wardrobe_repository import WardrobeRepository
 from app.schemas.outfit import OutfitGenerateIn, OutfitGenerateOut
-from app.services.outfit_engine import OutfitEngine
+from app.services.outfits.outfit_generator import OutfitGenerator
+from app.services.user_context import build_user_context_from_db
 
 router = APIRouter()
 
@@ -16,31 +16,16 @@ router = APIRouter()
 def _item_to_dict(item) -> dict:
     attrs = item.attributes_json or {}
     return {
+        **attrs,
         "id": str(item.id),
         "category": item.category,
-        "name": attrs.get("name"),
+        "cost": item.cost,
+        "wear_count": item.wear_count or 0,
         "attributes": attrs,
-        # Hoist the attributes the scoring engine expects so it can read them
-        # whether it gets the flat or nested form.
-        **attrs,
     }
 
 
-def _build_user_context(db: Session, user_id: uuid.UUID) -> dict:
-    """Assemble the user context the scoring engine consumes.
-
-    Pulls identity family + color profile from ``StyleProfile`` (if it exists)
-    and the latest preference vector from ``PersonalizationProfile``. Both
-    profiles are optional — the scoring service tolerates missing keys.
-    """
-    style: StyleProfile | None = db.get(StyleProfile, user_id)
-    perso = PersonalizationRepository(db).get_or_create(user_id)
-    return {
-        "identity_family": style.kibbe_type if style else None,
-        "color_profile": (style.color_profile_json or {}) if style else {},
-        "style_vector": perso.style_vector_json or {},
-        "lifestyle": [],
-    }
+_build_user_context = build_user_context_from_db
 
 
 @router.post("/generate", response_model=OutfitGenerateOut)
@@ -61,7 +46,11 @@ def generate_outfits(
 
     items = [_item_to_dict(i) for i in wardrobe_repo.list_by_user(user_id)]
     user_context = _build_user_context(db, user_id)
-    generated = OutfitEngine().generate(items, user_context=user_context, occasion=payload.occasion)
+    generated = OutfitGenerator().generate(
+        items,
+        user_profile=user_context,
+        occasion=payload.occasion,
+    )
 
     for outfit in generated:
         outfit_repo.create(
@@ -72,3 +61,86 @@ def generate_outfits(
         )
 
     return {"outfits": generated, "count": len(generated)}
+
+
+@router.get("/for-item/{item_id}")
+def outfits_for_item(
+    item_id: uuid.UUID,
+    db: Session = Depends(get_db),
+    user_id: uuid.UUID = Depends(get_current_user_id),
+) -> dict:
+    """Return scored outfits anchored on a specific wardrobe item.
+
+    Every returned outfit includes the requested item. The ``breakdown``
+    field exposes per-scorer scores (color_harmony, palette_fit, reuse, …).
+    """
+    wardrobe_repo = WardrobeRepository(db)
+    item = wardrobe_repo.get_by_id(item_id)
+    if item is None or item.user_id != user_id:
+        raise ApiError(
+            code=ErrorCode.NOT_FOUND,
+            message="wardrobe item not found",
+            status_code=404,
+        )
+    items = [_item_to_dict(i) for i in wardrobe_repo.list_by_user(user_id)]
+    user_context = _build_user_context(db, user_id)
+    outfits = OutfitGenerator().generate_for_item(
+        str(item_id), items, user_profile=user_context
+    )
+    return {"item_id": str(item_id), "outfits": outfits, "count": len(outfits)}
+
+
+@router.get("/for-occasion/{occasion}")
+def outfits_for_occasion(
+    occasion: str,
+    db: Session = Depends(get_db),
+    user_id: uuid.UUID = Depends(get_current_user_id),
+) -> dict:
+    """Return scored outfits filtered for a specific occasion.
+
+    ``occasion`` must be a string matching the item attribute values used in
+    the wardrobe (e.g. ``casual``, ``business``, ``evening``).
+    """
+    wardrobe_repo = WardrobeRepository(db)
+    items = [_item_to_dict(i) for i in wardrobe_repo.list_by_user(user_id)]
+    user_context = _build_user_context(db, user_id)
+    outfits = OutfitGenerator().generate_for_occasion(
+        occasion, items, user_profile=user_context
+    )
+    return {"occasion": occasion, "outfits": outfits, "count": len(outfits)}
+
+
+@router.post("/{outfit_id}/worn")
+def mark_outfit_worn(
+    outfit_id: uuid.UUID,
+    db: Session = Depends(get_db),
+    user_id: uuid.UUID = Depends(get_current_user_id),
+) -> dict:
+    """Record that the user wore this outfit today.
+
+    Increments ``wear_count`` for every item in the outfit and fires an
+    ``outfit_worn`` personalization event so the preference scorer adapts.
+    Returns the list of updated wear-log entries.
+    """
+    from app.services.wardrobe.wear_log_service import WearLogService
+    from app.services.feedback_service import FeedbackService
+
+    logs = WearLogService(db).log_outfit_worn(
+        user_id=user_id,
+        outfit_id=outfit_id,
+    )
+    if not logs:
+        outfit = OutfitRepository(db).get_by_id(outfit_id)
+        if outfit is None or outfit.user_id != user_id:
+            raise ApiError(
+                code=ErrorCode.NOT_FOUND,
+                message="outfit not found",
+                status_code=404,
+            )
+    # Fire personalization event
+    FeedbackService(db).process(
+        user_id=user_id,
+        event_type="outfit_worn",
+        payload={"outfit_id": str(outfit_id)},
+    )
+    return {"outfit_id": str(outfit_id), "items_logged": len(logs), "logs": logs}

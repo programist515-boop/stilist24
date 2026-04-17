@@ -26,6 +26,36 @@ from typing import Any
 from pydantic import BaseModel, ConfigDict
 
 
+class ColorOverrideIn(BaseModel):
+    """Input for PATCH /user/color-override.
+
+    All fields are optional — only supplied fields are applied.
+    Accepted undertone values mirror the color axis vocabulary in
+    ``data/color_dimensions.yaml``.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    manual_hair_color: str | None = None
+    manual_eye_color: str | None = None
+    manual_undertone: str | None = None
+    manual_selected_season: str | None = None
+
+
+class ColorOverrideOut(BaseModel):
+    """Response from PATCH /user/color-override.
+
+    Returns the re-scored color analysis after applying the overrides,
+    plus a flag confirming which fields were changed.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    color: dict[str, Any]
+    overrides_applied: dict[str, str]
+    overrides_history_length: int
+
+
 class AnalyzedPhotoOut(BaseModel):
     """One persisted user photo as surfaced in ``/user/analyze``.
 
@@ -60,4 +90,4 @@ class UserAnalyzeResponse(BaseModel):
     photos: list[AnalyzedPhotoOut]
 
 
-__all__ = ["AnalyzedPhotoOut", "UserAnalyzeResponse"]
+__all__ = ["AnalyzedPhotoOut", "ColorOverrideIn", "ColorOverrideOut", "UserAnalyzeResponse"]

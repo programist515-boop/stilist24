@@ -24,7 +24,8 @@ dependencies = [
   "mediapipe>=0.10.9",
   "numpy>=1.26.0",
   "pillow>=10.0.0",
-  "pytest>=8.2.2"
+  "pytest>=8.2.2",
+  "rembg>=2.0.50"
 ]
 
 [tool.setuptools.packages.find]

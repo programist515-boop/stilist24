@@ -12,9 +12,11 @@ from app.api.routes import (
     auth,
     color,
     feedback,
+    gap_analysis,
     insights,
     outfits,
     recommendations,
+    shopping,
     today,
     tryon,
     user_analysis,
@@ -48,6 +50,7 @@ app.add_exception_handler(RequestValidationError, validation_error_handler)
 app.include_router(auth.router, prefix="/auth", tags=["auth"])
 app.include_router(user_analysis.router, prefix="/user", tags=["user"])
 app.include_router(color.router, prefix="/color", tags=["color"])
+app.include_router(gap_analysis.router, prefix="/wardrobe", tags=["wardrobe"])
 app.include_router(wardrobe.router, prefix="/wardrobe", tags=["wardrobe"])
 app.include_router(outfits.router, prefix="/outfits", tags=["outfits"])
 app.include_router(tryon.router, prefix="/tryon", tags=["tryon"])
@@ -57,6 +60,7 @@ app.include_router(insights.router, prefix="/insights", tags=["insights"])
 app.include_router(
     recommendations.router, prefix="/recommendations", tags=["recommendations"]
 )
+app.include_router(shopping.router, prefix="/shopping", tags=["shopping"])
 
 
 @app.get("/health")

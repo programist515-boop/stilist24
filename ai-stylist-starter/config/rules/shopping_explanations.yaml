@@ -1,0 +1,35 @@
+shopping_explanations:
+  palette_match:
+    high: "Fits your {season} color palette — will coordinate with existing pieces"
+    medium: "Neutral color — works with almost anything"
+    low: "Clashes with your palette — may be hard to style"
+
+  gap_fill:
+    yes: "Fills a {category} gap — unlocks {count} new outfit combinations"
+    no: "You already have {count} similar items in this category"
+    no_data: "Could not assess wardrobe gaps"
+
+  wardrobe_compatibility:
+    high: "Pairs well with {count} existing items"
+    medium: "Compatible with {count} pieces in your wardrobe"
+    low: "Limited compatibility — only {count} compatible item(s) found"
+
+  redundancy_penalty:
+    high: "Very similar to items already in your wardrobe"
+    medium: "You have similar items but for different occasions"
+    low: "Unique addition — no redundancy detected"
+
+  expected_versatility:
+    high: "Would enable {count} new outfit combinations"
+    medium: "Would fit into {count} outfit combinations"
+    low: "Limited versatility — only {count} outfit combination(s) possible"
+
+  budget_fit:
+    high: "At this price and {wear} wears/month, CPW drops to {cpw} in a year"
+    medium: "Cost-per-wear would be {cpw} after a year at your typical wear rate"
+    low: "High price relative to expected wear — CPW stays above {cpw}"
+
+  decision:
+    buy: "Strong addition to your wardrobe — worth buying"
+    maybe: "Decent fit but not essential — consider if it fills a real need"
+    skip: "Unlikely to earn its keep — too redundant, incompatible, or off-palette"

@@ -1,0 +1,78 @@
+gap_analysis:
+  # Suggested items per missing category, ranked by versatility potential.
+  # Each suggestion feeds _project_new_combos() as a synthetic item.
+  suggestions:
+    top:
+      - label: "white button-down shirt"
+        style_tags: [classic, minimal]
+        line_type: clean
+        fit: tailored
+        occasions: [business, smart_casual, casual]
+      - label: "simple crew neck t-shirt"
+        style_tags: [casual, minimal]
+        line_type: clean
+        fit: regular
+        occasions: [casual, weekend]
+
+    bottom:
+      - label: "dark navy tailored trousers"
+        style_tags: [classic, elegant]
+        line_type: clean
+        fit: tailored
+        occasions: [business, smart_casual]
+      - label: "straight-leg dark denim"
+        style_tags: [casual, classic]
+        line_type: relaxed
+        fit: regular
+        occasions: [casual, smart_casual]
+
+    dress:
+      - label: "wrap dress"
+        style_tags: [feminine, elegant]
+        line_type: soft
+        fit: relaxed
+        occasions: [casual, smart_casual, business]
+      - label: "shirt dress"
+        style_tags: [classic, casual]
+        line_type: clean
+        fit: relaxed
+        occasions: [casual, smart_casual]
+
+    outerwear:
+      - label: "dark navy blazer"
+        style_tags: [classic, business]
+        line_type: clean
+        fit: tailored
+        occasions: [business, smart_casual]
+      - label: "classic trench coat"
+        style_tags: [classic, elegant]
+        line_type: clean
+        fit: tailored
+        occasions: [business, smart_casual, casual]
+
+    shoes:
+      - label: "white clean-sole sneakers"
+        style_tags: [casual, minimal]
+        line_type: clean
+        fit: regular
+        occasions: [casual, smart_casual, weekend]
+      - label: "classic ankle boots"
+        style_tags: [classic, elegant]
+        line_type: clean
+        fit: fitted
+        occasions: [casual, smart_casual, business]
+
+    accessory:
+      - label: "simple leather belt"
+        style_tags: [classic, minimal]
+        line_type: clean
+        fit: regular
+        occasions: [casual, smart_casual, business]
+      - label: "structured tote bag"
+        style_tags: [classic, minimal]
+        line_type: clean
+        fit: regular
+        occasions: [business, smart_casual]
+
+  # Items with outfit_count below this are flagged as untapped.
+  untapped_threshold: 2

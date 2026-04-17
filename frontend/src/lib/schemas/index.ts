@@ -105,7 +105,7 @@ export const OutfitSchema = z
     explanation: z.union([z.string(), z.array(z.string())]).optional(),
     scoring_reasons: z.array(z.string()).optional(),
     filter_pass_reasons: z.array(z.string()).optional(),
-    breakdown: z.record(z.array(z.string())).optional(),
+    breakdown: z.record(z.unknown()).optional(),
     generation: z
       .object({
         template: z.string().optional(),

@@ -1,0 +1,23 @@
+garment_recognition:
+  # Named color clusters: each key maps to representative hex samples.
+  # The nearest cluster (by Euclidean RGB distance to mean of samples)
+  # becomes the primary_color label.
+  color_clusters:
+    white:  ["#FFFFFF", "#F8F8FF", "#F5F5F5", "#FFFAFA"]
+    black:  ["#000000", "#1C1C1C", "#2C2C2C", "#0A0A0A"]
+    navy:   ["#000080", "#003087", "#001F5B", "#0A2472"]
+    grey:   ["#808080", "#A9A9A9", "#696969", "#888888"]
+    beige:  ["#F5F5DC", "#E8D8C0", "#D4C5A9", "#C8B89A"]
+    red:    ["#FF0000", "#DC143C", "#B22222", "#C41E3A"]
+    blue:   ["#1E90FF", "#6495ED", "#4169E1", "#4682B4"]
+    green:  ["#008000", "#228B22", "#556B2F", "#2E8B57"]
+    brown:  ["#8B4513", "#D2691E", "#CD853F", "#A0522D"]
+    camel:  ["#C19A6B", "#D4B896", "#C8A878", "#B89868"]
+    pink:   ["#FFC0CB", "#FF69B4", "#DB7093", "#FFB6C1"]
+    orange: ["#FFA500", "#FF7043", "#FF6347", "#FF8C00"]
+    purple: ["#800080", "#9370DB", "#4B0082", "#8B008B"]
+    yellow: ["#FFD700", "#F0E68C", "#FFFF00", "#DAA520"]
+
+  # If (a*_std + b*_std) / 2 in CIE Lab exceeds this threshold,
+  # the garment is classified as "patterned", otherwise "solid".
+  print_variance_threshold: 15.0

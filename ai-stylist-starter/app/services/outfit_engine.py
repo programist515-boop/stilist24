@@ -93,7 +93,13 @@ CLASHING_LINE_GROUPS: tuple[frozenset[str], ...] = (
 
 
 class OutfitEngine:
-    """Template-driven outfit generator scored by ``ScoringService``."""
+    """Template-driven outfit generator scored by ``ScoringService``.
+
+    .. deprecated::
+        Use :class:`app.services.outfits.outfit_generator.OutfitGenerator`
+        which provides explainable per-scorer breakdown. ``OutfitEngine`` will
+        be removed once all callers are migrated (target: next sprint).
+    """
 
     #: Hard upper bound on candidates *per template* before scoring. Prevents a
     #: single template from monopolising the pipeline on large wardrobes.
@@ -198,6 +204,7 @@ class OutfitEngine:
                         "template": template["name"],
                         "optional_used": used_optional,
                     },
+                    "outfit_source": "legacy",
                 }
                 scored.append(outfit)
                 accepted += 1
@@ -216,12 +223,24 @@ class OutfitEngine:
 
     # ------------------------------------------------------------- bucketing
 
-    @staticmethod
-    def _bucket_by_category(items: list[dict]) -> dict[str, list[dict]]:
+    # Normalize plural/variant category strings from the DB to the canonical
+    # singular keys used by outfit templates.  Wardrobe items are stored with
+    # plural forms ("tops", "bottoms", "dresses") while templates reference
+    # singular forms ("top", "bottom", "dress").
+    _CAT_ALIASES: dict[str, str] = {
+        "tops": "top",
+        "bottoms": "bottom",
+        "dresses": "dress",
+        "outerwears": "outerwear",
+    }
+
+    @classmethod
+    def _bucket_by_category(cls, items: list[dict]) -> dict[str, list[dict]]:
         """Bucket items by category, folding accessory-like raw categories
         (``accessory``, ``bag``, ``jewelry``, ``hat``) into a single
-        ``accessory`` bucket. Items keep their raw ``category`` field so the
-        breakdown and explanations can still show ``bag`` or ``hat``.
+        ``accessory`` bucket.  Plural category names from the DB ("tops",
+        "bottoms", "dresses") are normalised to their singular template keys.
+        Items keep their raw ``category`` field so breakdowns stay accurate.
         """
         buckets: dict[str, list[dict]] = {
             "top": [],
@@ -233,10 +252,16 @@ class OutfitEngine:
         }
         for item in items:
             cat = item.get("category")
-            if cat in ACCESSORY_LIKE:
+            # v2 attribute format stores category as {value, confidence, …}
+            if isinstance(cat, dict):
+                cat = cat.get("value") or ""
+            cat = cat or ""
+            # Normalise plural → singular before lookup
+            normalized = cls._CAT_ALIASES.get(cat, cat)
+            if normalized in ACCESSORY_LIKE or cat in ACCESSORY_LIKE:
                 buckets["accessory"].append(item)
-            elif cat in buckets:
-                buckets[cat].append(item)
+            elif normalized in buckets:
+                buckets[normalized].append(item)
         return buckets
 
     @staticmethod

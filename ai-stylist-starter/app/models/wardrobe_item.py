@@ -1,5 +1,5 @@
 import uuid
-from sqlalchemy import ForeignKey, DateTime, func, Boolean, String
+from sqlalchemy import ForeignKey, DateTime, func, Boolean, String, Float, Integer
 from sqlalchemy.dialects.postgresql import UUID, JSONB
 from sqlalchemy.orm import Mapped, mapped_column
 from app.core.database import Base
@@ -19,4 +19,6 @@ class WardrobeItem(Base):
     image_key: Mapped[str | None] = mapped_column(String, nullable=True)
     image_url: Mapped[str] = mapped_column(String, nullable=False)
     is_verified: Mapped[bool] = mapped_column(Boolean, default=False)
+    cost: Mapped[float | None] = mapped_column(Float, nullable=True)
+    wear_count: Mapped[int] = mapped_column(Integer, nullable=False, server_default="0", default=0)
     created_at: Mapped[str] = mapped_column(DateTime(timezone=True), server_default=func.now())

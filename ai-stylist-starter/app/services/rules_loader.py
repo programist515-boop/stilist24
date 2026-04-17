@@ -20,4 +20,5 @@ def load_rules() -> dict[str, dict]:
         "seasons_12": _load_yaml("seasons_12.yaml"),
         "garment_line_rules": _load_yaml("garment_line_rules.yaml"),
         "outfit_rules": _load_yaml("outfit_rules.yaml"),
+        "seasons_palette": _load_yaml("seasons_palette.yaml"),
     }

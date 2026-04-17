@@ -13,4 +13,9 @@ class StyleProfile(Base):
     kibbe_confidence: Mapped[float | None] = mapped_column(Float, nullable=True)
     color_profile_json: Mapped[dict] = mapped_column(JSONB, default=dict)
     style_vector_json: Mapped[dict] = mapped_column(JSONB, default=dict)
+    # Stores manual corrections to auto-detected color axes and season selection.
+    # Schema: {auto_hair_color, auto_eye_color, auto_undertone,
+    #          manual_hair_color, manual_eye_color, manual_undertone,
+    #          manual_selected_season, override_history: []}
+    color_overrides_json: Mapped[dict] = mapped_column(JSONB, default=dict)
     created_at: Mapped[str] = mapped_column(DateTime(timezone=True), server_default=func.now())

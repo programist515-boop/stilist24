@@ -1,0 +1,464 @@
+# Clothing ontology for AI Stylist wardrobe items.
+# Defines valid attribute values per category.
+# Used by attribute_normalizer.py to validate and standardize item attributes.
+
+# Shared attribute vocabularies (referenced across categories)
+shared:
+  color:
+    - white
+    - black
+    - grey
+    - navy
+    - beige
+    - brown
+    - camel
+    - red
+    - blue
+    - green
+    - pink
+    - orange
+    - purple
+    - yellow
+    - burgundy
+    - olive
+    - teal
+    - cream
+    - charcoal
+    - coral
+    - multicolor
+  pattern:
+    - solid
+    - stripe
+    - check
+    - plaid
+    - floral
+    - geometric
+    - abstract
+    - animal_print
+    - polka_dot
+    - houndstooth
+    - paisley
+    - tie_dye
+    - print
+  occasion:
+    - casual
+    - smart_casual
+    - business
+    - business_casual
+    - formal
+    - evening
+    - sport
+    - outdoor
+    - beach
+    - loungewear
+  seasonality:
+    - spring
+    - summer
+    - autumn
+    - winter
+    - all_season
+    - spring_summer
+    - autumn_winter
+  layer_role:
+    - base
+    - mid
+    - outer
+
+categories:
+  tops:
+    subcategories:
+      - t_shirt
+      - blouse
+      - shirt
+      - sweater
+      - knit
+      - crop_top
+      - tank_top
+      - polo
+      - turtleneck
+      - corset_top
+      - cami
+    attributes:
+      material:
+        - cotton
+        - linen
+        - silk
+        - wool
+        - cashmere
+        - synthetic
+        - polyester
+        - viscose
+        - denim
+        - jersey
+        - velvet
+        - satin
+        - chiffon
+        - knit
+        - mesh
+      fit:
+        - slim
+        - regular
+        - oversized
+        - cropped
+        - fitted
+        - relaxed
+        - boxy
+      silhouette:
+        - straight
+        - fitted
+        - boxy
+        - relaxed
+        - a_line
+        - wrap
+      neckline:
+        - crew
+        - v_neck
+        - scoop
+        - turtleneck
+        - boat_neck
+        - off_shoulder
+        - one_shoulder
+        - halter
+        - collar
+        - square
+        - cowl
+      sleeve_length:
+        - sleeveless
+        - cap
+        - short
+        - 3_4
+        - long
+        - balloon
+      layer_role: [base, mid]
+
+  bottoms:
+    subcategories:
+      - jeans
+      - trousers
+      - chinos
+      - shorts
+      - skirt
+      - mini_skirt
+      - midi_skirt
+      - maxi_skirt
+      - leggings
+      - joggers
+      - culottes
+      - wide_leg_pants
+      - straight_leg_pants
+      - cargo_pants
+    attributes:
+      material:
+        - cotton
+        - denim
+        - linen
+        - wool
+        - synthetic
+        - polyester
+        - velvet
+        - leather
+        - suede
+        - jersey
+        - tweed
+        - corduroy
+        - satin
+      fit:
+        - slim
+        - skinny
+        - straight
+        - regular
+        - relaxed
+        - wide_leg
+        - tapered
+        - bootcut
+        - flared
+        - cropped
+      silhouette:
+        - straight
+        - fitted
+        - wide_leg
+        - a_line
+        - flared
+        - tapered
+      length:
+        - mini
+        - above_knee
+        - knee
+        - midi
+        - maxi
+        - full_length
+        - cropped
+      waist:
+        - high_waist
+        - mid_waist
+        - low_waist
+
+  dresses:
+    subcategories:
+      - mini_dress
+      - midi_dress
+      - maxi_dress
+      - shirt_dress
+      - wrap_dress
+      - bodycon_dress
+      - slip_dress
+      - sundress
+      - evening_dress
+      - cocktail_dress
+      - knit_dress
+      - blazer_dress
+    attributes:
+      material:
+        - cotton
+        - linen
+        - silk
+        - satin
+        - chiffon
+        - jersey
+        - velvet
+        - knit
+        - denim
+        - synthetic
+        - lace
+        - organza
+      fit:
+        - slim
+        - fitted
+        - relaxed
+        - a_line
+        - bodycon
+        - shift
+        - wrap
+        - empire
+      silhouette:
+        - a_line
+        - straight
+        - fitted
+        - wrap
+        - bodycon
+        - empire
+        - trapeze
+        - column
+      neckline:
+        - crew
+        - v_neck
+        - scoop
+        - boat_neck
+        - off_shoulder
+        - one_shoulder
+        - halter
+        - collar
+        - square
+        - sweetheart
+      sleeve_length:
+        - sleeveless
+        - cap
+        - short
+        - 3_4
+        - long
+      length:
+        - mini
+        - above_knee
+        - knee
+        - midi
+        - maxi
+
+  outerwear:
+    subcategories:
+      - blazer
+      - jacket
+      - coat
+      - trench_coat
+      - puffer
+      - parka
+      - leather_jacket
+      - denim_jacket
+      - cardigan
+      - vest
+      - bomber
+      - raincoat
+      - cape
+      - shearling
+    attributes:
+      material:
+        - wool
+        - cotton
+        - linen
+        - leather
+        - suede
+        - denim
+        - synthetic
+        - polyester
+        - down
+        - cashmere
+        - velvet
+        - tweed
+        - shearling
+      fit:
+        - slim
+        - regular
+        - oversized
+        - relaxed
+        - fitted
+        - boxy
+      silhouette:
+        - straight
+        - fitted
+        - oversized
+        - a_line
+        - wrap
+      length:
+        - cropped
+        - hip_length
+        - thigh_length
+        - knee_length
+        - midi
+        - maxi
+      closure:
+        - button
+        - zip
+        - snap
+        - belt
+        - open
+      layer_role: [mid, outer]
+
+  shoes:
+    subcategories:
+      - sneakers
+      - loafers
+      - oxford
+      - boots
+      - ankle_boots
+      - knee_boots
+      - heels
+      - stilettos
+      - block_heels
+      - mules
+      - sandals
+      - flip_flops
+      - ballet_flats
+      - platforms
+      - espadrilles
+      - mary_janes
+      - chelsea_boots
+      - combat_boots
+    attributes:
+      material:
+        - leather
+        - suede
+        - canvas
+        - synthetic
+        - rubber
+        - patent_leather
+        - satin
+        - velvet
+        - mesh
+      heel_height:
+        - flat
+        - low  # < 3cm
+        - mid  # 3-6cm
+        - high  # > 6cm
+        - platform
+      toe_shape:
+        - round
+        - square
+        - pointed
+        - open
+        - almond
+      closure:
+        - lace
+        - slip_on
+        - buckle
+        - zip
+        - strap
+
+  accessories:
+    subcategories:
+      - bag
+      - handbag
+      - tote
+      - clutch
+      - backpack
+      - crossbody
+      - belt
+      - scarf
+      - hat
+      - cap
+      - beanie
+      - gloves
+      - sunglasses
+      - jewelry
+      - necklace
+      - earrings
+      - bracelet
+      - watch
+      - hair_accessory
+    attributes:
+      material:
+        - leather
+        - suede
+        - fabric
+        - metal
+        - gold
+        - silver
+        - synthetic
+        - straw
+        - wood
+        - glass
+        - stone
+        - pearl
+      size:
+        - mini
+        - small
+        - medium
+        - large
+        - oversized
+
+# Attribute editability rules:
+# source "cv" = detected by computer vision → editable by user
+# source "manual" = set by user → editable
+# source "import" = imported from external data → editable
+# source "default" = fallback value when no detection → editable
+# Non-editable fields: id, user_id, created_at (not in attributes schema)
+
+editable_by_source:
+  cv: true
+  manual: true
+  import: true
+  default: true
+
+# Legacy value mappings: normalize old free-text values to ontology terms
+legacy_color_map:
+  white: white
+  black: black
+  grey: grey
+  gray: grey
+  navy: navy
+  navy blue: navy
+  blue: blue
+  red: red
+  green: green
+  pink: pink
+  orange: orange
+  purple: purple
+  yellow: yellow
+  brown: brown
+  beige: beige
+  clean: white
+  light: beige
+  dark: charcoal
+
+legacy_pattern_map:
+  solid: solid
+  plain: solid
+  patterned: print
+  striped: stripe
+  checked: check
+  floral: floral
+
+legacy_fit_map:
+  regular: regular
+  slim: slim
+  loose: relaxed
+  tight: fitted
+  oversized: oversized

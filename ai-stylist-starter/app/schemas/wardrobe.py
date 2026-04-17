@@ -41,6 +41,8 @@ class WardrobeItemOut(BaseModel):
     image_key: str | None
     image_url: str
     is_verified: bool
+    cost: float | None = None
+    wear_count: int = 0
 
 
 class WardrobeListOut(BaseModel):
