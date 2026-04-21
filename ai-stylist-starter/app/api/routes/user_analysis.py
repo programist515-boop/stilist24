@@ -14,6 +14,7 @@ from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_user_id, get_db
+from app.core.storage import fresh_public_url
 from app.repositories.user_photo_repository import UserPhotoRepository
 from app.schemas.user_analysis import (
     AnalyzedPhotoOut,
@@ -53,7 +54,7 @@ def list_user_photos(
             "id": str(row.id),
             "slot": row.slot,
             "image_key": row.image_key,
-            "image_url": row.image_url,
+            "image_url": fresh_public_url(row.image_key, row.image_url),
         }
         for row in rows
     ]

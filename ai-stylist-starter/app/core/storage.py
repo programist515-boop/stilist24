@@ -633,6 +633,28 @@ def get_storage_service() -> StorageService:
     return StorageService()
 
 
+def fresh_public_url(image_key: str | None, fallback: str) -> str:
+    """Rebuild the public URL from ``image_key`` on every call.
+
+    The wardrobe/user_photos/tryon_jobs tables all persist ``image_url``
+    as a snapshot of what the backend projected at upload time. That is
+    fine until ``S3_PUBLIC_BASE_URL`` changes (e.g. the nginx proxy
+    prefix is fixed) — then every already-stored URL goes stale. This
+    helper re-derives the URL from the canonical ``image_key`` so one
+    env update repairs every row at the next read, no DB migration
+    required.
+
+    Legacy rows that predate the ``image_key`` column (or any
+    unexpected storage failure) fall through to the persisted URL.
+    """
+    if not image_key:
+        return fallback
+    try:
+        return get_storage_service().public_url(image_key)
+    except Exception:
+        return fallback
+
+
 __all__ = [
     "StorageBackend",
     "StorageBackendError",

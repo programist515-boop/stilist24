@@ -22,6 +22,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_user_id, get_db
+from app.core.storage import fresh_public_url
 from app.repositories.tryon_repository import TryOnRepository
 from app.schemas.tryon import TryOnGenerateIn, TryOnJobOut
 from app.services.tryon_service import (
@@ -60,7 +61,7 @@ def _serialize_job(job) -> dict:
         "provider": job.provider,
         "provider_job_id": job.provider_job_id,
         "result_image_key": job.result_image_key,
-        "result_image_url": job.result_image_url,
+        "result_image_url": fresh_public_url(job.result_image_key, job.result_image_url),
         "metadata": job.metadata_json or {},
         "error_message": job.error_message,
         "note": TRY_ON_DISCLAIMER,

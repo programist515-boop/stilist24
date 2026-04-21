@@ -26,6 +26,7 @@ from app.core.storage import (
     StorageError,
     StorageService,
     StorageValidationError,
+    fresh_public_url,
     get_storage_service,
 )
 from app.models.style_profile import StyleProfile
@@ -60,7 +61,7 @@ def _serialize(item) -> dict:
         "category": item.category,
         "attributes": item.attributes_json or {},
         "image_key": item.image_key,
-        "image_url": item.image_url,
+        "image_url": fresh_public_url(item.image_key, item.image_url),
         "is_verified": item.is_verified,
         "cost": item.cost,
         "wear_count": item.wear_count,
