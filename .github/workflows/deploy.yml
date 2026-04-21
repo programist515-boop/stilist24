@@ -106,7 +106,9 @@ jobs:
             JWT_ALGORITHM=HS256
             JWT_ACCESS_MINUTES=60
             NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
-            S3_PUBLIC_BASE_URL=https://stilist24.com/s3
+            # Must include the bucket — nginx strips /s3/ and forwards the
+            # remainder straight to MinIO, which then needs /<bucket>/<key>.
+            S3_PUBLIC_BASE_URL=https://stilist24.com/s3/ai-stylist
             EOF
             chmod 600 .env.prod
 
