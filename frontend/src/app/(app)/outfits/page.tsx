@@ -15,6 +15,7 @@ import {
   OutfitCardSkeleton,
 } from "@/components/outfits/OutfitCard";
 import { generateOutfits } from "@/lib/api/outfits";
+import { trackEvent } from "@/lib/api/events";
 import { listWardrobeItems } from "@/lib/api/wardrobe";
 import { buildImageMap } from "@/components/today/TodayCard";
 import type { OutfitGenerateResponse } from "@/lib/schemas";
@@ -49,6 +50,13 @@ export default function OutfitsPage() {
         occasion: occasion || undefined,
         season: season || undefined,
       }),
+    onSuccess: (data) => {
+      trackEvent("outfits_generated", {
+        count: data.count ?? data.outfits?.length ?? 0,
+        occasion: occasion || null,
+        season: season || null,
+      });
+    },
   });
 
   const wardrobeEmpty =

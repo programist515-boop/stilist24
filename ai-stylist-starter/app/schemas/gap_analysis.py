@@ -6,15 +6,21 @@ from pydantic import BaseModel, ConfigDict
 
 
 class GapSuggestion(BaseModel):
-    """A suggested item that would unlock new outfit combinations."""
+    """A suggested item that would unlock new outfit combinations.
+
+    Slim UX shape:
+      * ``item``   — короткое название вещи
+      * ``why``    — одно короткое предложение, зачем она нужна
+      * ``action`` — предлагаемое действие (кнопка)
+    ``category`` сохранён для фронтенда (фильтры / иконки).
+    """
 
     model_config = ConfigDict(extra="forbid")
 
-    suggested_item: str            # human-readable label from YAML
-    category: str                  # which category the suggestion fills
-    new_combinations: int          # projected new valid combos if item added
-    categories_unlocked: list[str] # occasion tags this item opens up
-    explanation: str               # why this item is valuable
+    item: str
+    category: str
+    why: str
+    action: str = "Попробовать добавить"
 
 
 class UntappedItem(BaseModel):
@@ -25,7 +31,7 @@ class UntappedItem(BaseModel):
     item_id: str
     category: str
     outfit_count: int
-    reason: str    # what's keeping the item from appearing in more outfits
+    reason: str    # короткое объяснение, почему вещь редко попадает в образы
 
 
 class GapAnalysisResponse(BaseModel):
@@ -33,7 +39,7 @@ class GapAnalysisResponse(BaseModel):
 
     model_config = ConfigDict(extra="forbid")
 
-    suggestions: list[GapSuggestion]    # sorted by new_combinations desc
+    suggestions: list[GapSuggestion]    # ranked by projected unlock, highest first
     untapped_items: list[UntappedItem]
     missing_categories: list[str]
     notes: list[str]

@@ -18,7 +18,7 @@ contradict the requested weather.
 import uuid
 from typing import TYPE_CHECKING, Any, Callable, Iterable
 
-from app.services.explainer import Explanation, explain_outfit
+from app.services.explainer import Explanation, explain_outfit, MAX_REASONS
 from app.services.outfit_engine import OutfitEngine
 from app.services.scoring_service import cosine_like
 from app.services.user_context import build_user_context
@@ -403,7 +403,6 @@ class TodayService:
                     -a["overall"],
                     a["tiebreak"],
                 )
-            reason_builder = cls._safe_reasons
         elif label == "expressive":
             def key(a: dict):
                 return (
@@ -412,7 +411,6 @@ class TodayService:
                     -a["overall"],
                     a["tiebreak"],
                 )
-            reason_builder = cls._expressive_reasons
         else:  # balanced
             def key(a: dict):
                 return (
@@ -420,7 +418,6 @@ class TodayService:
                     -(a["rule_fit"] + a["personalization_pull"]),
                     a["tiebreak"],
                 )
-            reason_builder = cls._balanced_reasons
 
         ranked = sorted(annotated, key=key)
         for candidate in ranked:
@@ -428,60 +425,23 @@ class TodayService:
             if sig in used_signatures:
                 continue
             outfit = candidate["outfit"]
+            explanation = explain_outfit(outfit).to_dict()
             return {
                 "outfit": outfit,
-                "reasons": reason_builder(candidate),
-                "actions": _outfit_actions(outfit, label),
-                "explanation": explain_outfit(outfit).to_dict(),
+                "reasons": explanation.get("reasons", [])[:MAX_REASONS],
+                "actions": _outfit_actions(explanation),
+                "explanation": explanation,
             }
         return None
 
-    # -------------------------------------------------------- reason builders
 
-    @staticmethod
-    def _safe_reasons(a: dict) -> list[str]:
-        return [
-            f"safe: rule_fit={a['rule_fit']:.2f} (highest rule alignment)",
-            f"safe: experimentation={a['experimentation']:.2f} (low)",
-            f"safe: visual_risk={a['visual_risk']:.2f} (low)",
-            f"safe: overall={a['overall']:.2f}",
-        ]
+def _outfit_actions(explanation: dict) -> list[str]:
+    """Return a compact action list for a Today outfit.
 
-    @staticmethod
-    def _balanced_reasons(a: dict) -> list[str]:
-        blend = a["rule_fit"] + a["personalization_pull"]
-        return [
-            f"balanced: overall={a['overall']:.2f} (strongest)",
-            f"balanced: rules+prefs blend={blend:.2f}",
-            f"balanced: rule_fit={a['rule_fit']:.2f}, "
-            f"personalization_pull={a['personalization_pull']:.2f}",
-        ]
-
-    @staticmethod
-    def _expressive_reasons(a: dict) -> list[str]:
-        return [
-            f"expressive: personalization_pull={a['personalization_pull']:.2f} "
-            f"(strongest)",
-            f"expressive: experimentation={a['experimentation']:.2f} allowed "
-            f"by user score {a['user_experimentation']:.2f}",
-            f"expressive: overall={a['overall']:.2f}",
-        ]
-
-
-def _outfit_actions(outfit: dict, label: str) -> list[str]:
-    """Generate context-aware action labels for a Today outfit slot."""
-    actions = ["Wear today", "Save outfit"]
-    cats = {it.get("category") for it in outfit.get("items", [])}
-    # Normalise plural/singular
-    has_top = bool({"top", "tops"} & cats)
-    has_shoes = bool({"shoes"} & cats)
-    has_outerwear = bool({"outerwear"} & cats)
-    if has_top:
-        actions.append("Replace top")
-    if has_shoes:
-        actions.append("Replace shoes")
-    if has_outerwear:
-        actions.append("Remove outerwear")
-    if label == "expressive":
-        actions.append("Too bold? Try balanced")
+    Always shows ``Wear today`` and ``Save``; appends ``Adjust`` only if the
+    explanation reports warnings so users get a single clear escape hatch.
+    """
+    actions = ["Wear today", "Save"]
+    if explanation.get("warnings"):
+        actions.append("Adjust")
     return actions

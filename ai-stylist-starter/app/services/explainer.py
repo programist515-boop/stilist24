@@ -1,21 +1,40 @@
-"""Human-readable explanation formatter (Block 2 — Explainability UX).
+"""Human-readable explanation formatter (UX Simplification Sprint).
 
-Converts raw scorer reasons / warnings / scores produced by the backend
-into a product-friendly ``Explanation`` object:
+Produces a compact, Russian-language ``Explanation`` object:
 
     {
-        "summary": "Great fit for your wardrobe",
-        "reasons": ["Color matches your palette", "Pairs with 5 items"],
-        "warnings": ["Rarely worn so far"],
+        "summary": "Хорошее сочетание",
+        "reasons": ["Цвет хорошо подходит вам", "Сочетается с гардеробом"],
+        "warnings": ["Сложно сочетать с другими вещами"],
     }
 
-Import and call the helpers at the API boundary so the shape is consistent
-across outfits, shopping, versatility, and gap analysis.
+Rules (enforced in this module — downstream callers can rely on them):
+* summary — одно короткое предложение
+* reasons — максимум 3
+* warnings — максимум 2
+* никаких технических терминов (score, penalty, threshold, compatibility index)
 """
 
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+
+
+# ---------------------------------------------------------------------------
+# Shared label dictionary (Block 3)
+# ---------------------------------------------------------------------------
+
+LABELS: dict[str, str] = {
+    "high": "Базовая вещь",
+    "medium": "Универсальная",
+    "low": "Ограниченно сочетается",
+    "orphan": "Почти не используется",
+}
+
+
+MAX_SUMMARY_LEN = 1      # single sentence
+MAX_REASONS = 3
+MAX_WARNINGS = 2
 
 
 @dataclass
@@ -29,8 +48,8 @@ class Explanation:
     def to_dict(self) -> dict:
         return {
             "summary": self.summary,
-            "reasons": self.reasons,
-            "warnings": self.warnings,
+            "reasons": self.reasons[:MAX_REASONS],
+            "warnings": self.warnings[:MAX_WARNINGS],
         }
 
 
@@ -42,80 +61,67 @@ def explain_outfit(outfit: dict) -> Explanation:
     """Convert an outfit dict (from OutfitGenerator) into a user-facing Explanation."""
     score = outfit.get("total_score") or outfit.get("scores", {}).get("overall", 0.0)
     breakdown = outfit.get("breakdown") or {}
-    raw_reasons = list(outfit.get("reasons") or [])
-    raw_warnings = list(outfit.get("warnings") or [])
 
-    # Pick a summary based on overall score
     if score >= 0.75:
-        summary = "Great outfit — strong palette and style match"
+        summary = "Отличный образ"
     elif score >= 0.55:
-        summary = "Good combination — works well together"
+        summary = "Хорошее сочетание"
     elif score >= 0.35:
-        summary = "Decent option — a few things could be improved"
+        summary = "Неплохой вариант"
     else:
-        summary = "Worth considering — check the notes below"
+        summary = "Стоит доработать"
 
-    reasons = _clean_reasons(raw_reasons)
-    warnings = _clean_reasons(raw_warnings)
+    reasons: list[str] = []
+    warnings: list[str] = []
 
-    # Highlight the strongest positive sub-scorer
-    best_key, best_score = _best_subscore(breakdown)
-    if best_key and best_score >= 0.7:
-        reasons.insert(0, _subscore_label(best_key, best_score))
+    for key, score_val in _iter_subscores(breakdown):
+        if score_val >= 0.7:
+            reason = _SUBSCORE_POS.get(key)
+            if reason and reason not in reasons:
+                reasons.append(reason)
+        elif score_val < 0.35:
+            warning = _SUBSCORE_NEG.get(key)
+            if warning and warning not in warnings:
+                warnings.append(warning)
 
-    return Explanation(summary=summary, reasons=reasons[:5], warnings=warnings[:3])
+    return Explanation(summary=summary, reasons=reasons[:MAX_REASONS], warnings=warnings[:MAX_WARNINGS])
 
 
 # ---------------------------------------------------------------------------
 # Shopping explanation
 # ---------------------------------------------------------------------------
 
+_SHOPPING_DECISION_SUMMARY = {
+    "buy": "Стоит купить",
+    "maybe": "Можно рассмотреть",
+    "skip": "Лучше пропустить",
+}
+
+
 def explain_shopping(result: dict) -> Explanation:
     """Produce a user-facing Explanation from a PurchaseEvaluator result dict."""
     decision = result.get("decision", "maybe")
-    confidence = result.get("confidence", 0.5)
     subscores = result.get("subscores") or {}
 
-    _DECISION_SUMMARY = {
-        "buy": "Worth buying — strong fit for your wardrobe",
-        "maybe": "Decent option — consider if it fills a real need",
-        "skip": "Probably skip — too redundant, off-palette, or pricey for the wear",
-    }
-    summary = _DECISION_SUMMARY.get(decision, "See details below")
-    if confidence >= 0.75:
-        summary += " (high confidence)"
-    elif confidence < 0.5:
-        summary += " (low confidence — limited wardrobe data)"
+    summary = _SHOPPING_DECISION_SUMMARY.get(decision, "Можно рассмотреть")
 
     reasons: list[str] = []
     warnings: list[str] = []
 
-    for raw in result.get("reasons") or []:
-        cleaned = _clean_one(raw)
-        if cleaned:
-            reasons.append(cleaned)
-
-    for raw in result.get("warnings") or []:
-        cleaned = _clean_one(raw)
-        if cleaned:
-            warnings.append(cleaned)
-
-    # Highlight key sub-scores
-    for key, label_hi, label_lo in [
-        ("palette_match", "Color matches your palette", "Color may not fit your palette"),
-        ("gap_fill", "Fills a gap in your wardrobe", "You already have similar items"),
-        ("wardrobe_compat", "Pairs well with existing pieces", "Few compatible items found"),
-        ("redundancy_penalty", "Unique addition — no duplicates", "You already own something similar"),
-    ]:
+    for key, label_hi, label_lo in _SHOPPING_SUBSCORE_MAP:
         s = subscores.get(key, {}).get("score")
         if s is None:
             continue
-        if s >= 0.7 and label_hi not in reasons:
+        if s >= 0.7 and label_hi and label_hi not in reasons:
             reasons.append(label_hi)
-        elif s < 0.35 and label_lo not in warnings:
+        elif s < 0.35 and label_lo and label_lo not in warnings:
             warnings.append(label_lo)
 
-    return Explanation(summary=summary, reasons=reasons[:5], warnings=warnings[:3])
+    return Explanation(
+        summary=summary,
+        reasons=reasons[:MAX_REASONS],
+        warnings=warnings[:MAX_WARNINGS],
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -126,45 +132,22 @@ def explain_versatility(result: dict) -> Explanation:
     """Produce a user-facing Explanation from a VersatilityService result dict."""
     outfit_count = result.get("outfit_count", 0)
     is_orphan = result.get("is_orphan", True)
-    cpw = result.get("cost_per_wear")
-    wear_count = result.get("wear_count", 0) or 0
 
-    if outfit_count >= 8:
-        summary = "Highly versatile — a wardrobe staple"
-        label = "Wardrobe staple"
-    elif outfit_count >= 4:
-        summary = f"Good versatility — fits into {outfit_count} outfit combinations"
-        label = "Versatile piece"
-    elif outfit_count >= 1:
-        summary = f"Limited versatility — only {outfit_count} combination(s) found"
-        label = "Needs partners"
-    else:
-        summary = "Orphan item — no valid outfits found with current wardrobe"
-        label = "Rarely used"
+    status = _versatility_status(outfit_count, is_orphan)
+    summary = _VERSATILITY_SUMMARY[status]
 
     reasons: list[str] = []
     warnings: list[str] = []
 
     if not is_orphan:
-        reasons.append(f"Enables {outfit_count} valid outfit combinations")
+        reasons.append("Хорошо сочетается с гардеробом")
     else:
-        warnings.append("Consider adding complementary items to unlock this piece")
-
-    if cpw is not None:
-        if cpw <= 10:
-            reasons.append(f"Excellent value — cost per wear is {cpw:.1f}")
-        elif cpw <= 30:
-            reasons.append(f"Reasonable cost per wear: {cpw:.1f}")
-        else:
-            warnings.append(f"High cost per wear ({cpw:.1f}) — wear it more often")
-
-    if wear_count == 0:
-        warnings.append("Not yet worn — can't calculate real CPW")
+        warnings.append("Сложно сочетать с другими вещами")
 
     return Explanation(
         summary=summary,
-        reasons=reasons,
-        warnings=warnings,
+        reasons=reasons[:MAX_REASONS],
+        warnings=warnings[:MAX_WARNINGS],
     )
 
 
@@ -172,96 +155,73 @@ def explain_versatility(result: dict) -> Explanation:
 # Gap analysis action label
 # ---------------------------------------------------------------------------
 
-_GAP_CATEGORY_LABELS: dict[str, str] = {
-    "top": "tops",
-    "bottom": "bottoms",
-    "dress": "dresses",
-    "shoes": "footwear",
-    "outerwear": "outerwear",
-    "accessory": "accessories",
-}
-
-
 def gap_action_label(category: str) -> str:
-    """Return a friendly action string for a missing wardrobe category."""
-    friendly = _GAP_CATEGORY_LABELS.get(category, category)
-    return f"Add {friendly} to unlock new outfits"
+    """Return a short friendly action string for a missing wardrobe category."""
+    return "Попробовать добавить"
 
 
 # ---------------------------------------------------------------------------
 # Internal helpers
 # ---------------------------------------------------------------------------
 
-_PREFIX_STRIP = (
-    "palette_fit: ",
-    "wardrobe_compat: ",
-    "redundancy: ",
-    "budget_fit: ",
-    "gap_fill: ",
-    "expected_versatility: ",
-    "color_harmony: ",
-    "silhouette: ",
-    "preference: ",
-    "reuse: ",
-    "weather: ",
-    "occasion: ",
-    "filter: ",
-)
+_SUBSCORE_POS: dict[str, str] = {
+    "palette_fit": "Цвет хорошо подходит вам",
+    "color_harmony": "Цвета хорошо сочетаются",
+    "silhouette": "Силуэт сбалансирован",
+    "occasion": "Подходит под повод",
+    "preference": "В вашем стиле",
+    "reuse": "Свежее сочетание",
+    "weather": "Подходит по погоде",
+}
 
-_SCORE_LABELS: dict[str, tuple[str, str]] = {
-    "palette_fit": ("palette_fit", "Palette match"),
-    "color_harmony": ("color_harmony", "Color harmony"),
-    "silhouette": ("silhouette", "Silhouette balance"),
-    "occasion": ("occasion", "Occasion fit"),
-    "reuse": ("reuse", "Wear frequency bonus"),
-    "preference": ("preference", "Style preference"),
-    "weather": ("weather", "Weather suitability"),
+_SUBSCORE_NEG: dict[str, str] = {
+    "palette_fit": "Цвет может не подойти",
+    "color_harmony": "Цвета не очень сочетаются",
+    "silhouette": "Силуэт несбалансирован",
+    "occasion": "Не совсем под повод",
+    "preference": "Не в вашем обычном стиле",
+    "weather": "Не подходит по погоде",
+}
+
+_SHOPPING_SUBSCORE_MAP: list[tuple[str, str | None, str | None]] = [
+    ("palette_match", "Цвет хорошо подходит вам", "Цвет может не подойти"),
+    ("gap_fill", "Закроет пробел в гардеробе", "Похожее уже есть"),
+    ("wardrobe_compat", "Сочетается с гардеробом", "Мало с чем сочетается"),
+    ("redundancy_penalty", None, "Похожее уже есть"),
+    ("expected_versatility", "Хорошо раскроется в образах", "Сложно будет сочетать"),
+]
+
+_VERSATILITY_SUMMARY: dict[str, str] = {
+    "high": "Базовая вещь — легко сочетать",
+    "medium": "Универсальная вещь",
+    "low": "Ограниченно сочетается",
+    "orphan": "Почти не используется",
 }
 
 
-def _clean_one(raw: str) -> str:
-    """Strip internal prefix tags from a reason string."""
-    for prefix in _PREFIX_STRIP:
-        if raw.lower().startswith(prefix.lower()):
-            return raw[len(prefix):].strip().capitalize()
-    return raw.strip()
+def _versatility_status(outfit_count: int, is_orphan: bool) -> str:
+    if is_orphan:
+        return "orphan"
+    if outfit_count >= 8:
+        return "high"
+    if outfit_count >= 4:
+        return "medium"
+    return "low"
 
 
-def _clean_reasons(raws: list[str]) -> list[str]:
-    cleaned = []
-    seen: set[str] = set()
-    for r in raws:
-        c = _clean_one(r)
-        if c and c not in seen:
-            seen.add(c)
-            cleaned.append(c)
-    return cleaned
-
-
-def _best_subscore(breakdown: dict) -> tuple[str | None, float]:
-    best_key = None
-    best_score = -1.0
+def _iter_subscores(breakdown: dict):
     for key, val in breakdown.items():
         if isinstance(val, dict) and "score" in val:
-            s = float(val["score"])
+            yield key, float(val["score"])
         elif isinstance(val, (int, float)):
-            s = float(val)
-        else:
-            continue  # skip OutfitEngine's category→list breakdown
-        if s > best_score:
-            best_score = s
-            best_key = key
-    return best_key, best_score
+            yield key, float(val)
 
 
-def _subscore_label(key: str, score: float) -> str:
-    labels = {
-        "color_harmony": "Colors coordinate well together",
-        "palette_fit": "Colors fit your season palette",
-        "silhouette": "Silhouette is well-balanced",
-        "occasion": "Right for the occasion",
-        "reuse": "Good rotation — includes items due for wear",
-        "preference": "Matches your style preferences",
-        "weather": "Appropriate for the weather",
-    }
-    return labels.get(key, f"{key.replace('_', ' ').capitalize()} looks good")
+__all__ = [
+    "Explanation",
+    "LABELS",
+    "explain_outfit",
+    "explain_shopping",
+    "explain_versatility",
+    "gap_action_label",
+]

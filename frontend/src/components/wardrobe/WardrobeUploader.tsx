@@ -10,6 +10,7 @@ import { FileDropzone } from "@/components/ui/FileDropzone";
 import { Label } from "@/components/ui/Label";
 import { Select } from "@/components/ui/Select";
 import { uploadWardrobeItem } from "@/lib/api/wardrobe";
+import { trackEvent } from "@/lib/api/events";
 
 const CATEGORIES: Array<{ value: string; label: string }> = [
   { value: "top", label: "Верх" },
@@ -30,9 +31,13 @@ export function WardrobeUploader() {
       if (!file) throw new Error("Сначала выберите изображение");
       return uploadWardrobeItem({ image: file, category });
     },
-    onSuccess: () => {
+    onSuccess: (item) => {
       setFile(null);
       queryClient.invalidateQueries({ queryKey: ["wardrobe"] });
+      trackEvent("wardrobe_item_uploaded", {
+        item_id: item.id,
+        category: item.category,
+      });
     },
   });
 

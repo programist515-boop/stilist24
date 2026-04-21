@@ -66,7 +66,7 @@ export default function TodayPage() {
         />
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-1.5">
-            <Label htmlFor="weather">Погоода</Label>
+            <Label htmlFor="weather">Погода</Label>
             <Input
               id="weather"
               value={weather}

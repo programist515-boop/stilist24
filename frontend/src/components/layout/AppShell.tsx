@@ -1,6 +1,8 @@
 import type { ReactNode } from "react";
 import { NavBar } from "./NavBar";
 import { MobileNav } from "./MobileNav";
+import { FeedbackButton } from "@/components/feedback/FeedbackButton";
+import { PageViewTracker } from "@/components/feedback/PageViewTracker";
 
 export function AppShell({ children }: { children: ReactNode }) {
   return (
@@ -10,6 +12,8 @@ export function AppShell({ children }: { children: ReactNode }) {
         {children}
       </main>
       <MobileNav />
+      <FeedbackButton />
+      <PageViewTracker />
     </div>
   );
 }

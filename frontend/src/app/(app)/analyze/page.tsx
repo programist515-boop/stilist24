@@ -11,6 +11,7 @@ import { SectionHeader } from "@/components/ui/SectionHeader";
 import { PhotoSlot } from "@/components/analysis/PhotoSlot";
 import { AnalysisResultCard } from "@/components/analysis/AnalysisResultCard";
 import { analyzeUser } from "@/lib/api/user";
+import { trackEvent } from "@/lib/api/events";
 import { saveLastAnalysis } from "@/lib/local-store";
 import type { UserAnalysis } from "@/lib/schemas";
 
@@ -28,6 +29,10 @@ export default function AnalyzePage() {
     },
     onSuccess: (data) => {
       saveLastAnalysis(data);
+      trackEvent("analysis_completed", {
+        kibbe_type: data.kibbe?.main_type ?? null,
+        season: data.color?.season_top_1 ?? null,
+      });
     },
   });
 

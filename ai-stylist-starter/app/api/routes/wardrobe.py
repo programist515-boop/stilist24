@@ -28,6 +28,7 @@ from app.core.storage import (
     StorageValidationError,
     get_storage_service,
 )
+from app.models.style_profile import StyleProfile
 from app.repositories.wardrobe_repository import WardrobeRepository
 from app.services.user_context import build_user_context_from_db
 from app.services.garment_recognizer import recognize_garment

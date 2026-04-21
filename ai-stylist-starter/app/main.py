@@ -11,6 +11,7 @@ from app.api.errors import (
 from app.api.routes import (
     auth,
     color,
+    events,
     feedback,
     gap_analysis,
     insights,
@@ -55,6 +56,7 @@ app.include_router(wardrobe.router, prefix="/wardrobe", tags=["wardrobe"])
 app.include_router(outfits.router, prefix="/outfits", tags=["outfits"])
 app.include_router(tryon.router, prefix="/tryon", tags=["tryon"])
 app.include_router(feedback.router, prefix="/feedback", tags=["feedback"])
+app.include_router(events.router, prefix="/events", tags=["events"])
 app.include_router(today.router, prefix="/today", tags=["today"])
 app.include_router(insights.router, prefix="/insights", tags=["insights"])
 app.include_router(

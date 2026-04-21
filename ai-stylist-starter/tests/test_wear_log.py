@@ -120,10 +120,11 @@ class TestWearLogServiceUnit:
         item_id = uuid.uuid4()
         user_id = uuid.uuid4()
         row = self._make_log_row(item_id)
+        row.rating = 4  # match the rating passed to log_item_worn below
 
         with (
-            patch("app.services.wardrobe.wear_log_service.WearLogRepository") as MockWLR,
-            patch("app.services.wardrobe.wear_log_service.WardrobeRepository") as MockWR,
+            patch("app.repositories.wear_log_repository.WearLogRepository") as MockWLR,
+            patch("app.repositories.wardrobe_repository.WardrobeRepository") as MockWR,
         ):
             MockWLR.return_value.create.return_value = row
             MockWR.return_value.increment_wear_count.return_value = MagicMock()
@@ -143,7 +144,7 @@ class TestWearLogServiceUnit:
         user_id = uuid.uuid4()
         rows = [self._make_log_row(item_id) for _ in range(3)]
 
-        with patch("app.services.wardrobe.wear_log_service.WearLogRepository") as MockWLR:
+        with patch("app.repositories.wear_log_repository.WearLogRepository") as MockWLR:
             MockWLR.return_value.list_by_item.return_value = rows
             svc = WearLogService(db)
             result = svc.get_history(user_id=user_id, item_id=item_id)

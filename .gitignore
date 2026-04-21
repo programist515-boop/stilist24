@@ -64,6 +64,9 @@ Thumbs.db
 # --- Claude Code local state ------------------------------------------------
 .claude/
 
+# --- Business context (private) --------------------------------------------
+.business/
+
 # --- Docker / data volumes (local dev) --------------------------------------
 postgres_data/
 minio_data/
@@ -82,3 +85,7 @@ logs/
 *.key
 credentials*
 secrets*
+
+# --- Production env (generated on the server, never committed) -------------
+.env.prod
+!.env.prod.example

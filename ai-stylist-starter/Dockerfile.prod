@@ -9,10 +9,14 @@ WORKDIR /app
 
 RUN apt-get update && apt-get install -y --no-install-recommends libglib2.0-0 libgl1 libgles2 libegl1 libsm6 libxext6 libxrender1 curl && rm -rf /var/lib/apt/lists/*
 
+# Two-step install (see dev Dockerfile): cached deps first, source + editable
+# install after. Editable here is harmless (no volume mount in prod) and keeps
+# parity with dev so "No module named 'app'" cannot resurface.
 COPY pyproject.toml /app/pyproject.toml
 RUN pip install --upgrade pip && pip install .
 
 COPY . /app
+RUN pip install --no-deps -e .
 
 RUN python scripts/download_models.py
 RUN chmod +x /app/entrypoint.sh

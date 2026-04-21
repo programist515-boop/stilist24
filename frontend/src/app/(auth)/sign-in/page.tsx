@@ -18,6 +18,7 @@ export default function SignInPage() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-canvas px-4">
       <div className="w-full max-w-md">
+        <h1 className="sr-only">Вход в AI Stylist</h1>
         <div className="mb-8 text-center">
           <Link href="/" className="font-display text-2xl tracking-tight">
             AI Stylist

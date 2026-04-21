@@ -31,9 +31,10 @@ class TodayOutfit(BaseModel):
     """One labelled Today suggestion.
 
     ``label`` is one of ``"safe"``, ``"balanced"``, ``"expressive"``.
-    ``actions`` lists the context-aware CTA strings the frontend should
-    surface (e.g. "Wear today", "Replace top").
-    ``explanation`` is the UI-ready summary produced by the explainer.
+    ``actions`` holds the compact CTA list (``Wear today`` / ``Save`` /
+    optional ``Adjust`` when the explanation reports warnings).
+    ``explanation`` is the UI-ready summary produced by the explainer
+    (one-sentence summary, ≤3 reasons, ≤2 warnings — all in Russian).
     """
 
     model_config = ConfigDict(extra="forbid")

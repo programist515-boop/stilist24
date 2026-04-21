@@ -28,17 +28,18 @@ class SubScore(BaseModel):
 
 
 class PurchaseEvalOut(BaseModel):
-    """Response from ``POST /shopping/evaluate``."""
+    """Response from ``POST /shopping/evaluate``.
+
+    Slim UX shape:
+      * ``decision``   — buy / maybe / skip
+      * ``summary``    — одно короткое предложение
+      * ``reasons``    — до 3 коротких причин
+      * ``warnings``   — до 2 коротких предупреждений
+      * ``confidence`` — 0..1
+    """
 
     decision: Literal["buy", "maybe", "skip"]
+    summary: str
+    reasons: list[str] = Field(default_factory=list)
+    warnings: list[str] = Field(default_factory=list)
     confidence: float = Field(ge=0.0, le=1.0)
-    reasons: list[str]
-    warnings: list[str]
-    pairs_with_count: int
-    fills_gap_ids: list[str]
-    duplicate_like_item_ids: list[str]
-    subscores: dict[str, SubScore]
-    candidate_attributes: dict[str, Any]
-    data_quality: Literal["high", "medium", "low"] = "medium"
-    data_source: Literal["image", "manual", "minimal"] = "manual"
-    explanation: dict[str, Any] = Field(default_factory=dict)

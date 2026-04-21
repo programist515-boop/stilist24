@@ -46,12 +46,18 @@ jobs:
         env:
           PYTHONPATH: .
           STORAGE_BACKEND: memory
+        # The set is curated — every suite below can run without a live
+        # Postgres or MinIO. test_wear_log internally pytest.importorskips
+        # sqlalchemy and skips its route tests when it's missing.
         run: |
           pytest -q \
             tests/test_rules.py \
             tests/test_scoring.py \
             tests/test_scoring_engine.py \
-            tests/test_outfit_engine_step4.py
+            tests/test_outfit_engine_step4.py \
+            tests/test_events.py \
+            tests/test_insights.py \
+            tests/test_wear_log.py
 
   deploy:
     name: Deploy to stilist24.com

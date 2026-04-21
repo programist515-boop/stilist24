@@ -5,3 +5,9 @@ out
 .env
 *.log
 .DS_Store
+
+# Playwright artifacts — browser downloads and one-off screenshot dirs
+# written by scripts/mobile-check.js and debug probes.
+scripts/screenshots/
+test-results/
+playwright-report/

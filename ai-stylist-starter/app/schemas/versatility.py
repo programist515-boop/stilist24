@@ -15,8 +15,8 @@ class VersatilityResponse(BaseModel):
     top_partners: list[str]       # item_ids ranked by co-occurrence count
     is_orphan: bool               # True when outfit_count < ORPHAN_THRESHOLD
     cost_per_wear: float | None   # cost / wear_count, None if no cost set
-    explanation: list[str]        # human-readable reasoning lines
-    label: str = "Versatile piece"       # user-facing label
+    explanation: list[str]        # short human-readable reasoning lines
+    label: str = "Универсальная"         # user-facing label (see explainer.LABELS)
     status: str = "medium"               # orphan / low / medium / high
 
 

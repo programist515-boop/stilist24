@@ -82,25 +82,19 @@ async def evaluate_purchase(
 
     result = PurchaseEvaluator(wardrobe, user_context).evaluate(candidate)
 
-    # Data quality: based on inferred confidence + wardrobe size
-    inferred_conf = candidate.get("_inferred_confidence")
-    wardrobe_size = len(wardrobe)
-    if inferred_conf is not None:
-        data_quality = "high" if inferred_conf >= 0.7 else ("medium" if inferred_conf >= 0.4 else "low")
-    elif wardrobe_size >= 5:
-        data_quality = "medium"
-    else:
-        data_quality = "low"
-
     from app.services.explainer import explain_shopping
-    result["data_quality"] = data_quality
-    result["data_source"] = data_source
-    result["explanation"] = explain_shopping(result).to_dict()
+    explanation = explain_shopping(result).to_dict()
 
     # Persist the candidate so the evaluation can be referenced later
     _persist_candidate(db, user_id, candidate)
 
-    return result
+    return {
+        "decision": result["decision"],
+        "summary": explanation["summary"],
+        "reasons": explanation["reasons"],
+        "warnings": explanation["warnings"],
+        "confidence": result["confidence"],
+    }
 
 
 def _persist_candidate(

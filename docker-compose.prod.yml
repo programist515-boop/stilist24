@@ -1,12 +1,19 @@
 # Production stack for stilist24.com.
 #
 # Project name: stilist24com (see --env-file / -p in the CI deploy step).
-# Ports exposed to host: 8002 (api), 3002 (web).
-# db/redis/minio are internal-only — no host ports published.
+# Ports exposed to host: 8002 (api), 3002 (web), 9000 (minio, loopback).
+# Nginx on the host terminates HTTPS for stilist24.com and proxies:
+#   /        → 127.0.0.1:3002   (Next.js web)
+#   /api/    → 127.0.0.1:8002   (FastAPI)
+#   /s3/     → 127.0.0.1:9000   (MinIO — public wardrobe photos)
+# db and redis are compose-network-only — no host ports published.
 #
-# .env.prod is generated at deploy time from GitHub Secrets; all sensitive
-# values (JWT_SECRET, POSTGRES_PASSWORD, S3 keys, NEXT_PUBLIC_API_URL) come
-# from there — nothing sensitive is committed.
+# .env.prod is generated at deploy time from GitHub Secrets by the
+# appleboy/ssh-action step in .github/workflows/deploy.yml; all sensitive
+# values (JWT_SECRET, POSTGRES_PASSWORD, S3 keys, NEXT_PUBLIC_API_URL)
+# come from there — nothing sensitive is committed. `.env.prod.example`
+# in the repo is a reference list of every variable, not an input file
+# for the real deploy.
 
 services:
   api:
@@ -21,6 +28,16 @@ services:
       PYTHONPATH: /app
     ports:
       - "8002:8002"
+    # Uvicorn binds 0.0.0.0:8002 inside the container. A healthcheck lets
+    # docker compose surface a restart when the process is alive but
+    # the HTTP stack has hung — the host nginx will then fail-open to
+    # a 502 instead of holding the client.
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8002/health', timeout=3).getcode()==200 else 1)\""]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
     depends_on:
       db:
         condition: service_healthy

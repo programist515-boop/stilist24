@@ -1,3 +1,4 @@
+from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -46,6 +47,17 @@ class Settings(BaseSettings):
         "http://localhost:3000",
         "http://127.0.0.1:3000",
     ]
+
+    @field_validator("cors_allow_origins", mode="before")
+    @classmethod
+    def _split_cors_csv(cls, v):
+        # Pydantic-settings defaults to JSON-parsing list fields, which is
+        # awful in a .env file ("[...]" quoting pain). Accept a plain
+        # comma-separated string instead, e.g.
+        #   CORS_ALLOW_ORIGINS=https://stilist24.com,https://www.stilist24.com
+        if isinstance(v, str):
+            return [origin.strip() for origin in v.split(",") if origin.strip()]
+        return v
 
     # --- Feature flags ----------------------------------------------------
     # Use OutfitGenerator (new explainable pipeline) instead of legacy OutfitEngine.

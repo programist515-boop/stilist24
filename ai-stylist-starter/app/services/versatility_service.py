@@ -24,6 +24,7 @@ from collections import Counter
 from typing import TYPE_CHECKING
 
 from app.services.analytics.cpw_service import calculate as _cpw_calculate
+from app.services.explainer import LABELS
 from app.services.outfit_engine import ACCESSORY_LIKE, OUTFIT_TEMPLATES, OutfitEngine
 
 if TYPE_CHECKING:
@@ -154,36 +155,9 @@ class VersatilityService:
         lines: list[str] = []
 
         if is_orphan:
-            lines.append(
-                f"Item appears in {outfit_count} valid outfit combination(s) — "
-                f"below the orphan threshold of {ORPHAN_THRESHOLD}."
-            )
-            if last_reject_reasons:
-                lines.append(
-                    "Last filter rejection: " + "; ".join(last_reject_reasons)
-                )
-            lines.append(
-                "Consider adding complementary items (e.g. missing shoes or top) "
-                "or reviewing occasion/formality tags."
-            )
+            lines.append("Сложно сочетать с другими вещами")
         else:
-            lines.append(
-                f"Item enables {outfit_count} valid outfit combination(s)."
-            )
-
-        if top_partners:
-            lines.append(
-                f"Most frequent outfit partners (top {len(top_partners)}): "
-                + ", ".join(top_partners[:3])
-            )
-
-        if cost_per_wear is not None:
-            lines.append(
-                f"Cost per wear: {cost_per_wear} "
-                f"(worn {wear_count} time(s))."
-            )
-        elif wear_count == 0:
-            lines.append("Item has not been marked as worn yet.")
+            lines.append("Хорошо сочетается с гардеробом")
 
         return lines
 
@@ -194,8 +168,8 @@ class VersatilityService:
             "top_partners": [],
             "is_orphan": True,
             "cost_per_wear": None,
-            "explanation": ["Item not found in wardrobe."],
-            "label": "Rarely used",
+            "explanation": ["Вещь не найдена в гардеробе"],
+            "label": LABELS["orphan"],
             "status": "orphan",
         }
 
@@ -203,12 +177,12 @@ class VersatilityService:
 def _versatility_label(outfit_count: int, is_orphan: bool) -> tuple[str, str]:
     """Return (human label, machine status) for a versatility result."""
     if is_orphan:
-        return "Rarely used", "orphan"
+        return LABELS["orphan"], "orphan"
     if outfit_count >= 8:
-        return "Wardrobe staple", "high"
+        return LABELS["high"], "high"
     if outfit_count >= 4:
-        return "Versatile piece", "medium"
-    return "Needs partners", "low"
+        return LABELS["medium"], "medium"
+    return LABELS["low"], "low"
 
 
 __all__ = ["VersatilityService", "ORPHAN_THRESHOLD"]

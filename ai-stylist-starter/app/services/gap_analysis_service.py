@@ -21,6 +21,7 @@ from typing import TYPE_CHECKING, Any
 
 import yaml
 
+from app.services.explainer import gap_action_label
 from app.services.outfit_engine import ACCESSORY_LIKE, OUTFIT_TEMPLATES, OutfitEngine
 
 if TYPE_CHECKING:
@@ -73,7 +74,7 @@ class GapAnalysisService:
         notes: list[str] = []
 
         if not wardrobe:
-            notes.append("Wardrobe is empty — add items to enable gap analysis.")
+            notes.append("Гардероб пуст — добавьте вещи")
             return {
                 "suggestions": [],
                 "untapped_items": [],
@@ -136,6 +137,7 @@ class GapAnalysisService:
     ) -> list[dict]:
         suggestions: list[dict] = []
         suggestion_defs = self._rules.get("suggestions", {})
+        scored: list[tuple[int, dict]] = []
 
         for missing_cat in missing_categories:
             cat_defs = suggestion_defs.get(missing_cat, [])
@@ -145,27 +147,20 @@ class GapAnalysisService:
                 )
                 if new_combos == 0:
                     continue
-                occasions = sorted(set(suggestion_def.get("occasions", [])))
                 label = suggestion_def.get("label", missing_cat)
-                explanation = self._suggestion_explanation(
-                    label=label,
-                    new_combos=new_combos,
-                    occasions=occasions,
-                    owned_categories=owned_categories,
-                    missing_cat=missing_cat,
-                )
-                suggestions.append({
-                    "suggested_item": label,
-                    "category": missing_cat,
-                    "new_combinations": new_combos,
-                    "categories_unlocked": occasions,
-                    "explanation": explanation,
-                    "action": "Add to wishlist",
-                    "shopping_hint": f"Looking for {label}? Evaluate it against your wardrobe before buying.",
-                    "evaluate_path": f"/shopping/evaluate?category={missing_cat}",
-                })
+                scored.append((
+                    new_combos,
+                    {
+                        "item": label,
+                        "category": missing_cat,
+                        "why": "Добавит много новых сочетаний",
+                        "action": gap_action_label(missing_cat),
+                    },
+                ))
 
-        suggestions.sort(key=lambda s: -s["new_combinations"])
+        scored.sort(key=lambda row: -row[0])
+        for _, suggestion in scored:
+            suggestions.append(suggestion)
         return suggestions
 
     def _project_new_combos(
@@ -235,56 +230,9 @@ class GapAnalysisService:
         count: int,
         buckets: dict[str, list[dict]],
     ) -> str:
-        needed: list[str] = []
-        if category == "top":
-            if not buckets.get("bottom") and not buckets.get("dress"):
-                needed.append("bottoms or dress")
-            if not buckets.get("shoes"):
-                needed.append("shoes")
-        elif category == "bottom":
-            if not buckets.get("top"):
-                needed.append("tops")
-            if not buckets.get("shoes"):
-                needed.append("shoes")
-        elif category == "dress":
-            if not buckets.get("shoes"):
-                needed.append("shoes")
-        elif category == "shoes":
-            if not buckets.get("top") and not buckets.get("dress"):
-                needed.append("tops or dress")
-
-        base = f"Appears in {count} valid combination(s)."
-        if needed:
-            return base + " Missing complementary items: " + ", ".join(needed) + "."
-        return (
-            base + " Check formality/occasion tags — "
-            "they may conflict with other items in your wardrobe."
-        )
-
-    @staticmethod
-    def _suggestion_explanation(
-        *,
-        label: str,
-        new_combos: int,
-        occasions: list[str],
-        owned_categories: set[str],
-        missing_cat: str,
-    ) -> str:
-        occ_str = (
-            (", ".join(occasions[:3]) + " occasions")
-            if occasions
-            else "multiple occasions"
-        )
-        existing = sorted(owned_categories - {missing_cat})
-        pair_str = (
-            ("pairs with your " + ", ".join(existing[:3]))
-            if existing
-            else "expands your wardrobe"
-        )
-        return (
-            f"Adding a {label} would enable {new_combos} new outfit "
-            f"combination(s). It {pair_str} across {occ_str}."
-        )
+        if count == 0:
+            return "Почти не используется"
+        return "Сложно сочетать с другими вещами"
 
     @staticmethod
     def _infer_formality(occasions: list[str]) -> str:

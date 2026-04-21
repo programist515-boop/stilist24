@@ -406,12 +406,18 @@ class InsightsService:
 def _to_flat_item(item) -> dict:
     if hasattr(item, "attributes_json"):
         attrs = dict(item.attributes_json or {})
+        # Spread attrs into root first so callers that read e.g. ``item["primary_color"]``
+        # keep working. Explicit keys (``id``, ``category``, ``attributes``) go *after*
+        # the spread so they take precedence — otherwise attrs with the same key (e.g.
+        # the envelope-shaped ``category: {value, source, ...}`` produced by the upload
+        # pipeline) would clobber the raw string ``item.category`` and break downstream
+        # code that does ``set.add(item["category"])``.
         return {
+            **attrs,
             "id": str(item.id),
             "category": item.category,
             "name": attrs.get("name"),
             "attributes": attrs,
-            **attrs,
         }
     if isinstance(item, dict):
         return item
