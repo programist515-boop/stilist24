@@ -9,9 +9,15 @@ __pycache__
 .env
 .venv
 venv
-data
 logs
 *.log
 *.swp
 .DS_Store
 Thumbs.db
+
+# NB: do NOT add `data/` here — it ships runtime YAML files
+# (clothing_ontology.yaml, color_dimensions.yaml, outfit_templates.yaml)
+# read by app.services.wardrobe.attribute_normalizer and
+# app.services.outfits.outfit_generator. Excluding the folder makes the
+# prod image build fine but every /wardrobe/upload returns 500 —
+# attribute normalization can't find its ontology file.
