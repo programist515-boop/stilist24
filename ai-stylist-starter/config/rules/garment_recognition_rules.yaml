@@ -21,3 +21,102 @@ garment_recognition:
   # If (a*_std + b*_std) / 2 in CIE Lab exceeds this threshold,
   # the garment is classified as "patterned", otherwise "solid".
   print_variance_threshold: 15.0
+
+  # -----------------------------------------------------------------
+  # Phase-0: whitelist допустимых значений для 14 новых атрибутов
+  # (зеркало app.models.item_attributes). Используется для документации
+  # и валидации YAML-конфигов категорий/стоп-листов.
+  # При правке — обновлять и Python-константы (это единственный
+  # источник истины на уровне runtime), и эти списки.
+  # -----------------------------------------------------------------
+  attribute_values:
+    fabric_rigidity:
+      - soft
+      - medium
+      - rigid
+    fabric_finish:
+      - matte
+      - glossy
+      - metallic
+      - sequin
+      - brocade
+    occasion:
+      - day
+      - work
+      - smart_casual
+      - evening
+      - sport
+    neckline_type:
+      - v
+      - straight
+      - boat
+      - round
+      - sweetheart
+      - halter
+      - asymmetric
+      - turtleneck
+      - off_shoulder
+    sleeve_type:
+      - set_in
+      - raglan
+      - batwing
+      - dropped_shoulder
+      - cap
+      - puff_sharp
+      - sleeveless
+    sleeve_length:
+      - short
+      - three_quarter
+      - long_wrist
+      - long
+    pattern_scale:
+      - small
+      - medium
+      - large
+    pattern_character:
+      - geometric
+      - abstract
+      - floral_soft
+      - floral_bold
+      - watercolor
+      - animal
+      - stripe
+      - dots
+      - checks
+      - asymmetric
+    pattern_symmetry:
+      - symmetric
+      - asymmetric
+    detail_scale:
+      - small
+      - medium
+      - large
+    structure:
+      - structured
+      - semi_structured
+      - unstructured
+    cut_lines:
+      - angular
+      - straight
+      - soft_flowing
+    shoulder_emphasis:
+      - required
+      - neutral
+      - avoided
+    style_tags:
+      - military
+      - preppy
+      - dandy
+      - casual
+      - smart_casual
+      - dramatic
+      - twenties
+      - romantic
+
+  # Quality thresholds — сколько из 14 атрибутов должно быть
+  # заполнено для каждого уровня качества. Значения зеркалят логику
+  # в garment_recognizer.recognize_extended.
+  extended_quality_thresholds:
+    high: 10    # 10+ из 14
+    medium: 7   # 7-9 из 14
+    # low: всё что меньше — по умолчанию
