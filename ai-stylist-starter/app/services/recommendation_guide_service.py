@@ -359,14 +359,15 @@ class RecommendationGuideService:
         style = self._load_style_profile(user_id)
         perso = self._load_personalization(user_id)
 
-        kibbe_type_raw: str | None = (
-            getattr(style, "kibbe_type", None) if style else None
-        )
-        color_profile: dict | None = (
-            getattr(style, "color_profile_json", None) or {}
-            if style
-            else None
-        )
+        from app.services.style_profile_resolver import get_active_profile
+
+        resolved = get_active_profile(style)
+        kibbe_type_raw: str | None = resolved.kibbe_type
+        color_profile: dict | None = dict(resolved.raw_color_profile)
+        # Ensure downstream season lookups use the active season even when the
+        # source is the preference quiz (which may not populate the raw blob).
+        if resolved.color_season:
+            color_profile["season_top_1"] = resolved.color_season
         style_vector: dict | None = (
             getattr(perso, "style_vector_json", None) or {}
             if perso

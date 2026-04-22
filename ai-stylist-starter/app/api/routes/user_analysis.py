@@ -10,7 +10,8 @@ storage or DB calls, no feature extraction.
 import uuid
 from datetime import datetime, timezone
 
-from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
+from fastapi import APIRouter, Body, Depends, File, HTTPException, UploadFile
+from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_user_id, get_db
@@ -23,6 +24,10 @@ from app.schemas.user_analysis import (
     UserAnalyzeResponse,
 )
 from app.services.color_engine import ColorEngine
+from app.services.style_profile_resolver import (
+    VALID_SOURCES,
+    set_active_profile_source,
+)
 from app.services.user_analysis_service import (
     AnalysisPhotoUpload,
     UserAnalysisPersistenceError,
@@ -184,4 +189,59 @@ def apply_color_override(
         "color": color_result,
         "overrides_applied": applied,
         "overrides_history_length": len(history),
+    }
+
+
+class ActiveProfileSourceIn(BaseModel):
+    source: str = Field(
+        ...,
+        description=(
+            "Which profile feeds downstream recommendations: "
+            "'algorithmic' (photo analysis) or 'preference' (style quiz)."
+        ),
+    )
+
+
+class ActiveProfileSourceOut(BaseModel):
+    source: str
+    kibbe_type: str | None = None
+    color_season: str | None = None
+
+
+@router.post("/active-profile-source", response_model=ActiveProfileSourceOut)
+def set_active_profile_source_endpoint(
+    body: ActiveProfileSourceIn = Body(...),
+    db: Session = Depends(get_db),
+    user_id: uuid.UUID = Depends(get_current_user_id),
+) -> dict:
+    """Switch the profile used for downstream recommendations.
+
+    Accepts ``algorithmic`` (photo-analysis-derived — default) or
+    ``preference`` (style-quiz-derived). Fails with 409 when the caller
+    asks for ``preference`` without having completed the quiz, and with
+    400 on an unknown source value.
+    """
+    if body.source not in VALID_SOURCES:
+        raise HTTPException(
+            status_code=400,
+            detail=(
+                f"invalid profile source: {body.source!r} "
+                f"(expected one of {sorted(VALID_SOURCES)})"
+            ),
+        )
+    try:
+        row = set_active_profile_source(user_id, body.source, db)
+    except ValueError as exc:
+        # "preference profile not completed" — the quiz hasn't been taken.
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
+    except LookupError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+    from app.services.style_profile_resolver import get_active_profile
+
+    resolved = get_active_profile(row)
+    return {
+        "source": resolved.source,
+        "kibbe_type": resolved.kibbe_type,
+        "color_season": resolved.color_season,
     }

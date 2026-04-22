@@ -5,6 +5,10 @@ from sqlalchemy.orm import Mapped, mapped_column
 from app.core.database import Base
 
 
+PROFILE_SOURCE_ALGORITHMIC = "algorithmic"
+PROFILE_SOURCE_PREFERENCE = "preference"
+
+
 class StyleProfile(Base):
     __tablename__ = "style_profiles"
 
@@ -18,4 +22,15 @@ class StyleProfile(Base):
     #          manual_hair_color, manual_eye_color, manual_undertone,
     #          manual_selected_season, override_history: []}
     color_overrides_json: Mapped[dict] = mapped_column(JSONB, default=dict)
+    # Preference-quiz-derived profile (alternative to algorithmic analysis).
+    # Populated by the Tinder-style style quiz; consumed via style_profile_resolver.
+    kibbe_type_preference: Mapped[str | None] = mapped_column(String, nullable=True)
+    kibbe_preference_confidence: Mapped[float | None] = mapped_column(Float, nullable=True)
+    color_season_preference: Mapped[str | None] = mapped_column(String, nullable=True)
+    color_preference_confidence: Mapped[float | None] = mapped_column(Float, nullable=True)
+    preference_completed_at: Mapped[str | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    # Which profile feeds downstream recommendations: "algorithmic" | "preference".
+    active_profile_source: Mapped[str] = mapped_column(
+        String(16), nullable=False, server_default=PROFILE_SOURCE_ALGORITHMIC
+    )
     created_at: Mapped[str] = mapped_column(DateTime(timezone=True), server_default=func.now())

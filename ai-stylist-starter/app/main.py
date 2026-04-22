@@ -16,6 +16,8 @@ from app.api.routes import (
     gap_analysis,
     insights,
     outfits,
+    preference_quiz_color,
+    preference_quiz_identity,
     recommendations,
     shopping,
     today,
@@ -63,6 +65,16 @@ app.include_router(
     recommendations.router, prefix="/recommendations", tags=["recommendations"]
 )
 app.include_router(shopping.router, prefix="/shopping", tags=["shopping"])
+app.include_router(
+    preference_quiz_identity.router,
+    prefix="/preference-quiz/identity",
+    tags=["preference-quiz"],
+)
+app.include_router(
+    preference_quiz_color.router,
+    prefix="/preference-quiz/color",
+    tags=["preference-quiz"],
+)
 
 
 @app.get("/health")

@@ -133,6 +133,22 @@ export default function AnalyzePage() {
             </div>
           </Card>
           <AnalysisResultCard result={mutation.data} />
+          <Card className="border-sky-200 bg-sky-50">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div className="max-w-xl">
+                <CardTitle className="text-sky-900">
+                  Не уверены в результате?
+                </CardTitle>
+                <CardSubtitle className="mt-1 text-sky-800">
+                  Пройдите квиз по лайкам — 5 минут, без загрузок. В конце
+                  сравним два профиля и вы сами решите, какой использовать.
+                </CardSubtitle>
+              </div>
+              <Link href="/style-quiz">
+                <Button variant="primary">Уточнить по лайкам</Button>
+              </Link>
+            </div>
+          </Card>
         </section>
       ) : null}
     </>
