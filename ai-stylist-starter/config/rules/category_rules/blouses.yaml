@@ -1,0 +1,37 @@
+category: blouses
+rules:
+
+  flamboyant_gamine:
+    prefer:
+      cut: [straight_mens_type]             # прямые по мужскому типу
+      pending_neckline_type: [v, straight, asymmetric]
+      trim: geometric
+      pending_fabric_rigidity: [medium, rigid]
+      pending_fabric_finish: [matte, very_glossy]   # либо матовая, либо очень блестящая
+      asymmetric_details: bonus
+    stop:
+      - rule: ruffled
+        reason: "Блузы с рюшами — мягкая плавная форма, противоположна FG"
+      - rule: tightly_fitting
+        reason: "Очень обтягивающие блузы подчёркивают кривые, а FG нуждается в разбитом силуэте"
+      - rule: symmetric_traditional
+        reason: "Симметричная традиционная блуза без деталей — слишком 'хорошая девочка'"
+      - rule: fine_soft_fabric
+        reason: "Тонкая мягкая ткань не держит форму"
+    notes:
+      - "Белая рубашка — носить дерзко: расстегнуть верхние пуговицы, поднять воротник."
+      - "Если нужен классический вид — с брошкой или угловатой фурнитурой."
+      - "Поверх белой классической рубашки — яркий кардиган, не жакет (не взрослить)."
+
+  dramatic: {prefer: {}, stop: []}
+  soft_dramatic: {prefer: {}, stop: []}
+  flamboyant_natural: {prefer: {}, stop: []}
+  soft_natural: {prefer: {}, stop: []}
+  natural: {prefer: {}, stop: []}
+  dramatic_classic: {prefer: {}, stop: []}
+  soft_classic: {prefer: {}, stop: []}
+  classic: {prefer: {}, stop: []}
+  soft_gamine: {prefer: {}, stop: []}
+  gamine: {prefer: {}, stop: []}
+  romantic: {prefer: {}, stop: []}
+  theatrical_romantic: {prefer: {}, stop: []}

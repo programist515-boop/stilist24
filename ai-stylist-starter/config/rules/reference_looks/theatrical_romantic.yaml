@@ -1,0 +1,118 @@
+subtype: theatrical_romantic
+primary_look_id: tr_hourglass_dress
+reference_looks:
+
+  - id: tr_hourglass_dress
+    name: "Платье-песочные часы с акцентом на талию"
+    style: smart_casual
+    season_hint: all
+    image_url: "/reference_looks/theatrical_romantic/tr_hourglass_dress.jpg"
+    items:
+      - slot: dress
+        requires:
+          category: dress
+          pending_silhouette: hourglass
+          pending_cut_lines: [curved, crisp]
+          pending_waist: nipped
+          pending_structure: semi_tailored
+          pending_fabric: [silk, satin, structured_crepe]
+          pending_length: [knee, just_below_knee]
+          pending_neckline: [sweetheart, v_deep]
+        optional: false
+      - slot: shoes
+        requires:
+          category: heels
+          pending_heel_type: [stiletto, slim_curved]
+          pending_toe_shape: [pointed_soft, almond]
+        optional: false
+    accessories:
+      - type: bag
+        requires:
+          pending_structure: structured_curved
+          pending_detail_scale: [small, medium]
+      - type: jewelry
+        requires:
+          pending_detail_scale: medium
+          pending_cut_lines: curved_dramatic
+        count_max: 3
+    notes:
+      - "Тонкая талия + округлые линии — визитка подтипа"
+      - "Чуть больше драмы, чем у Romantic: сильный акцент, но мягкие контуры"
+
+  - id: tr_pencil_skirt_silk_blouse
+    name: "Юбка-карандаш с шёлковой блузкой"
+    style: office
+    season_hint: all
+    image_url: "/reference_looks/theatrical_romantic/tr_pencil_skirt_silk_blouse.jpg"
+    items:
+      - slot: top
+        requires:
+          category: [silk_blouse, bow_blouse]
+          pending_cut_lines: [curved, draped_crisp]
+          pending_fabric: [silk, satin]
+          pending_neckline: [v_soft, bow_collar]
+        optional: false
+      - slot: bottom
+        requires:
+          category: pencil_skirt
+          pending_silhouette: pencil_hourglass
+          pending_length: [knee, just_below_knee]
+          pending_waist: high_fitted
+        optional: false
+      - slot: shoes
+        requires:
+          category: [pumps, slingback_heels]
+          pending_heel_type: stiletto
+          pending_toe_shape: pointed_soft
+        optional: false
+    accessories:
+      - type: bag
+        requires:
+          pending_structure: structured_curved
+    notes:
+      - "Высокая талия юбки + заправленная блузка подчёркивают силуэт"
+
+  - id: tr_evening_velvet_gown
+    name: "Бархатное вечернее платье"
+    style: evening
+    season_hint: autumn_winter
+    image_url: "/reference_looks/theatrical_romantic/tr_evening_velvet_gown.jpg"
+    items:
+      - slot: dress
+        requires:
+          category: gown
+          pending_silhouette: [hourglass, mermaid_soft]
+          pending_cut_lines: curved_dramatic
+          pending_fabric: [velvet, satin, silk_heavy]
+          pending_waist: nipped
+          pending_length: maxi
+          pending_neckline: [sweetheart, v_deep, halter_soft]
+        optional: false
+      - slot: shoes
+        requires:
+          category: heels
+          pending_heel_type: stiletto
+          pending_toe_shape: pointed_soft
+        optional: false
+    accessories:
+      - type: clutch
+        requires:
+          pending_structure: structured_curved
+          pending_fabric: [velvet, satin, sequin_fine]
+      - type: jewelry
+        requires:
+          pending_detail_scale: [medium, large]
+          pending_cut_lines: curved_dramatic
+          pending_material: [gold, pearl_lush]
+        count_max: 3
+    notes:
+      - "Бархат — любимая ткань подтипа"
+      - "Драма через ткань и силуэт, не через геометрию"
+
+global_stop_items:
+  - pending_cut_lines: [sharp_angular_extreme, boxy]
+  - pending_structure: [unstructured_loose, boxy_masculine]
+  - pending_silhouette: [straight_column_rigid, oversized_boxy]
+  - pending_proportion: boxy_masculine
+  - category: [utility_safari, oversized_boyfriend_blazer, boxy_shift_dress]
+  - pending_fabric: [heavy_suede_rough, coarse_linen]

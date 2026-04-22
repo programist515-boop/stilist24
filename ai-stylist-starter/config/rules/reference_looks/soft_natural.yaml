@@ -1,0 +1,116 @@
+subtype: soft_natural
+primary_look_id: sn_wrap_dress_soft
+reference_looks:
+
+  - id: sn_wrap_dress_soft
+    name: "Платье с мягким запахом"
+    style: smart_casual
+    season_hint: spring_summer
+    image_url: "/reference_looks/soft_natural/sn_wrap_dress_soft.jpg"
+    items:
+      - slot: dress
+        requires:
+          category: wrap_dress
+          pending_cut_lines: relaxed_curved
+          pending_drape: soft_flowing
+          pending_fabric: [cotton_jersey, linen_soft, modal]
+          pending_waist: [defined_soft, blouson]
+          pending_length: midi
+        optional: false
+      - slot: shoes
+        requires:
+          category: [low_block_heels, espadrilles, loafers]
+          pending_detail_scale: medium
+        optional: false
+    accessories:
+      - type: belt
+        optional: true
+        requires:
+          pending_fabric: soft_leather
+          width: medium
+      - type: bag
+        requires:
+          pending_structure: semi_slouchy
+          pending_detail_scale: medium
+    notes:
+      - "Мягкий запах подчёркивает талию, не зажимая силуэт"
+      - "Натуральные струящиеся ткани — лён, вискоза, мягкий трикотаж"
+
+  - id: sn_linen_wide_set
+    name: "Льняной костюм oversize с мягким плечом"
+    style: weekend
+    season_hint: spring_summer
+    image_url: "/reference_looks/soft_natural/sn_linen_wide_set.jpg"
+    items:
+      - slot: blazer
+        requires:
+          category: [blazer, overshirt]
+          pending_structure: unstructured
+          pending_cut_lines: relaxed_curved
+          pending_fabric: [linen, cotton_soft]
+          pending_shoulder: natural
+        optional: false
+      - slot: top
+        requires:
+          category: [tank, tshirt]
+          pending_fabric: cotton_jersey
+          pending_cut_lines: relaxed_curved
+        optional: false
+      - slot: bottom
+        requires:
+          category: [wide_trousers, palazzo]
+          pending_silhouette: wide_flowing
+          pending_fabric: linen
+        optional: false
+      - slot: shoes
+        requires:
+          category: [espadrilles, mules, sandals]
+          pending_detail_scale: medium
+        optional: false
+    accessories:
+      - type: bag
+        requires:
+          pending_structure: semi_slouchy
+          pending_fabric: soft_leather
+    notes:
+      - "Льняной жакет без подплечников — мягкая посадка, подчёркивающая природную ширину"
+
+  - id: sn_midi_knit
+    name: "Трикотажный миди-комплект"
+    style: smart_casual
+    season_hint: autumn_winter
+    image_url: "/reference_looks/soft_natural/sn_midi_knit.jpg"
+    items:
+      - slot: top
+        requires:
+          category: [knit_sweater, knit_top]
+          pending_fabric: soft_knit
+          pending_cut_lines: relaxed_curved
+          pending_neckline: [scoop, v_soft]
+        optional: false
+      - slot: bottom
+        requires:
+          category: [midi_skirt, a_line_skirt]
+          pending_silhouette: a_line_soft
+          pending_drape: soft_flowing
+          pending_length: midi
+        optional: false
+      - slot: shoes
+        requires:
+          category: [ankle_boots_soft, loafers]
+          pending_detail_scale: medium
+        optional: false
+    accessories:
+      - type: bag
+        requires:
+          pending_structure: semi_slouchy
+    notes:
+      - "Средняя длина юбки подчёркивает природные пропорции"
+      - "Избегайте жёстких линий и излишней структуры"
+
+global_stop_items:
+  - pending_structure: tailored_rigid
+  - pending_cut_lines: sharp_angular
+  - pending_detail_scale: tiny
+  - category: [sheath_dress_formal, pencil_skirt_rigid, structured_blazer_power]
+  - pending_fabric: [heavy_brocade, lacquered_leather]

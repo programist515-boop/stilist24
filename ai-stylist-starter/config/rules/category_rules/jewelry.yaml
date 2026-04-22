@@ -1,0 +1,40 @@
+category: jewelry
+rules:
+
+  flamboyant_gamine:
+    prefer:
+      count_per_outfit: {min: 1, max: 2}    # одного-двух украшений достаточно
+      size: [medium, large_not_bulky]
+      shape: [angular, geometric, sculptural, asymmetric]
+      stones: [faceted, cut]                # гранёность камней
+      absent: round_elements
+      sub_types: [statement_earrings_angular, brooch_unusual, geometric_ring_medium_large, collar_necklace_clear]
+      style_category: [bold_avant_garde, modern, brutal_minimal]
+      earring_rule: "располагаются на ухе или стремятся вверх; если свисают — из углов и дуг"
+      necklace_rule: "располагается в районе ключиц, чёткая строгая форма"
+    stop:
+      - rule: round_circles_only
+        reason: "Круглые мягкие формы без углов — не FG"
+      - rule: delicate_chain_layered
+        reason: "Тонкие многослойные цепочки без акцента — слишком нежно"
+      - rule: pearl_classic_strand
+        reason: "Классическая жемчужная нить без геометрии — 'хорошая девочка'"
+      - rule: bulky_overwhelming
+        reason: "Громоздкое крупное украшение — 'перебор'"
+    notes:
+      - "Украшения передают характеру 'драму и роскошь', должны сильно притягивать внимание."
+      - "Не бойтесь быть немного эксцентричной. Украшения могут добавить юмора в образ."
+      - "Необычные броши — отличный акцент."
+
+  dramatic: {prefer: {}, stop: []}
+  soft_dramatic: {prefer: {}, stop: []}
+  flamboyant_natural: {prefer: {}, stop: []}
+  soft_natural: {prefer: {}, stop: []}
+  natural: {prefer: {}, stop: []}
+  dramatic_classic: {prefer: {}, stop: []}
+  soft_classic: {prefer: {}, stop: []}
+  classic: {prefer: {}, stop: []}
+  soft_gamine: {prefer: {}, stop: []}
+  gamine: {prefer: {}, stop: []}
+  romantic: {prefer: {}, stop: []}
+  theatrical_romantic: {prefer: {}, stop: []}

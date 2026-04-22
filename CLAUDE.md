@@ -100,7 +100,7 @@ stilist24/
 
 ### YAML-правила (в `ai-stylist-starter/config/rules/`)
 
-`outfit_rules`, `gap_analysis_rules`, `garment_line_rules`, `garment_recognition_rules`, `identity_families`, `identity_subtypes`, `seasons_12`, `seasons_palette`, `season_families`, `recommendation_guides`, `shopping_explanations`.
+`outfit_rules`, `gap_analysis_rules`, `garment_line_rules`, `garment_recognition_rules`, `identity_families`, `identity_subtypes`, `seasons_12`, `seasons_palette`, `season_families`, `recommendation_guides`, `shopping_explanations`, `reference_looks/` (референсные луки по подтипам, YAML на подтип — см. [план 2026-04-21](plans/2026-04-21-каталог-фич-из-отчёта-типажа.md)).
 
 ## Ключевые принципы проекта
 

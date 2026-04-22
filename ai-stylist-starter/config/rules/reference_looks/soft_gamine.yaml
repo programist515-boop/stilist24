@@ -1,0 +1,115 @@
+subtype: soft_gamine
+primary_look_id: sg_fit_and_flare_dress
+reference_looks:
+
+  - id: sg_fit_and_flare_dress
+    name: "Платье fit-and-flare с акцентом на талию"
+    style: smart_casual
+    season_hint: spring_summer
+    image_url: "/reference_looks/soft_gamine/sg_fit_and_flare_dress.jpg"
+    items:
+      - slot: dress
+        requires:
+          category: dress
+          fit: fit_and_flare
+          pending_cut_lines: [crisp, curved]
+          pending_waist: defined
+          pending_length: [above_knee, knee]
+          pending_fabric: [cotton_poplin, structured_crepe]
+          pending_neckline: [sweetheart, scoop]
+        optional: false
+      - slot: shoes
+        requires:
+          category: [mary_janes, kitten_heels, ballet_flats]
+          pending_detail_scale: small
+        optional: false
+    accessories:
+      - type: bag
+        requires:
+          pending_structure: structured
+          pending_detail_scale: small
+    notes:
+      - "Короткий верх + пышный короткий низ с чёткой талией — ядро Soft Gamine"
+      - "Никаких длинных вертикалей — работа над компактностью"
+
+  - id: sg_polka_dot_blouse_skirt
+    name: "Блузка в горох и юбка-солнце"
+    style: smart_casual
+    season_hint: all
+    image_url: "/reference_looks/soft_gamine/sg_polka_dot_blouse_skirt.jpg"
+    items:
+      - slot: top
+        requires:
+          category: [blouse, silk_shirt]
+          pending_pattern_character: [polka_dot_small, cherry_print]
+          pending_cut_lines: [crisp, curved]
+          pending_fabric: [silk, poplin]
+        optional: false
+      - slot: bottom
+        requires:
+          category: [a_line_skirt, circle_skirt_short]
+          pending_length: above_knee
+          pending_waist: defined
+          pending_silhouette: flared_short
+        optional: false
+      - slot: shoes
+        requires:
+          category: [mary_janes, kitten_heels]
+          pending_detail_scale: small
+        optional: false
+    accessories:
+      - type: belt
+        optional: true
+        requires:
+          width: narrow
+      - type: bag
+        requires:
+          pending_structure: structured
+          pending_detail_scale: small
+    notes:
+      - "Мелкий принт любит подтип — полька дот, вишенки, мелкая клетка"
+
+  - id: sg_casual_cropped_set
+    name: "Casual: cropped-жакет и узкие джинсы"
+    style: casual
+    season_hint: all
+    image_url: "/reference_looks/soft_gamine/sg_casual_cropped_set.jpg"
+    items:
+      - slot: blazer
+        requires:
+          category: [blazer, cropped_jacket]
+          pending_proportion: cropped
+          pending_cut_lines: [crisp, curved]
+          pending_structure: tailored
+        optional: false
+      - slot: top
+        requires:
+          category: [fitted_tshirt, fine_knit_top]
+          pending_cut_lines: curved
+          pending_neckline: [scoop, crew]
+        optional: false
+      - slot: bottom
+        requires:
+          category: [skinny_jeans, cigarette_pants]
+          pending_silhouette: slim_cropped
+          pending_length: ankle
+        optional: false
+      - slot: shoes
+        requires:
+          category: [loafers, ballet_flats, ankle_boots_slim]
+          pending_detail_scale: small
+        optional: false
+    accessories:
+      - type: bag
+        requires:
+          pending_structure: structured
+          pending_detail_scale: small
+    notes:
+      - "Короткий жакет + укороченные брюки подчёркивают компактность"
+
+global_stop_items:
+  - pending_proportion: elongated_long
+  - pending_cut_lines: [flowing, loose_draped]
+  - pending_detail_scale: oversized
+  - pending_silhouette: [maxi_flowing, column_long]
+  - category: [maxi_dress_flowing, wide_leg_palazzo, oversized_boho]

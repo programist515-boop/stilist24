@@ -1,0 +1,113 @@
+subtype: soft_classic
+primary_look_id: sc_feminine_dress
+reference_looks:
+
+  - id: sc_feminine_dress
+    name: "Женственное платье с мягкой талией"
+    style: smart_casual
+    season_hint: all
+    image_url: "/reference_looks/soft_classic/sc_feminine_dress.jpg"
+    items:
+      - slot: dress
+        requires:
+          category: dress
+          pending_cut_lines: [clean, soft_curved]
+          pending_structure: semi_tailored
+          pending_waist: defined_soft
+          pending_fabric: [crepe, soft_wool, silk]
+          pending_length: [midi, just_below_knee]
+          pending_neckline: [v_soft, scoop]
+        optional: false
+      - slot: shoes
+        requires:
+          category: [heels, pointed_flats]
+          pending_heel_type: [slim_block, kitten]
+        optional: false
+    accessories:
+      - type: bag
+        requires:
+          pending_structure: semi_structured
+          pending_detail_scale: medium
+      - type: jewelry
+        optional: true
+        requires:
+          pending_detail_scale: [small, medium]
+          pending_cut_lines: soft_curved
+        count_max: 3
+    notes:
+      - "Мягкость линий + симметрия кроя — основа подтипа"
+      - "Талия определена, но не зажата"
+
+  - id: sc_twinset_skirt
+    name: "Twin-set и миди-юбка"
+    style: office
+    season_hint: autumn_winter
+    image_url: "/reference_looks/soft_classic/sc_twinset_skirt.jpg"
+    items:
+      - slot: top
+        requires:
+          category: [fine_knit_top, twinset]
+          pending_fabric: [cashmere, fine_merino]
+          pending_cut_lines: [clean, soft_curved]
+        optional: false
+      - slot: bottom
+        requires:
+          category: [pencil_skirt, a_line_skirt]
+          pending_silhouette: [pencil_soft, a_line_moderate]
+          pending_length: [knee, midi]
+        optional: false
+      - slot: shoes
+        requires:
+          category: [pumps, mid_heels]
+          pending_heel_type: slim_block
+        optional: false
+    accessories:
+      - type: bag
+        requires:
+          pending_structure: structured
+    notes:
+      - "Тонкий кашемир + миди-юбка — классика с женственностью"
+
+  - id: sc_wrap_coat
+    name: "Пальто-халат с поясом"
+    style: weekend
+    season_hint: autumn_winter
+    image_url: "/reference_looks/soft_classic/sc_wrap_coat.jpg"
+    items:
+      - slot: outerwear
+        requires:
+          category: [wrap_coat, belted_coat]
+          pending_cut_lines: soft_curved
+          pending_structure: semi_tailored
+          pending_length: [midi, knee]
+          pending_waist: defined_soft
+        optional: false
+      - slot: top
+        requires:
+          category: [turtleneck_fine, blouse]
+          pending_cut_lines: clean
+        optional: false
+      - slot: bottom
+        requires:
+          category: [straight_trousers, midi_skirt]
+          pending_silhouette: slim_soft
+        optional: false
+      - slot: shoes
+        requires:
+          category: [ankle_boots_slim, pumps]
+          pending_heel_type: slim_block
+        optional: false
+    accessories:
+      - type: bag
+        requires:
+          pending_structure: structured
+          pending_detail_scale: medium
+    notes:
+      - "Пояс подчёркивает талию мягко, без резких складок"
+
+global_stop_items:
+  - pending_cut_lines: [sharp_angular, aggressive_geometric]
+  - pending_structure: [unstructured, over_tailored]
+  - pending_detail_scale: oversized
+  - category: [oversized_boho_dress, utility_safari, military_coat_heavy]
+  - pending_fabric: [coarse_linen, heavy_suede]

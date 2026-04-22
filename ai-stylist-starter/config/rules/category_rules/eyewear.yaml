@@ -1,0 +1,31 @@
+category: eyewear
+rules:
+
+  flamboyant_gamine:
+    prefer:
+      shape: [angular, cat_eye, geometric]
+      frame: [contrasting, bold_color, animal_print_bold]
+      size: [medium, bold_medium]
+    stop:
+      - rule: round_soft_frames
+        reason: "Круглые мягкие оправы — противоположность угловатости"
+      - rule: rimless_delicate
+        reason: "Тонкие безободковые — не создают контраст"
+      - rule: aviator_classic
+        reason: "Классические авиаторы нейтральны, не добавляют дерзости"
+    notes:
+      - "Угловатая форма + контрастная оправа — визитная карточка."
+      - "Смелые, современные или авангардные формы — всё подходит."
+
+  dramatic: {prefer: {}, stop: []}
+  soft_dramatic: {prefer: {}, stop: []}
+  flamboyant_natural: {prefer: {}, stop: []}
+  soft_natural: {prefer: {}, stop: []}
+  natural: {prefer: {}, stop: []}
+  dramatic_classic: {prefer: {}, stop: []}
+  soft_classic: {prefer: {}, stop: []}
+  classic: {prefer: {}, stop: []}
+  soft_gamine: {prefer: {}, stop: []}
+  gamine: {prefer: {}, stop: []}
+  romantic: {prefer: {}, stop: []}
+  theatrical_romantic: {prefer: {}, stop: []}

@@ -1,0 +1,42 @@
+category: skirts
+rules:
+
+  flamboyant_gamine:
+    prefer:
+      fit: [straight, slightly_tapered, pencil]
+      details: [asymmetric, wrap, cross_over, unusual_print]
+      pending_fabric_rigidity: [medium, rigid]
+      pending_pattern_character: [geometric, bold_abstract]
+    stop:
+      - rule: long_plain_straight
+        reason: "Длинные прямые юбки без отделки монотонны"
+      - rule: a_line_symmetric
+        reason: "Традиционная А-образная форма слишком симметрична"
+      - rule: wide_shapeless
+        reason: "Широкие бесформенные юбки убивают геометрию"
+      - rule: circle_skirt
+        reason: "Солнце-клёш — избыточный объём без угловатости"
+      - rule: fine_pleating
+        reason: "Мелкая плиссировка читается как мягкая структура"
+      - rule: flared_soft_falling
+        reason: "Расклешённые ниспадающие юбки не держат линию"
+      - rule: ruffled_tiered
+        reason: "Оборки и пышные ярусы — противоположность FG"
+      - rule: soft_deep_pleats_from_hip
+        reason: "Глубокие мягкие складки начинающиеся на бёдрах размывают силуэт"
+    notes:
+      - "Асимметрично расположенные детали, запахи, перехлёст в крое, нестандартный принт — идеал."
+      - "Неверная длина: важно избегать 'ни туда ни сюда' — по бедру или по колено, ниже — только строгая прямая."
+
+  dramatic: {prefer: {}, stop: []}
+  soft_dramatic: {prefer: {}, stop: []}
+  flamboyant_natural: {prefer: {}, stop: []}
+  soft_natural: {prefer: {}, stop: []}
+  natural: {prefer: {}, stop: []}
+  dramatic_classic: {prefer: {}, stop: []}
+  soft_classic: {prefer: {}, stop: []}
+  classic: {prefer: {}, stop: []}
+  soft_gamine: {prefer: {}, stop: []}
+  gamine: {prefer: {}, stop: []}
+  romantic: {prefer: {}, stop: []}
+  theatrical_romantic: {prefer: {}, stop: []}

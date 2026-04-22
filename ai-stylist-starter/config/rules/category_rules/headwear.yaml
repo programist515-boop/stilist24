@@ -1,0 +1,34 @@
+category: headwear
+rules:
+
+  flamboyant_gamine:
+    prefer:
+      size: small
+      shape: [angular, irregular, sculptural, geometric, asymmetric]
+      sub_types: [beret, gavroche_cap, turban_spring]
+      winter_rule:
+        preferred: [machine_knit_simple, bright_color]
+        avoid: [cable_knit, chunky_braided]
+      spring_option:
+        turban: {brooch_shape: angular_bird, sunglasses: bold}
+    stop:
+      - rule: wide_brim_soft
+        reason: "Широкополые мягкие шляпы — слишком романтика"
+      - rule: symmetric_beanie_neutral
+        reason: "Симметричная бежевая шапка с косами — 'бабушкин' эффект"
+    notes:
+      - "Лютые морозы — враг номер один FG. Зима не лучшее время для стиля."
+      - "Берет и кепка 'Гаврош' — идеальные варианты."
+
+  dramatic: {prefer: {}, stop: []}
+  soft_dramatic: {prefer: {}, stop: []}
+  flamboyant_natural: {prefer: {}, stop: []}
+  soft_natural: {prefer: {}, stop: []}
+  natural: {prefer: {}, stop: []}
+  dramatic_classic: {prefer: {}, stop: []}
+  soft_classic: {prefer: {}, stop: []}
+  classic: {prefer: {}, stop: []}
+  soft_gamine: {prefer: {}, stop: []}
+  gamine: {prefer: {}, stop: []}
+  romantic: {prefer: {}, stop: []}
+  theatrical_romantic: {prefer: {}, stop: []}

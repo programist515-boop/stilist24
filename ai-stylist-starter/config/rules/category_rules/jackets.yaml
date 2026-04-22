@@ -1,0 +1,51 @@
+# Жакеты: правила подбора по подтипам.
+# Применяется в outfit_engine и gap_analysis_service.
+# Атрибуты с префиксом pending_ ждут Фазы 0 (миграция Item).
+
+category: jackets
+rules:
+
+  flamboyant_gamine:
+    prefer:
+      length: [cropped, short, mid]           # короткие и средней длины
+      fit: [fitted, semi_fitted]
+      pending_structure: structured
+      pending_shoulder_emphasis: required     # чёткие, хорошо очерченные плечи
+      pending_sleeve_type: [set_in, puff_sharp]
+      pending_cut_lines: angular
+      closure: [double_breasted, asymmetric]  # двубортные эффектны
+      pending_detail_scale: [small, medium]
+    stop:
+      - rule: long_unstructured
+        reason: "Длинные бесформенные жакеты убивают разбитый силуэт"
+      - rule: peplum
+        reason: "Баска создаёт мягкую плавную линию — противоположно угловатости"
+      - rule: raglan_sleeve
+        reason: "Реглан скашивает плечи, теряется драматик"
+      - rule: dropped_shoulder
+        reason: "Спущенное плечо размывает форму"
+      - rule: plain_blazer_symmetric
+        reason: "Стандартный симметричный блейзер слишком классический, не хватает дерзости"
+    notes:
+      - "Жакет — основа гардероба. Иметь варианты от дневного кэжуала до вечернего."
+      - "Поверх белой классической рубашки — не классический жакет, а яркий кардиган. Иначе взрослит."
+
+  dramatic:
+    prefer:
+      length: [long, mid]
+      fit: [tailored]
+      pending_structure: structured
+    stop: []
+
+  # placeholder для остальных
+  soft_dramatic: {prefer: {}, stop: []}
+  flamboyant_natural: {prefer: {}, stop: []}
+  soft_natural: {prefer: {}, stop: []}
+  natural: {prefer: {}, stop: []}
+  dramatic_classic: {prefer: {}, stop: []}
+  soft_classic: {prefer: {}, stop: []}
+  classic: {prefer: {}, stop: []}
+  soft_gamine: {prefer: {}, stop: []}
+  gamine: {prefer: {}, stop: []}
+  romantic: {prefer: {}, stop: []}
+  theatrical_romantic: {prefer: {}, stop: []}

@@ -1,0 +1,211 @@
+# Метаданные подтипов: ассоциации характера, девиз, философия, галерея звёзд.
+# Используется в explainer.py и на фронте (карточка "Кто ты стилистически").
+# Ключи совпадают с именами rules в identity_subtypes.yaml.
+#
+# Статус наполнения:
+#   - flamboyant_gamine: полное наполнение из PDF "Типаж Г.Д." (2026-04-21)
+#   - gamine: LLM-черновик по методологии Kibbe + WebSearch community-verified
+#     (Leslie Caron/Mia Farrow/Emma Watson/Janelle Monáe из kibbebody.com и
+#     community-обсуждений, русские — по разборам в рунете, помечены как
+#     community_consensus)
+#   - остальные: placeholder-структура, TODO наполнить из соответствующих гайдов
+
+identity_subtype_profiles:
+
+  flamboyant_gamine:
+    display_name_ru: "Гамин-Драматик"
+    display_name_en: "Flamboyant Gamine"
+    family: gamine
+    associations:
+      - оторва
+      - креативная
+      - вызывающая
+      - смелая
+      - непокорная
+      - эксцентричная
+      - запоминающаяся
+    motto: "Правила были созданы, чтобы их нарушать!"
+    philosophy: >
+      Самый выразительный типаж. Быть серой мышкой — не про вас.
+      Совершенно не классический типаж, далёкий от общепризнанного идеала красоты.
+      Стремиться к нему — пустая трата времени и сил. Вы были созданы, чтобы блистать
+      на сцене и слышать аплодисменты в свой адрес. Принять себя такой, какая есть —
+      первый шаг к созданию вашего стиля. Не стремиться быть женственной, милой,
+      идеальной, а стремиться быть яркой и запоминающейся — вот секрет вашего успеха.
+    key_principles:
+      - "Контрастные верх и низ"
+      - "Разбитый, прерывистый силуэт"
+      - "Чёткие формы — геометрия, а не плавность"
+      - "Акцент на плечи (никаких рукавов реглан)"
+      - "Высокий контраст цвета"
+    celebrity_examples:
+      - name: "Одри Хепбёрн"
+        era: "1950s–1960s"
+      - name: "Кристина Орбакайте"
+      - name: "Алёна Свиридова"
+      - name: "Мэг Райан"
+      - name: "Кристал Ренн"
+      - name: "Кьяра Ферраньи"
+      - name: "Тина Сизонова"
+      - name: "Алсу"
+
+  # --- Остальные 12 подтипов: placeholder, наполнить при получении гайдов ---
+
+  dramatic:
+    display_name_ru: "Драматик"
+    display_name_en: "Dramatic"
+    family: dramatic
+    associations: []      # TODO
+    motto: ""             # TODO
+    philosophy: ""        # TODO
+    key_principles: []    # TODO
+    celebrity_examples: []
+
+  soft_dramatic:
+    display_name_ru: "Мягкий Драматик"
+    display_name_en: "Soft Dramatic"
+    family: dramatic
+    associations: []
+    motto: ""
+    philosophy: ""
+    key_principles: []
+    celebrity_examples: []
+
+  flamboyant_natural:
+    display_name_ru: "Драматик-Натурал"
+    display_name_en: "Flamboyant Natural"
+    family: natural
+    associations: []
+    motto: ""
+    philosophy: ""
+    key_principles: []
+    celebrity_examples: []
+
+  soft_natural:
+    display_name_ru: "Мягкий Натурал"
+    display_name_en: "Soft Natural"
+    family: natural
+    associations: []
+    motto: ""
+    philosophy: ""
+    key_principles: []
+    celebrity_examples: []
+
+  natural:
+    display_name_ru: "Натурал"
+    display_name_en: "Natural"
+    family: natural
+    associations: []
+    motto: ""
+    philosophy: ""
+    key_principles: []
+    celebrity_examples: []
+
+  dramatic_classic:
+    display_name_ru: "Драматик-Классик"
+    display_name_en: "Dramatic Classic"
+    family: classic
+    associations: []
+    motto: ""
+    philosophy: ""
+    key_principles: []
+    celebrity_examples: []
+
+  soft_classic:
+    display_name_ru: "Мягкий Классик"
+    display_name_en: "Soft Classic"
+    family: classic
+    associations: []
+    motto: ""
+    philosophy: ""
+    key_principles: []
+    celebrity_examples: []
+
+  classic:
+    display_name_ru: "Классик"
+    display_name_en: "Classic"
+    family: classic
+    associations: []
+    motto: ""
+    philosophy: ""
+    key_principles: []
+    celebrity_examples: []
+
+  soft_gamine:
+    display_name_ru: "Гамин-Романтик"
+    display_name_en: "Soft Gamine"
+    family: gamine
+    associations: []
+    motto: ""
+    philosophy: ""
+    key_principles: []
+    celebrity_examples: []
+
+  gamine:
+    display_name_ru: "Гамин"
+    display_name_en: "Gamine"
+    family: gamine
+    associations:
+      - дерзкая
+      - задорная
+      - любопытная
+      - озорная
+      - графичная
+      - свежая
+      - хулиганистая
+    motto: "Быть маленькой — не уменьшение, а концентрация."
+    philosophy: >
+      Ваш типаж строится на контрасте внутри миниатюры. Тело прямое и узкое,
+      линии чёткие, а лицо — округлое, живое, с большими глазами и
+      контрастными чертами. Это не «ребёнок в теле взрослой», а точно
+      выверенная композиция двух противоположностей в одном человеке.
+      Отсюда ваша сила: вы не теряетесь в толпе, несмотря на рост, потому что
+      в вас слишком много движения и противоречия, чтобы вас пропустить.
+      Стремиться к длинноногой, плавной или мягко-женственной эстетике —
+      пустая трата энергии: у вас совсем другая задача. Ваш стиль — геометрия
+      в компактности, принт в масштабе ладони, воротник-стойка рядом со
+      свободной линией штанины. Чем точнее вы работаете с пропорциями и
+      контрастом, тем меньше вас читают как «малышку» и тем больше — как
+      графичный, собранный, независимый образ. Не становитесь романтичной, не
+      растягивайтесь визуально длинными линиями, не прячьтесь в
+      бесформенности. Ваша формула — точность, игра и дерзость на маленьком
+      холсте.
+    key_principles:
+      - "Длина верха выше бедра или точно на талии — никаких длинных свободных туник"
+      - "Воротник, не растягивающий вертикаль: стойка, Питер Пэн, бантик, маленький лацкан"
+      - "Принт в масштабе ладони: горох, клетка 2–3 см, графика, мини-звёзды — не крупный цветок"
+      - "Контраст фактур в одном образе: гладкое + структурное, мат + глянец"
+      - "Акцент на талию без романтики: ремень, шов, жилет — не драпировка, не оборка"
+      - "Аксессуары маленькие и чёткие: очки-стекляшки, короткие серьги, сумка-коробка, плоский носок"
+    celebrity_examples:
+      - name: "Leslie Caron"
+        era: "1950s–1960s"
+      - name: "Mia Farrow"
+        era: "1960s–1970s"
+      - name: "Emma Watson"
+      - name: "Janelle Monáe"
+      - name: "Ирина Муравьёва"
+        era: "1970s–1980s"
+      - name: "Юлия Меньшова"
+      - name: "Настасья Самбурская"
+      - name: "Юлия Пересильд"
+
+  romantic:
+    display_name_ru: "Романтик"
+    display_name_en: "Romantic"
+    family: romantic
+    associations: []
+    motto: ""
+    philosophy: ""
+    key_principles: []
+    celebrity_examples: []
+
+  theatrical_romantic:
+    display_name_ru: "Романтик-Драматик"
+    display_name_en: "Theatrical Romantic"
+    family: romantic
+    associations: []
+    motto: ""
+    philosophy: ""
+    key_principles: []
+    celebrity_examples: []

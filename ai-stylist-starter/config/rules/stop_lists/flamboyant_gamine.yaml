@@ -1,0 +1,119 @@
+# Единый стоп-лист для подтипа flamboyant_gamine.
+# Оси: силуэт, детали, ткани, принты, цвет, категории (ссылки на category_rules/).
+# Каждый элемент содержит reason — используется в explainer.py.
+
+subtype: flamboyant_gamine
+source: "pdf_guide_gamin_dramatic_2026-04-21"
+
+stop_list:
+
+  silhouette:
+    - id: shapeless_silhouette
+      pattern: "оверсайз без структуры, бесформенные очертания"
+      reason: "FG нуждается в чётком разбитом силуэте — бесформенность убивает драму"
+    - id: complex_delicate_lines
+      pattern: "сложные, деликатные, декоративные линии"
+      reason: "FG требует резкости и ломаных очертаний"
+    - id: excessive_draping
+      pattern: "чрезмерные драпировки, плавные линии"
+      reason: "Драпировки допустимы только в сочетании с острыми элементами"
+    - id: symmetric_perfect
+      pattern: "симметричные очертания, слишком 'правильный' образ"
+      reason: "Симметрия противоположна эксцентричности FG"
+    - id: good_girl_look
+      pattern: "образ 'хорошей девочки'"
+      reason: "FG — это оторва, креативность, дерзость, а не милота"
+
+  details:
+    - id: overly_complex_decoration
+      pattern: "чрезмерно сложные, богато украшенные детали"
+      reason: "Перегруженность деталями размывает чёткость"
+    - id: rounded_curled
+      pattern: "округлые и закрученные формы"
+      reason: "FG — это углы, а не округлости"
+    - id: excessive_drapery
+      pattern: "чрезмерные драпировки"
+      reason: "Размывают геометрию"
+    - id: too_cute_delicate
+      pattern: "слишком нежные, изящные 'милые' формы"
+      reason: "FG не про 'милый' образ"
+    - id: overwhelming_fragility
+      pattern: "чрезмерная хрупкость"
+      reason: "Контрастирует с 'оторва' характером"
+    - id: detail_overload
+      pattern: "перегруженность деталями"
+      reason: "Одного-двух ярких акцентов достаточно"
+    - id: complex_folds_gathers
+      pattern: "сложные складки и сборки"
+      reason: "Только если они в нижней части, чёткие и направленные вниз"
+
+  fabrics:
+    - id: coarse_rough_textures
+      pattern: "крупные и грубые текстуры"
+      reason: "Грубая фактура теряет угловатость"
+    - id: heavy_drapery_fabric
+      pattern: "ткани с тяжёлой драпировкой"
+      reason: "Мягкие струящиеся ткани не держат форму"
+    - id: shimmery_delicate_fabric
+      pattern: "мерцающие нежные ткани"
+      reason: "Мерцание без плотности — мягкая романтика"
+    - id: soft_tender_fabric
+      pattern: "нежные ткани"
+      reason: "Нежность противоположна жёсткой геометрии"
+    - id: thin_fabric
+      pattern: "тонкие ткани"
+      reason: "Не держат форму — FG требует плотности"
+    - id: fine_knit
+      pattern: "тонкий трикотаж"
+      reason: "Размывает структуру"
+    - id: coarse_wool
+      pattern: "грубая шерстяная"
+      reason: "Утяжеляет образ без драмы"
+
+  prints:
+    - id: watercolor_blended
+      pattern: "чрезмерно смешанные акварельные принты"
+      reason: "Акварельная размытость противоположна чёткости"
+    - id: small_symmetric_prints
+      pattern: "мелкие симметричные принты"
+      reason: "Симметрия и мелкость без контраста — не FG"
+    - id: soft_wave_patterns
+      pattern: "мягкие волны в рисунках"
+      reason: "Волны — это плавные линии, FG требует угловатости"
+    - id: floral_soft
+      pattern: "цветочные принты"
+      reason: "Исключение: только если абсолютно дикие и современные"
+
+  color:
+    - id: long_single_color_line
+      pattern: "одна длинная линия любого цвета"
+      reason: "Не разбивает силуэт — FG нуждается в цветовом контрасте"
+    - id: monochromatic_scheme
+      pattern: "монохромные цветовые схемы"
+      reason: "Моноцвет без разрыва размывает образ"
+    - id: washed_out_pastels
+      pattern: "чрезмерно размытые пастели"
+      reason: "Пастели затемняют внешность — исключение: если хорошо акцентированы в рисунке"
+    - id: neutral_muted_colors
+      pattern: "нейтральные цвета"
+      reason: "FG нужны электрические, смелые цвета"
+    - id: warm_dusty_palette
+      pattern: "тёплые пыльные приглушённые цвета"
+      reason: "Делают кожу зеленоватой, отвлекают от внешности"
+
+  categories_ref:
+    # ссылки на стоп-блоки в category_rules/*.yaml для единой точки доступа
+    jackets: "see category_rules/jackets.yaml → flamboyant_gamine.stop"
+    dresses: "see category_rules/dresses.yaml → flamboyant_gamine.stop"
+    sweaters: "see category_rules/sweaters.yaml → flamboyant_gamine.stop"
+    swimwear: "see category_rules/swimwear.yaml → flamboyant_gamine.stop"
+    pants: "see category_rules/pants.yaml → flamboyant_gamine.stop"
+    skirts: "see category_rules/skirts.yaml → flamboyant_gamine.stop"
+    blouses: "see category_rules/blouses.yaml → flamboyant_gamine.stop"
+    outerwear: "see category_rules/outerwear.yaml → flamboyant_gamine.*.stop"
+    headwear: "see category_rules/headwear.yaml → flamboyant_gamine.stop"
+    shoes: "see category_rules/shoes.yaml → flamboyant_gamine.stop"
+    bags: "see category_rules/bags.yaml → flamboyant_gamine.stop"
+    belts: "see category_rules/belts.yaml → flamboyant_gamine.stop"
+    eyewear: "see category_rules/eyewear.yaml → flamboyant_gamine.stop"
+    jewelry: "see category_rules/jewelry.yaml → flamboyant_gamine.stop"

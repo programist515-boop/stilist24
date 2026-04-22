@@ -1,0 +1,95 @@
+# Справочник стилей одежды. Ось "Стили" — фильтр/бонус в outfit_engine.
+# Используется в связке со style_subtype_affinity.yaml и style_tag[] на вещах.
+
+styles:
+
+  smart_casual:
+    display_name_ru: "Смарт-кэжуал"
+    description: "Лаконично, утончённо, элегантно, профессионально, не скучно."
+    core_items:
+      - "Классические брюки длиной до щиколотки"
+      - "Юбка по колено"
+      - "Джинсы + жакет / брюки + кардиган"
+      - "Классические туфли и сумка"
+    alternative_mix: "Классический костюм + белая майка + белые кроссовки"
+    color_hints: [bordeaux, emerald, white, black, grey]
+    occasion: [work_creative, business_casual, dinner]
+
+  casual:
+    display_name_ru: "Кэжуал"
+    description: "Повседневный комфорт для прогулок."
+    core_items:
+      - "Тельняшка / белая футболка / свитер"
+      - "Брюки удобные"
+      - "Тренч / жакет / кардиган"
+      - "Яркая сумка, шарф, шапка, кроссовки"
+    occasion: [walking, weekend, cafe]
+
+  military:
+    display_name_ru: "Милитари"
+    description: "Стильная, уверенная в себе. Может стать одним из любимых повседневных стилей."
+    core_items:
+      - "Пальто милитари (весна-осень)"
+      - "Жакет милитари (тёплое время)"
+      - "Топы и футболки базовые"
+      - "Брюки прямые"
+      - "Грубая обувь"
+    impression: [stylish, confident, bold]
+    occasion: [daily, work_casual]
+
+  dandy:
+    display_name_ru: "Денди"
+    description: "Копирование мужского стиля в женской одежде — основой служит классический мужской костюм или хотя бы один его элемент."
+    core_items:
+      - "Пиджак / фрак"
+      - "Брюки"
+      - "Шляпа"
+      - "Галстук / шейный платок"
+      - "Ботинки"
+    character: [modest, emphasized_elegance, ideal_cut, slight_carelessness]
+    accessories_policy: plenty_allowed
+
+  preppy:
+    display_name_ru: "Преппи"
+    description: "От школьной формы престижных колледжей. Интеллектуалка и обладательница хорошего вкуса."
+    core_items:
+      - "Бордовые или красные брюки"
+      - "Белая рубашка с завязкой-бантом"
+      - "Тёмно-зелёный кардиган"
+      - "Берет или любой однотонный жакет с эмблемой"
+    character: [accurate, tidy, comfortable, elegant, chic]
+
+  romantic_adapted:
+    display_name_ru: "Романтический (адаптированный)"
+    description: "Для FG — не рюши и цветы, а игра нежных оттенков с цветочным принтом и держащие форму пышные рукава-фонарики."
+    core_items:
+      - "Брюки, юбки, жакеты и жилеты светлых тонов"
+      - "Рукава-фонарики (держащие форму!)"
+      - "Перья, стразы, шлейфы"
+      - "Разрезы на одной ноге, открытые декольте"
+    color_palette: [pink_soft, yellow_soft, beige, blue_soft, grey]
+    impression: [feminine, sexy, striking, sensual]
+    shape_requirement: "цветы должны содержать углы, не быть полностью круглыми"
+
+  dramatic:
+    display_name_ru: "Драматический"
+    description: "Лучшее решение для демонстрации темпераментной и необузданной сублимации."
+    core_items:
+      - "Яркие интенсивные цвета"
+      - "Строгие лаконичные линии"
+      - "Кожаные изделия"
+      - "Джинсы с дырками"
+      - "Тёмные шляпы"
+      - "Грубые ботинки"
+      - "Жёсткие сумки, шипы"
+    impression: [bold, fatal, extravagant, self_confident]
+
+  twenties:
+    display_name_ru: "Стиль 20-х годов"
+    description: "Эпоха гамин-драматиков. Когда хочется продемонстрировать индивидуальность на высшем уровне."
+    core_items:
+      - "Платья с заниженной линией талии, почти на бёдрах"
+      - "Украшение пайетками"
+      - "Причёска — волны"
+      - "Макияж максимально яркий, акцент и на глаза, и на губы"
+    impression: [mysterious, elusive, fatal, uninhibited, bold]

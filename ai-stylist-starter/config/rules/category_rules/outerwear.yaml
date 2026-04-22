@@ -1,0 +1,76 @@
+category: outerwear
+# Верхняя одежда делится на sub_category, т.к. правила различаются внутри.
+# sub_category: coat, fur_coat, puffer, biker_jacket, shearling, parka, trench
+
+rules:
+
+  flamboyant_gamine:
+
+    coat:
+      prefer:
+        color_policy: bright
+        details: [contrast_trim, bold_buttons, wide_lapels, epaulettes]
+        style_tag: military
+        length: [above_knee, mid_calf]      # милитари — не выше середины бедра
+        pending_structure: structured
+      stop:
+        - rule: shapeless_oversized
+          reason: "Бесформенное пальто убивает угловатость"
+        - rule: rounded_lapels
+          reason: "Округлые лацканы противоречат геометрии"
+      notes:
+        - "Пальто в милитари-стиле — идеально подчёркивает угловатые черты лица."
+        - "Сейчас в моде длина по середину икры."
+
+    fur_coat:
+      prefer:
+        fur_type: [shearling_sheep, mink_sheared]  # стриженый мех (мутон или норка)
+        collar: [stand_up_small]
+        closure_accents: [contrast_buttons, belts, brooches]
+        color_palette: [wild, bright]
+      stop:
+        - rule: voluminous_fluffy_fur
+          reason: "Объёмный пушистый мех размывает силуэт"
+        - rule: classic_luxury_look
+          reason: "Классический 'дорого-богато' не про FG"
+        - rule: hood_with_fur
+          reason: "Капюшон с мехом в морозы — лучше укутаться в шарф"
+      notes:
+        - "Даже зимой должен быть эклектичный внешний вид, с добавлением юмора."
+        - "Чёрная шуба + другого цвета шарф у лица + бордовые/красные/фиолетовые (НЕ чёрные) брюки + яркая сумка через плечо + яркий берет."
+
+    puffer:
+      prefer:
+        silhouette: [straight, angular]
+        length: [cropped, above_knee]        # выше колен, а лучше ещё выше
+        details: [asymmetric, contrast_panels]
+        color_policy: [daring, bold]
+      stop:
+        - rule: rounded_puffer_neutral
+          reason: "Округлый пуховик нейтрального цвета не даёт контраста"
+      notes:
+        - "Если пуховик чёрный — носить с яркими цветами в аксессуарах и одежде."
+
+    biker_jacket:
+      prefer: {always: true}                  # куртки-косухи прекрасны в любом случае
+      stop: []
+
+    trench:
+      prefer:
+        pending_structure: structured
+        color_policy: [neutral_with_bright_accents, bright]
+      stop: []
+
+  dramatic:
+    coat: {prefer: {}, stop: []}
+  soft_dramatic: {coat: {prefer: {}, stop: []}}
+  flamboyant_natural: {coat: {prefer: {}, stop: []}}
+  soft_natural: {coat: {prefer: {}, stop: []}}
+  natural: {coat: {prefer: {}, stop: []}}
+  dramatic_classic: {coat: {prefer: {}, stop: []}}
+  soft_classic: {coat: {prefer: {}, stop: []}}
+  classic: {coat: {prefer: {}, stop: []}}
+  soft_gamine: {coat: {prefer: {}, stop: []}}
+  gamine: {coat: {prefer: {}, stop: []}}
+  romantic: {coat: {prefer: {}, stop: []}}
+  theatrical_romantic: {coat: {prefer: {}, stop: []}}

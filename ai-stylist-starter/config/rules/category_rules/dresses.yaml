@@ -1,0 +1,42 @@
+category: dresses
+rules:
+
+  flamboyant_gamine:
+    prefer:
+      fit: [sheath, straight, semi_fitted]      # футляр — №1, а также прямое, полуприлегающее
+      pending_structure: structured
+      pending_fabric_rigidity: [medium, rigid]  # плотная ткань, держит форму
+      pending_shoulder_emphasis: required       # острые плечи, асимметричная деталь
+      pending_cut_lines: angular
+      sub_types: [sheath, coat_dress, shirt_dress, mini_straight]
+      shoulder_detail: [sharp, asymmetric, clean_drape]
+      waist_accent:
+        with_geometric_buckle: true
+        when: "фигура стройная и нет животика"
+    stop:
+      - rule: ruffled
+        reason: "Оборки создают мягкую плавную линию"
+      - rule: flowing_drape_whole
+        reason: "Струящееся платье без структуры размывает силуэт"
+      - rule: lace_full
+        reason: "Кружевное платье целиком делает образ 'милым', не хватает дерзости"
+      - rule: puff_sleeve_soft
+        reason: "Мягкие рукава-буфы работают только если они пышные и держат форму"
+    notes:
+      - "Платье-футляр — самый популярный фасон для FG."
+      - "Если плечи есть — пусть будут острыми. Мягкий оверсайз-покрой плечей не подходит."
+      - "2 главных правила: высокий контраст + акцент на плечи."
+      - "Для прямой фигуры без талии предпочтительнее короткое прямое платье вместо футляра."
+
+  dramatic: {prefer: {}, stop: []}
+  soft_dramatic: {prefer: {}, stop: []}
+  flamboyant_natural: {prefer: {}, stop: []}
+  soft_natural: {prefer: {}, stop: []}
+  natural: {prefer: {}, stop: []}
+  dramatic_classic: {prefer: {}, stop: []}
+  soft_classic: {prefer: {}, stop: []}
+  classic: {prefer: {}, stop: []}
+  soft_gamine: {prefer: {}, stop: []}
+  gamine: {prefer: {}, stop: []}
+  romantic: {prefer: {}, stop: []}
+  theatrical_romantic: {prefer: {}, stop: []}

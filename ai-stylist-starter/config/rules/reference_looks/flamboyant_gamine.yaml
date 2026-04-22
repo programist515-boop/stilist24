@@ -1,0 +1,196 @@
+# Референсные луки для подтипа Flamboyant Gamine (он же "Гамин-Драматик" в PDF-гайде).
+# Источник: PDF "Типаж Г.Д." — извлечено 2026-04-21.
+#
+# Формат:
+#   id, name, style, season_hint, items[], accessories[], notes
+# Каждый items[].requires — это фильтр по атрибутам Item (см. план Фаза 0).
+# Если атрибута ещё нет в модели — он помечен через prefix "pending:" и
+# применится после расширения схемы. Это нормально: YAML живёт впереди кода.
+
+subtype: flamboyant_gamine
+source: "pdf_guide_gamin_dramatic_2026-04-21"
+primary_look_id: fg_sheath_dress
+
+reference_looks:
+
+  - id: fg_casual_telnyashka
+    name: "Casual с тельняшкой"
+    style: casual
+    season_hint: all
+    image_url: "/reference_looks/flamboyant_gamine/fg_casual_telnyashka.jpg"
+    description: >
+      Базовый повседневный лук. Тельняшка — якорная вещь подтипа.
+      Полоска 1–1.5 см, не запахивая верх, создаёт две вертикали.
+    items:
+      - slot: top
+        requires:
+          category: [top, sweater, longsleeve]
+          pending_pattern_character: stripe
+          pending_pattern_scale: small
+          pending_cut_lines: straight
+      - slot: bottom
+        requires:
+          category: [jeans, trousers]
+          pending_structure: structured
+          pending_cut_lines: straight
+          pending_sleeve_length: ankle  # в смысле "длина по щиколотку" для брюк
+      - slot: outerwear
+        optional: true
+        requires:
+          category: [trench, leather_jacket, blazer_short]
+      - slot: shoes
+        requires:
+          category: [sneakers, ankle_boots]
+    accessories:
+      - type: bag
+        requires:
+          pending_detail_scale: [small, medium]
+          pending_structure: structured
+        color_policy: bright_contrast
+    notes:
+      - "Тельняшку носить под жакеты/тренчи/косухи, НЕ застёгивая"
+      - "Украшения — удлинённые, угловатые"
+
+  - id: fg_smart_casual_capsule
+    name: "Smart Casual: костюм с белой майкой и кроссовками"
+    style: smart_casual
+    season_hint: spring_autumn
+    image_url: "/reference_looks/flamboyant_gamine/fg_smart_casual_capsule.jpg"
+    description: >
+      Классический костюм "расбавленный" белой майкой и белыми кроссовками.
+      Вместо чёрных брюк — бордо или изумруд для цветового разрыва.
+    items:
+      - slot: blazer
+        requires:
+          category: blazer
+          pending_structure: structured
+          pending_detail_scale: medium
+          pending_sleeve_type: set_in
+      - slot: top
+        requires:
+          category: [tshirt, tank]
+          color: white
+          pending_fabric_finish: matte
+      - slot: bottom
+        requires:
+          category: trousers
+          pending_cut_lines: straight
+          pending_structure: structured
+          color_hint: [burgundy, emerald, dark_navy]
+      - slot: shoes
+        requires:
+          category: sneakers
+          color: white
+    notes:
+      - "НЕ брать серый костюм+серый верх — получим монохром, что в стоп-листе"
+
+  - id: fg_military
+    name: "Military для весны-осени"
+    style: military
+    season_hint: spring_autumn
+    image_url: "/reference_looks/flamboyant_gamine/fg_military.jpg"
+    description: >
+      Пальто или жакет милитари — подчёркивает угловатые черты лица.
+      Сочетать с грубой обувью.
+    items:
+      - slot: outerwear
+        requires:
+          category: [coat, jacket]
+          pending_style_tag: military
+          pending_structure: structured
+          length: [mid_thigh, mid_calf]
+      - slot: top
+        requires:
+          category: [top, blouse, turtleneck]
+          pending_cut_lines: straight
+      - slot: bottom
+        requires:
+          category: [trousers, mini_skirt]
+          pending_structure: structured
+      - slot: shoes
+        requires:
+          category: [ankle_boots, knee_boots, combat_boots]
+          pending_detail_scale: medium
+    accessories:
+      - type: bag
+        requires:
+          pending_structure: structured
+          color_policy: bright_accent
+    notes:
+      - "Пальто-милитари — не выше середины бедра (в моде до середины икры)"
+
+  - id: fg_evening_metallic
+    name: "Вечерний с металликом"
+    style: dramatic
+    season_hint: all
+    image_url: "/reference_looks/flamboyant_gamine/fg_evening_metallic.jpg"
+    description: >
+      Вечерний лук использует плотные блестящие ткани: металлик, парча,
+      пайетки, бисер. Важно держать форму — никаких струящихся.
+    items:
+      - slot: dress_or_set
+        requires:
+          category: [dress, top_bottom_set]
+          pending_fabric_finish: [metallic, sequin, brocade]
+          pending_fabric_rigidity: [medium, rigid]
+          pending_cut_lines: straight
+      - slot: shoes
+        requires:
+          category: [heels, ankle_boots]
+          pending_detail_scale: medium
+    accessories:
+      - type: clutch
+        requires:
+          pending_fabric_finish: metallic
+          pending_structure: structured
+      - type: jewelry
+        requires:
+          pending_detail_scale: [medium, large]
+          pending_cut_lines: angular
+        count_max: 2
+    notes:
+      - "Не более 1–2 украшений, но крупных и угловатых"
+
+  - id: fg_sheath_dress
+    name: "Платье-футляр — фасон №1 для подтипа"
+    style: dramatic_classic
+    season_hint: all
+    image_url: "/reference_looks/flamboyant_gamine/fg_sheath_dress.jpg"
+    description: >
+      Платье-футляр с острыми плечами и чётким силуэтом — самый
+      идущий фасон. Может быть с асимметричной деталью на плече.
+    items:
+      - slot: dress
+        requires:
+          category: dress
+          fit: sheath
+          pending_structure: structured
+          pending_fabric_rigidity: [medium, rigid]
+          pending_cut_lines: straight
+          shoulder_accent: required
+      - slot: shoes
+        requires:
+          category: [heels, pointed_flats]
+    accessories:
+      - type: belt
+        optional: true
+        requires:
+          width: medium_wide
+          pending_structure: rigid
+          buckle: geometric
+        when:
+          user_waist_defined: true
+    notes:
+      - "Если фигура прямая без талии — короткое прямое платье вместо футляра"
+      - "Плечи ОБЯЗАТЕЛЬНО выделены: острая деталь, драпировка или плечики"
+
+# Стоп-элементы, которые любой лук подтипа должен отклонять.
+# Применяются глобально движком reference_matcher при проверке соответствия.
+global_stop_items:
+  - pending_cut_lines: soft_flowing
+  - pending_structure: unstructured
+  - pending_pattern_character: [watercolor, small_floral_soft]
+  - pending_neckline_type: [boat, round_wide]
+  - pending_sleeve_type: [batwing, dropped_shoulder, raglan]
+  - category: [maxi_loose_skirt, a_line_long, circle_skirt]
+  - fabric_description: [coarse_wool, fine_knit, chiffon_soft]

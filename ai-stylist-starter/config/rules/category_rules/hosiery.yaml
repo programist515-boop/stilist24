@@ -1,0 +1,37 @@
+category: hosiery
+rules:
+
+  flamboyant_gamine:
+    prefer:
+      day:
+        type: [matte_nude_tights, sheer_skin]
+        note: "Матовые телесные колготки освежают"
+      evening:
+        type: [ultra_sheer_silky_shiny]
+        note: "Ультра-прозрачные шёлковые, блестящие — для вечера"
+      pattern_bonus: [wild_print, graphic]
+      socks_with_short_boots:
+        colors: [wild_bright]               # дикие яркие цвета
+        avoid: [classic_black_nude_matching_shoes]
+    stop:
+      - rule: all_types_allowed_except
+        reason: "Можно носить любой тип чулочных изделий — FG может разбивать вертикаль ноги через обувь"
+    leg_line_strategy:
+      long_legs: "разбивать вертикальную линию — не составлять единую линию с обувью и подолом"
+      short_legs: "колготки в цвет обуви — удлиняет ноги"
+    notes:
+      - "Дневные — матовые телесные, они освежают и утончённо вписываются в творческий образ."
+      - "Если кажется клоунадой — напоминаем: FG не классический типаж, ей подходит взрывной вид."
+
+  dramatic: {prefer: {}, stop: []}
+  soft_dramatic: {prefer: {}, stop: []}
+  flamboyant_natural: {prefer: {}, stop: []}
+  soft_natural: {prefer: {}, stop: []}
+  natural: {prefer: {}, stop: []}
+  dramatic_classic: {prefer: {}, stop: []}
+  soft_classic: {prefer: {}, stop: []}
+  classic: {prefer: {}, stop: []}
+  soft_gamine: {prefer: {}, stop: []}
+  gamine: {prefer: {}, stop: []}
+  romantic: {prefer: {}, stop: []}
+  theatrical_romantic: {prefer: {}, stop: []}

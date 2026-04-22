@@ -1,0 +1,38 @@
+category: belts
+rules:
+
+  flamboyant_gamine:
+    prefer:
+      width: medium                        # средняя ширина
+      rigidity: rigid                      # жёсткий
+      buckle_shape: [geometric, large, heavy]
+      accents: [studs, spikes, metal_trim]
+      texture: [smooth_matte, glossy]
+      sub_types: [wide_waist_belt_with_peplum, statement_belt]
+    stop:
+      - rule: thin_delicate
+        reason: "Слишком узкие ремешки не украсят FG"
+      - rule: soft_fabric_braided
+        reason: "Мягкие тканевые/плетёные ремни теряют структуру"
+    rule_conditions:
+      - id: waistline_required
+        description: "Обозначение талии важно для драматического стиля, но только если фигура позволяет"
+        apply_when: {user_waist_defined: true}
+        skip_when: {user_waist_defined: false}
+        skip_note: "Если талии нет — не обращаем внимания на этот пункт"
+    notes:
+      - "Крупные тяжёлые детали-пряжки, широкие пояса-ремни с баской."
+      - "Важна геометричность линий, утяжелённость деталей, асимметрия."
+
+  dramatic: {prefer: {}, stop: []}
+  soft_dramatic: {prefer: {}, stop: []}
+  flamboyant_natural: {prefer: {}, stop: []}
+  soft_natural: {prefer: {}, stop: []}
+  natural: {prefer: {}, stop: []}
+  dramatic_classic: {prefer: {}, stop: []}
+  soft_classic: {prefer: {}, stop: []}
+  classic: {prefer: {}, stop: []}
+  soft_gamine: {prefer: {}, stop: []}
+  gamine: {prefer: {}, stop: []}
+  romantic: {prefer: {}, stop: []}
+  theatrical_romantic: {prefer: {}, stop: []}

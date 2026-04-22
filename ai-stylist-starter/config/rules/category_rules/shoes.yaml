@@ -1,0 +1,38 @@
+category: shoes
+rules:
+
+  flamboyant_gamine:
+    prefer:
+      shape: [angular, irregular]
+      weight: slightly_heavy
+      heel_type: [tapered, very_straight_high]
+      asymmetric_low_heel: bonus
+      finish: [bright_colored, printed]
+      sub_types: [ankle_boots, pointed_heels, platform_loafers, sneakers_bold, knee_boots_pointed, mules_chain]
+      toe_shape: pointed
+      detail_scale: [small, medium]
+    stop:
+      - rule: classic_round_toe_pumps
+        reason: "Классические лодочки с круглым носом — слишком нейтрально"
+      - rule: thin_straps_delicate
+        reason: "Утончённые туфли с обилием тонких ремешков — романтичная эстетика"
+      - rule: ballerinas_plain
+        reason: "Простые балетки — слишком 'девочка'"
+      - rule: wedge_platform_smooth
+        reason: "Плавная танкетка теряет угловатость"
+    notes:
+      - "Если надели джинсы — ботинки короткие, джинсы закатать чтобы щиколотки открыты."
+      - "Можно колготки/носки диких ярких цветов, НЕ классические чёрные/бежевые в тон обуви."
+
+  dramatic: {prefer: {}, stop: []}
+  soft_dramatic: {prefer: {}, stop: []}
+  flamboyant_natural: {prefer: {}, stop: []}
+  soft_natural: {prefer: {}, stop: []}
+  natural: {prefer: {}, stop: []}
+  dramatic_classic: {prefer: {}, stop: []}
+  soft_classic: {prefer: {}, stop: []}
+  classic: {prefer: {}, stop: []}
+  soft_gamine: {prefer: {}, stop: []}
+  gamine: {prefer: {}, stop: []}
+  romantic: {prefer: {}, stop: []}
+  theatrical_romantic: {prefer: {}, stop: []}

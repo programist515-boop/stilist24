@@ -1,0 +1,54 @@
+# Матрица аффинити: какие стили идут какому подтипу.
+# Используется в outfit_engine для бонус/штраф скоринга + в UI-селекторе стилей.
+# Значения: excellent | good | neutral | avoid
+
+style_subtype_affinity:
+
+  flamboyant_gamine:
+    smart_casual: good
+    casual: good
+    military: excellent
+    dandy: good
+    preppy: good
+    romantic_adapted: good
+    dramatic: excellent
+    twenties: excellent
+
+  # Остальные подтипы — placeholder, наполнить из соответствующих гайдов
+  dramatic:
+    smart_casual: neutral
+    casual: neutral
+    military: neutral
+    dandy: neutral
+    preppy: neutral
+    romantic_adapted: neutral
+    dramatic: neutral
+    twenties: neutral
+
+  soft_dramatic: &empty
+    smart_casual: neutral
+    casual: neutral
+    military: neutral
+    dandy: neutral
+    preppy: neutral
+    romantic_adapted: neutral
+    dramatic: neutral
+    twenties: neutral
+
+  flamboyant_natural: *empty
+  soft_natural: *empty
+  natural: *empty
+  dramatic_classic: *empty
+  soft_classic: *empty
+  classic: *empty
+  soft_gamine: *empty
+  gamine: *empty
+  romantic: *empty
+  theatrical_romantic: *empty
+
+# Веса в скоринге
+score_modifiers:
+  excellent: 0.12
+  good: 0.06
+  neutral: 0.00
+  avoid: -0.10

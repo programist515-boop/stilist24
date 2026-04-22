@@ -1,0 +1,114 @@
+subtype: classic
+primary_look_id: cl_balanced_suit
+reference_looks:
+
+  - id: cl_balanced_suit
+    name: "Сбалансированный костюм"
+    style: office
+    season_hint: all
+    image_url: "/reference_looks/classic/cl_balanced_suit.jpg"
+    items:
+      - slot: blazer
+        requires:
+          category: blazer
+          pending_cut_lines: clean
+          pending_structure: tailored_moderate
+          pending_shoulder: natural_set_in
+          pending_proportion: balanced
+        optional: false
+      - slot: top
+        requires:
+          category: [blouse, silk_shell]
+          pending_cut_lines: clean
+          pending_neckline: [crew, v_moderate]
+        optional: false
+      - slot: bottom
+        requires:
+          category: [straight_trousers, pencil_skirt]
+          pending_silhouette: straight_moderate
+          pending_length: [knee, full_ankle]
+        optional: false
+      - slot: shoes
+        requires:
+          category: [pumps, mid_heels]
+          pending_heel_type: [slim_block, kitten]
+        optional: false
+    accessories:
+      - type: bag
+        requires:
+          pending_structure: structured
+          pending_detail_scale: medium
+    notes:
+      - "Ни крупных деталей, ни миниатюрных — всё в золотой середине"
+      - "Умеренность во всём — от цвета до длины"
+
+  - id: cl_shirt_dress_balanced
+    name: "Платье-рубашка с поясом"
+    style: smart_casual
+    season_hint: all
+    image_url: "/reference_looks/classic/cl_shirt_dress_balanced.jpg"
+    items:
+      - slot: dress
+        requires:
+          category: shirt_dress
+          pending_silhouette: [a_line_moderate, straight_moderate]
+          pending_cut_lines: clean
+          pending_waist: defined_moderate
+          pending_length: [knee, just_below_knee]
+        optional: false
+      - slot: shoes
+        requires:
+          category: [pumps, pointed_flats]
+          pending_heel_type: slim_block
+        optional: false
+    accessories:
+      - type: belt
+        requires:
+          width: medium
+          pending_fabric: classic_leather
+      - type: bag
+        requires:
+          pending_structure: structured
+    notes:
+      - "Симметричный крой + умеренный акцент на талии"
+
+  - id: cl_evening_simple_elegant
+    name: "Элегантное платье для вечера"
+    style: evening
+    season_hint: all
+    image_url: "/reference_looks/classic/cl_evening_simple_elegant.jpg"
+    items:
+      - slot: dress
+        requires:
+          category: dress
+          pending_silhouette: [sheath_moderate, a_line_moderate]
+          pending_cut_lines: clean
+          pending_length: [knee, midi]
+          pending_fabric: [crepe, satin]
+        optional: false
+      - slot: shoes
+        requires:
+          category: heels
+          pending_heel_type: slim_block
+          pending_toe_shape: [pointed_soft, almond]
+        optional: false
+    accessories:
+      - type: clutch
+        requires:
+          pending_structure: structured
+          pending_detail_scale: medium
+      - type: jewelry
+        requires:
+          pending_detail_scale: medium
+          pending_cut_lines: balanced
+        count_max: 2
+    notes:
+      - "Сдержанная элегантность — классика, которая не устаревает"
+
+global_stop_items:
+  - pending_cut_lines: [sharp_extreme, soft_extreme]
+  - pending_structure: [over_tailored, completely_unstructured]
+  - pending_detail_scale: [tiny, oversized]
+  - pending_proportion: [extremely_cropped, extremely_elongated]
+  - category: [avant_garde, peasant_blouse, utility_safari]
+  - pending_pattern_character: [busy_print, ditsy_overload]

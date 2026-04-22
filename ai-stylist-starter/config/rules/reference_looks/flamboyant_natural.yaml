@@ -1,0 +1,126 @@
+subtype: flamboyant_natural
+primary_look_id: fn_oversized_blazer_wide_jeans
+reference_looks:
+
+  - id: fn_oversized_blazer_wide_jeans
+    name: "Oversize-жакет с прямыми джинсами"
+    style: smart_casual
+    season_hint: all
+    image_url: "/reference_looks/flamboyant_natural/fn_oversized_blazer_wide_jeans.jpg"
+    items:
+      - slot: blazer
+        requires:
+          category: blazer
+          pending_cut_lines: relaxed
+          pending_structure: semi_structured
+          pending_proportion: elongated_wide
+          pending_shoulder: dropped
+        optional: false
+      - slot: top
+        requires:
+          category: [tshirt, tank, longsleeve]
+          pending_cut_lines: straight
+          pending_fabric_rigidity: medium
+        optional: false
+      - slot: bottom
+        requires:
+          category: jeans
+          pending_silhouette: [wide_straight, bootcut]
+          pending_cut_lines: relaxed
+        optional: false
+      - slot: shoes
+        requires:
+          category: [ankle_boots, loafers, chunky_sneakers]
+          pending_detail_scale: medium
+        optional: false
+    accessories:
+      - type: bag
+        requires:
+          pending_structure: slouchy
+          pending_detail_scale: [medium, large]
+    notes:
+      - "Широкие плечи + широкие брюки = удлинённая горизонталь, которая любит подтип"
+      - "Не зажимать талию — свободный силуэт"
+
+  - id: fn_long_coat_boho
+    name: "Длинное пальто с богемным акцентом"
+    style: weekend
+    season_hint: autumn_winter
+    image_url: "/reference_looks/flamboyant_natural/fn_long_coat_boho.jpg"
+    items:
+      - slot: outerwear
+        requires:
+          category: coat
+          pending_length: [maxi, mid_calf]
+          pending_cut_lines: relaxed
+          pending_fabric_rigidity: medium
+          pending_silhouette: straight_long
+        optional: false
+      - slot: top
+        requires:
+          category: [turtleneck, knit_sweater]
+          pending_fabric: chunky_knit
+          pending_cut_lines: relaxed
+        optional: false
+      - slot: bottom
+        requires:
+          category: [wide_trousers, flared_jeans]
+          pending_silhouette: wide
+        optional: false
+      - slot: shoes
+        requires:
+          category: [knee_boots, combat_boots]
+          pending_detail_scale: large
+        optional: false
+    accessories:
+      - type: bag
+        requires:
+          pending_structure: slouchy
+          pending_detail_scale: large
+      - type: scarf
+        optional: true
+        requires:
+          pending_fabric: chunky_knit
+          pending_detail_scale: large
+    notes:
+      - "Длинная вертикаль пальто в пол работает на рост"
+      - "Крупная фактура трикотажа — плюс к подтипу"
+
+  - id: fn_leather_shirt_dress
+    name: "Платье-рубашка из замши или грубой кожи"
+    style: casual
+    season_hint: all
+    image_url: "/reference_looks/flamboyant_natural/fn_leather_shirt_dress.jpg"
+    items:
+      - slot: dress
+        requires:
+          category: [shirt_dress, utility_dress]
+          pending_fabric: [suede, tumbled_leather, denim_heavy]
+          pending_cut_lines: relaxed
+          pending_silhouette: straight_long
+          pending_length: [midi, mid_calf]
+        optional: false
+      - slot: shoes
+        requires:
+          category: [ankle_boots, western_boots]
+          pending_detail_scale: medium
+        optional: false
+    accessories:
+      - type: belt
+        optional: true
+        requires:
+          pending_detail_scale: large
+          width: wide
+      - type: bag
+        requires:
+          pending_structure: slouchy
+    notes:
+      - "Грубая натуральная фактура — сердце подтипа"
+      - "Ремень опциональный: если завязать, то низко на бёдрах"
+
+global_stop_items:
+  - pending_cut_lines: dainty_fitted
+  - pending_structure: over_tailored
+  - pending_detail_scale: tiny
+  - category: [pencil_skirt, sheath_dress_formal, peplum_blazer]
+  - pending_fabric: [fine_silk, chiffon_soft, lace_delicate]

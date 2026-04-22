@@ -1,0 +1,40 @@
+category: pants
+rules:
+
+  flamboyant_gamine:
+    prefer:
+      fit: [straight, slightly_tapered]    # прямые, чуть зауженные, в строгом мужском стиле
+      length: [ankle, cropped_ankle]       # желательно по щиколотку
+      waist_rise: [medium, high]
+      details: [creases, side_stripe, contrast_piping]   # стрелки, лампасы, контрастные детали
+      material_bonus: leather              # кожаные — находка
+      jeans_rules:
+        fit: straight
+        color: [black, dark_navy]
+        no_distress: true
+        contrast_stitching: preferred
+    stop:
+      - rule: wide_unstructured
+        reason: "Широкие неструктурированные брюки размывают силуэт"
+      - rule: drapey_pleated_soft
+        reason: "Драпирующиеся брюки со сборками на талии и зауженные на лодыжке — не лучший вариант"
+      - rule: soft_jogger
+        reason: "Мягкие спортивные брюки без структуры — не FG"
+      - rule: ultra_distressed_jeans
+        reason: "Потёртые джинсы светлых оттенков теряют контраст и чёткость"
+    notes:
+      - "Со стрелками, лампасами, контрастными деталями — смело можно."
+      - "Кожаные брюки — это находка для типажа."
+
+  dramatic: {prefer: {}, stop: []}
+  soft_dramatic: {prefer: {}, stop: []}
+  flamboyant_natural: {prefer: {}, stop: []}
+  soft_natural: {prefer: {}, stop: []}
+  natural: {prefer: {}, stop: []}
+  dramatic_classic: {prefer: {}, stop: []}
+  soft_classic: {prefer: {}, stop: []}
+  classic: {prefer: {}, stop: []}
+  soft_gamine: {prefer: {}, stop: []}
+  gamine: {prefer: {}, stop: []}
+  romantic: {prefer: {}, stop: []}
+  theatrical_romantic: {prefer: {}, stop: []}

@@ -1,0 +1,116 @@
+subtype: soft_dramatic
+primary_look_id: sd_drape_wrap_dress
+reference_looks:
+
+  - id: sd_drape_wrap_dress
+    name: "Платье-халат с драпировкой"
+    style: smart_casual
+    season_hint: all
+    image_url: "/reference_looks/soft_dramatic/sd_drape_wrap_dress.jpg"
+    items:
+      - slot: dress
+        requires:
+          category: [dress, wrap_dress]
+          pending_cut_lines: [sharp, draped]
+          pending_drape: soft_flowing
+          pending_fabric_finish: [satin, silky]
+          pending_length: midi
+          pending_neckline: v_deep
+        optional: false
+      - slot: shoes
+        requires:
+          category: heels
+          pending_toe_shape: pointed
+          pending_heel_type: stiletto
+        optional: false
+    accessories:
+      - type: bag
+        requires:
+          pending_structure: semi_structured
+          pending_detail_scale: medium
+      - type: belt
+        optional: true
+        requires:
+          pending_structure: structured
+          width: medium
+    notes:
+      - "Драпировка + чёткая линия плеч — ключевая формула подтипа"
+      - "Струящаяся ткань, но силуэт не теряется"
+
+  - id: sd_statement_evening
+    name: "Вечерний статемент с люрексом"
+    style: evening
+    season_hint: all
+    image_url: "/reference_looks/soft_dramatic/sd_statement_evening.jpg"
+    items:
+      - slot: dress
+        requires:
+          category: dress
+          pending_fabric_finish: [metallic, sequin, velvet]
+          pending_silhouette: [column, fit_and_flare_elongated]
+          pending_cut_lines: [sharp, draped]
+          pending_length: maxi
+        optional: false
+      - slot: shoes
+        requires:
+          category: heels
+          pending_heel_type: stiletto
+        optional: false
+    accessories:
+      - type: clutch
+        requires:
+          pending_fabric_finish: [metallic, satin]
+          pending_structure: semi_structured
+      - type: jewelry
+        requires:
+          pending_detail_scale: large
+          pending_cut_lines: angular
+        count_max: 2
+    notes:
+      - "Soft Dramatic создан для большой сцены — чем богаче текстура, тем лучше"
+      - "Крупные драматичные украшения, но не перегружать количеством"
+
+  - id: sd_office_lush
+    name: "Офисный лук с чувственным акцентом"
+    style: office
+    season_hint: all
+    image_url: "/reference_looks/soft_dramatic/sd_office_lush.jpg"
+    items:
+      - slot: blazer
+        requires:
+          category: blazer
+          pending_cut_lines: sharp
+          pending_shoulder: structured
+          pending_proportion: elongated
+        optional: false
+      - slot: top
+        requires:
+          category: [blouse, silk_top]
+          pending_fabric_finish: silky
+          pending_drape: soft_flowing
+          pending_neckline: v_deep
+        optional: false
+      - slot: bottom
+        requires:
+          category: [pencil_skirt, wide_trousers]
+          pending_silhouette: [fitted_elongated, flowing_elongated]
+        optional: false
+      - slot: shoes
+        requires:
+          category: heels
+          pending_toe_shape: pointed
+        optional: false
+    accessories:
+      - type: bag
+        requires:
+          pending_structure: structured
+          pending_detail_scale: medium
+    notes:
+      - "Жесткий жакет + струящийся верх — контраст внутри лука"
+
+global_stop_items:
+  - pending_cut_lines: choppy
+  - pending_proportion: cropped_rounded
+  - pending_detail_scale: tiny
+  - category: [peasant_blouse, gingham_shirt, prairie_dress]
+  - pending_pattern_character: [ditsy, small_gingham]

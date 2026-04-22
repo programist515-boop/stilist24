@@ -1,0 +1,120 @@
+subtype: romantic
+primary_look_id: rm_wrap_dress_silk
+reference_looks:
+
+  - id: rm_wrap_dress_silk
+    name: "Платье на запах из шёлка"
+    style: smart_casual
+    season_hint: all
+    image_url: "/reference_looks/romantic/rm_wrap_dress_silk.jpg"
+    items:
+      - slot: dress
+        requires:
+          category: wrap_dress
+          pending_cut_lines: [flowing, curved]
+          pending_drape: soft_flowing
+          pending_fabric: [silk, satin, soft_jersey]
+          pending_waist: defined_hugged
+          pending_length: [midi, just_below_knee]
+          pending_neckline: [v_deep, surplice]
+        optional: false
+      - slot: shoes
+        requires:
+          category: [heels_rounded_toe, kitten_heels]
+          pending_detail_scale: medium
+          pending_heel_type: [slim_block, curved]
+        optional: false
+    accessories:
+      - type: bag
+        requires:
+          pending_structure: semi_structured_curved
+          pending_detail_scale: medium
+      - type: jewelry
+        requires:
+          pending_detail_scale: medium
+          pending_cut_lines: curved
+        count_max: 3
+    notes:
+      - "Запах обнимает талию — ключ к силуэту Romantic"
+      - "Струящаяся ткань и округлые линии"
+
+  - id: rm_ruffled_blouse_skirt
+    name: "Блузка с воланами и пышная юбка"
+    style: smart_casual
+    season_hint: spring_summer
+    image_url: "/reference_looks/romantic/rm_ruffled_blouse_skirt.jpg"
+    items:
+      - slot: top
+        requires:
+          category: [blouse, ruffled_top]
+          pending_cut_lines: [flowing, ruffled, curved]
+          pending_fabric: [silk, chiffon, soft_cotton]
+          pending_neckline: [v_soft, scoop, off_shoulder]
+        optional: false
+      - slot: bottom
+        requires:
+          category: [midi_skirt, circle_skirt]
+          pending_silhouette: [a_line_full, flared]
+          pending_drape: soft_flowing
+          pending_length: midi
+        optional: false
+      - slot: shoes
+        requires:
+          category: [kitten_heels, ballet_flats_curved]
+          pending_detail_scale: medium
+        optional: false
+    accessories:
+      - type: belt
+        optional: true
+        requires:
+          width: narrow
+          pending_structure: soft
+      - type: bag
+        requires:
+          pending_structure: semi_structured_curved
+    notes:
+      - "Волан и пышная юбка — фирменные детали подтипа"
+
+  - id: rm_evening_satin_gown
+    name: "Вечернее платье из атласа"
+    style: evening
+    season_hint: all
+    image_url: "/reference_looks/romantic/rm_evening_satin_gown.jpg"
+    items:
+      - slot: dress
+        requires:
+          category: [gown, slip_dress_evening]
+          pending_silhouette: [hourglass, fit_and_flare]
+          pending_cut_lines: curved
+          pending_drape: soft_flowing
+          pending_fabric: [satin, silk, velvet_soft]
+          pending_length: maxi
+          pending_neckline: [sweetheart, v_deep]
+        optional: false
+      - slot: shoes
+        requires:
+          category: heels_rounded_toe
+          pending_heel_type: curved
+        optional: false
+    accessories:
+      - type: clutch
+        requires:
+          pending_structure: soft_curved
+          pending_fabric: [satin, velvet]
+      - type: jewelry
+        requires:
+          pending_detail_scale: medium
+          pending_cut_lines: curved
+          pending_material: [pearl, soft_gold]
+        count_max: 3
+    notes:
+      - "Атлас, бархат, шёлк — ткани, которые обожает Romantic"
+      - "Жемчуг и мягкое золото вместо острой геометрии"
+
+global_stop_items:
+  - pending_cut_lines: [sharp_angular, aggressive_geometric, choppy]
+  - pending_structure: [over_tailored_rigid, boxy]
+  - pending_proportion: boxy_masculine
+  - pending_pattern_character: [aggressive_stripe, military_camo]
+  - category: [utility_safari, military_coat, masculine_suit_boxy]
+  - pending_fabric: [heavy_suede_rough, stiff_brocade_angular]

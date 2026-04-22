@@ -1,0 +1,110 @@
+subtype: natural
+primary_look_id: nt_utility_shirt_wide_jeans
+reference_looks:
+
+  - id: nt_utility_shirt_wide_jeans
+    name: "Юнисекс-рубашка и прямые джинсы"
+    style: casual
+    season_hint: all
+    image_url: "/reference_looks/natural/nt_utility_shirt_wide_jeans.jpg"
+    items:
+      - slot: top
+        requires:
+          category: [button_shirt, utility_shirt]
+          pending_cut_lines: relaxed
+          pending_structure: soft_unstructured
+          pending_fabric: [cotton, linen, chambray]
+        optional: false
+      - slot: bottom
+        requires:
+          category: jeans
+          pending_silhouette: [straight, wide_straight]
+          pending_cut_lines: relaxed
+        optional: false
+      - slot: shoes
+        requires:
+          category: [loafers, ankle_boots, chunky_sneakers]
+          pending_detail_scale: medium
+        optional: false
+    accessories:
+      - type: bag
+        requires:
+          pending_structure: semi_slouchy
+          pending_detail_scale: medium
+      - type: belt
+        optional: true
+        requires:
+          pending_fabric: natural_leather
+          width: medium
+    notes:
+      - "Прямая рубашка из натуральной ткани + прямые джинсы — базовая формула"
+      - "Никаких острых линий и жёсткой конструкции"
+
+  - id: nt_safari_dress
+    name: "Платье-сафари"
+    style: weekend
+    season_hint: spring_summer
+    image_url: "/reference_looks/natural/nt_safari_dress.jpg"
+    items:
+      - slot: dress
+        requires:
+          category: [shirt_dress, utility_dress]
+          pending_silhouette: straight_relaxed
+          pending_cut_lines: relaxed
+          pending_fabric: [linen, cotton_twill, khaki]
+          pending_length: midi
+        optional: false
+      - slot: shoes
+        requires:
+          category: [sandals, espadrilles, ankle_boots]
+          pending_detail_scale: medium
+        optional: false
+    accessories:
+      - type: belt
+        optional: true
+        requires:
+          width: medium_wide
+          pending_fabric: natural_leather
+      - type: bag
+        requires:
+          pending_structure: semi_slouchy
+    notes:
+      - "Утилитарный крой с накладными карманами — ключ к подтипу"
+
+  - id: nt_chunky_knit_set
+    name: "Толстый трикотаж и прямая юбка"
+    style: smart_casual
+    season_hint: autumn_winter
+    image_url: "/reference_looks/natural/nt_chunky_knit_set.jpg"
+    items:
+      - slot: top
+        requires:
+          category: knit_sweater
+          pending_fabric: chunky_knit
+          pending_cut_lines: relaxed
+          pending_silhouette: relaxed_straight
+        optional: false
+      - slot: bottom
+        requires:
+          category: [midi_skirt, straight_skirt]
+          pending_silhouette: [straight, a_line_relaxed]
+          pending_length: midi
+        optional: false
+      - slot: shoes
+        requires:
+          category: [ankle_boots, knee_boots]
+          pending_detail_scale: medium
+        optional: false
+    accessories:
+      - type: bag
+        requires:
+          pending_structure: semi_slouchy
+    notes:
+      - "Толстый трикотаж + прямая юбка — уравновешенный образ"
+
+global_stop_items:
+  - pending_cut_lines: sharp_angular
+  - pending_structure: over_tailored
+  - pending_detail_scale: tiny
+  - category: [peplum_blazer, sheath_dress_formal, pencil_skirt_rigid]
+  - pending_fabric: [brocade, lace_delicate, chiffon_soft]

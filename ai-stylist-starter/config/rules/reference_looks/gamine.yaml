@@ -1,0 +1,109 @@
+subtype: gamine
+primary_look_id: gm_cropped_stripe_set
+reference_looks:
+
+  - id: gm_cropped_stripe_set
+    name: "Укороченный сет в полоску"
+    style: casual
+    season_hint: all
+    image_url: "/reference_looks/gamine/gm_cropped_stripe_set.jpg"
+    items:
+      - slot: top
+        requires:
+          category: [striped_tee, breton_shirt]
+          pending_pattern_character: stripe
+          pending_pattern_scale: small
+          pending_proportion: cropped
+          pending_cut_lines: [crisp, juxtaposed]
+        optional: false
+      - slot: bottom
+        requires:
+          category: [cigarette_pants, cropped_jeans]
+          pending_silhouette: slim_cropped
+          pending_length: ankle
+        optional: false
+      - slot: shoes
+        requires:
+          category: [loafers, ballet_flats, oxford_shoes]
+          pending_detail_scale: small
+        optional: false
+    accessories:
+      - type: bag
+        requires:
+          pending_structure: structured
+          pending_detail_scale: small
+      - type: scarf
+        optional: true
+        requires:
+          pending_detail_scale: small
+    notes:
+      - "Короткий верх + укороченные брюки = базовая компактность"
+      - "Мелкая полоска создаёт лёгкий визуальный контраст, любимый подтипом"
+
+  - id: gm_mini_dress_geometric
+    name: "Мини-платье с геометрией"
+    style: smart_casual
+    season_hint: all
+    image_url: "/reference_looks/gamine/gm_mini_dress_geometric.jpg"
+    items:
+      - slot: dress
+        requires:
+          category: [mini_dress, a_line_mini]
+          pending_length: mini
+          pending_cut_lines: [crisp, geometric]
+          pending_pattern_character: [geometric, mondrian, block_color]
+          pending_structure: tailored
+        optional: false
+      - slot: shoes
+        requires:
+          category: [mary_janes, loafers_chunky]
+          pending_detail_scale: small
+        optional: false
+    accessories:
+      - type: bag
+        requires:
+          pending_structure: structured
+          pending_detail_scale: small
+    notes:
+      - "Платье А-силуэта выше колена — визитка подтипа"
+      - "Геометрический принт + контрастные цветовые блоки"
+
+  - id: gm_shirt_skirt_contrast
+    name: "Контрастный сет: рубашка и короткая юбка"
+    style: office
+    season_hint: all
+    image_url: "/reference_looks/gamine/gm_shirt_skirt_contrast.jpg"
+    items:
+      - slot: top
+        requires:
+          category: [button_shirt, fitted_shirt]
+          pending_cut_lines: crisp
+          pending_structure: tailored
+          pending_proportion: cropped_or_tucked
+        optional: false
+      - slot: bottom
+        requires:
+          category: [a_line_skirt_short, mini_skirt]
+          pending_length: [above_knee, mini]
+          pending_cut_lines: crisp
+        optional: false
+      - slot: shoes
+        requires:
+          category: [loafers, oxford_shoes, kitten_heels]
+          pending_detail_scale: small
+        optional: false
+    accessories:
+      - type: bag
+        requires:
+          pending_structure: structured
+          pending_detail_scale: small
+    notes:
+      - "Контраст между верхом и низом — главный принцип"
+      - "Высокая линия талии создаёт визуальный разрыв"
+
+global_stop_items:
+  - pending_proportion: elongated_long
+  - pending_cut_lines: [flowing, draped_loose]
+  - pending_silhouette: [maxi_flowing, column_long]
+  - pending_detail_scale: oversized
+  - category: [maxi_dress_boho, palazzo_trousers, longline_coat_flowing]

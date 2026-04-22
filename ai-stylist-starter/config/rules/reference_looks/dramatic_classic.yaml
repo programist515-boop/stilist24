@@ -1,0 +1,112 @@
+subtype: dramatic_classic
+primary_look_id: dc_tailored_sheath
+reference_looks:
+
+  - id: dc_tailored_sheath
+    name: "Платье-футляр с точной посадкой"
+    style: office
+    season_hint: all
+    image_url: "/reference_looks/dramatic_classic/dc_tailored_sheath.jpg"
+    items:
+      - slot: dress
+        requires:
+          category: dress
+          fit: sheath
+          pending_cut_lines: [clean, crisp]
+          pending_structure: tailored
+          pending_symmetry: high
+          pending_length: [knee, just_below_knee]
+          pending_neckline: [boat_narrow, v_moderate]
+        optional: false
+      - slot: shoes
+        requires:
+          category: heels
+          pending_toe_shape: pointed
+          pending_heel_type: [stiletto, slim_block]
+        optional: false
+    accessories:
+      - type: bag
+        requires:
+          pending_structure: structured
+          pending_detail_scale: minimal
+    notes:
+      - "Чистый силуэт без лишних деталей — ядро подтипа"
+      - "Чуть жёстче классики, но без резкой геометрии Dramatic"
+
+  - id: dc_column_pantsuit
+    name: "Колонный брючный костюм"
+    style: office
+    season_hint: all
+    image_url: "/reference_looks/dramatic_classic/dc_column_pantsuit.jpg"
+    items:
+      - slot: blazer
+        requires:
+          category: blazer
+          pending_cut_lines: clean
+          pending_structure: tailored
+          pending_shoulder: structured_slim
+          pending_proportion: elongated
+        optional: false
+      - slot: top
+        requires:
+          category: [blouse, silk_shell]
+          pending_cut_lines: clean
+          pending_neckline: [crew, boat]
+        optional: false
+      - slot: bottom
+        requires:
+          category: trousers
+          pending_silhouette: straight_slim
+          pending_length: full
+        optional: false
+      - slot: shoes
+        requires:
+          category: [heels, pointed_flats]
+          pending_toe_shape: pointed
+        optional: false
+    accessories:
+      - type: bag
+        requires:
+          pending_structure: structured
+    notes:
+      - "Монохромный костюм с длинной вертикалью + острый плечевой пояс"
+
+  - id: dc_evening_minimal
+    name: "Минималистичное вечернее платье"
+    style: evening
+    season_hint: all
+    image_url: "/reference_looks/dramatic_classic/dc_evening_minimal.jpg"
+    items:
+      - slot: dress
+        requires:
+          category: dress
+          pending_silhouette: [column, slim_sheath]
+          pending_cut_lines: clean
+          pending_fabric: [satin, crepe]
+          pending_length: [midi, maxi]
+        optional: false
+      - slot: shoes
+        requires:
+          category: heels
+          pending_heel_type: stiletto
+          pending_toe_shape: pointed
+        optional: false
+    accessories:
+      - type: clutch
+        requires:
+          pending_structure: structured
+          pending_detail_scale: minimal
+      - type: jewelry
+        requires:
+          pending_detail_scale: [small, medium]
+          pending_cut_lines: clean_geometric
+        count_max: 2
+    notes:
+      - "Элегантность без излишеств — минимум украшений, максимум крою"
+
+global_stop_items:
+  - pending_cut_lines: [ruffled, fussy, over_dramatic]
+  - pending_structure: unstructured
+  - pending_pattern_character: [ditsy, busy_print, cute]
+  - category: [boho_dress, peasant_blouse, a_line_flared_ruffled]
+  - pending_detail_scale: overloaded

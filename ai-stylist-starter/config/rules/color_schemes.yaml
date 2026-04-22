@@ -1,0 +1,117 @@
+# Цветовые схемы сочетаний — независимы от цветотипа.
+# Используются color_combination_service (Фаза 4) для проверки и предложений.
+# Правила применяются поверх палитры цветотипа пользователя.
+
+color_schemes:
+
+  triadic:
+    description: "Три цвета, равноудалённые на цветовом круге"
+    hue_spacing_deg: 120
+    selection:
+      primary: 1
+      secondary: 2
+    example_base: [red_orange, green, violet]
+    pairs_well_with_subtypes: [flamboyant_gamine, dramatic, soft_dramatic, flamboyant_natural]
+
+  analogous:
+    description: "2–3 соседних цвета на цветовом круге"
+    hue_spacing_deg: 30
+    selection:
+      primary: 1
+      neighbors: 2
+    example_base: [blue, teal, green]
+    pairs_well_with_subtypes: [flamboyant_gamine, romantic, classic]
+
+  complementary:
+    description: "Два противоположных цвета на цветовом круге"
+    hue_spacing_deg: 180
+    selection:
+      primary: 1
+      opposite: 1
+    example_base: [red, green]
+    pairs_well_with_subtypes: [flamboyant_gamine, dramatic, dramatic_classic]
+
+  split_complementary:
+    description: "Основной + два соседа его комплиментарного"
+    pairs_well_with_subtypes: [flamboyant_gamine, soft_dramatic]
+
+  tetradic:
+    description: "Два комплиментарных сочетания одновременно"
+    pairs_well_with_subtypes: [flamboyant_gamine, dramatic]
+
+  monochromatic:
+    description: "Один цвет в разных насыщенностях"
+    pairs_well_with_subtypes: [classic, dramatic_classic, soft_classic]
+    avoid_for_subtypes: [flamboyant_gamine]     # стоп-правило для FG
+    avoid_reason: "Моноцветная схема создаёт одну длинную вертикаль — FG её запрещает"
+
+# --- Правила композиции на уровне образа ---
+composition_rules:
+
+  flamboyant_gamine:
+
+    - id: break_vertical_by_color
+      description: "Разбивать линию силуэта цветом — не делать моноцвет от макушки до пят"
+      examples:
+        - "Красная юбка + молочный, жёлтый или зелёный верх (НЕ красный/бордовый)"
+        - "Пурпурная юбка + зелёный жакет + белый верх"
+      score_boost: 0.10
+      violation_penalty: 0.10
+
+    - id: electric_bold_colors_preferred
+      description: "Использовать самые яркие цвета из палитры цветотипа, делать контрасты"
+      score_boost: 0.08
+
+    - id: wild_color_combinations
+      description: "Дикие сочетания, о которых другие только мечтают — на FG смотрятся освежающе"
+      score_boost: 0.10
+
+    - id: colorful_splashes_over_dark_light_base
+      description: "Разноцветные брызги на светлом/тёмном фоне"
+      score_boost: 0.08
+
+    - id: single_tone_without_accent
+      description: "Один оттенок без ярких смелых акцентов"
+      score_penalty: 0.12
+      explanation: "Теряется динамическая энергия — главная ценность FG"
+
+    - id: close_colors_same_zone
+      description: "Очень близкие цвета в одной цветовой зоне (красный верх + бордовый низ)"
+      score_penalty: 0.08
+      explanation: "Не создаётся разбивки силуэта"
+
+  # Остальные подтипы — placeholder
+  dramatic:
+    - {}
+  soft_dramatic:
+    - {}
+  flamboyant_natural:
+    - {}
+  soft_natural:
+    - {}
+  natural:
+    - {}
+  dramatic_classic:
+    - {}
+  soft_classic:
+    - {}
+  classic:
+    - {}
+  soft_gamine:
+    - {}
+  gamine:
+    - {}
+  romantic:
+    - {}
+  theatrical_romantic:
+    - {}
+
+# Стоп-палитры (дополняют стоп-листы подтипов)
+forbidden_palettes:
+  flamboyant_gamine:
+    - name: warm_dusty_muted
+      colors: [olive, dusty_peach, muted_terracotta, dusty_rose, burnt_olive]
+      reason: "Тёплые пыльные приглушённые цвета делают кожу зеленоватой"
+    - name: soft_pastels_all
+      colors: [baby_blue_soft, peach_soft, lavender_soft, mint_soft]
+      reason: "Размытые пастели отвлекают от внешности FG"

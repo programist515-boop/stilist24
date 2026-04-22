@@ -1,0 +1,35 @@
+category: bags
+rules:
+
+  flamboyant_gamine:
+    prefer:
+      shape: [structured_rigid, geometric, asymmetric_extravagant]
+      sub_types: [clutch, envelope, portfolio_slim_medium, rigid_crossbody, chain_shoulder]
+      pending_detail_scale: [small, medium]
+      color_policy: [combined_multicolor, bright]
+      trim: [metal, studs, zippers]
+      materials: [python_leather, croc_leather, fur_accent, patent]
+      evening: [metallic_clutch, crystal_mini]
+    stop:
+      - rule: slouchy_soft_hobo
+        reason: "Мягкие бесформенные сумки-мешки — противоположность геометрии"
+      - rule: oversized_tote
+        reason: "Слишком большие сумки нарушают масштабность"
+      - rule: delicate_romantic_bow
+        reason: "Нежные сумочки с бантиками — романтика, не FG"
+    notes:
+      - "Вечерний вариант — клатчи из металлик, парча."
+      - "Узкие или средние по толщине портфели с жёсткой формой — отличная рабочая сумка."
+
+  dramatic: {prefer: {}, stop: []}
+  soft_dramatic: {prefer: {}, stop: []}
+  flamboyant_natural: {prefer: {}, stop: []}
+  soft_natural: {prefer: {}, stop: []}
+  natural: {prefer: {}, stop: []}
+  dramatic_classic: {prefer: {}, stop: []}
+  soft_classic: {prefer: {}, stop: []}
+  classic: {prefer: {}, stop: []}
+  soft_gamine: {prefer: {}, stop: []}
+  gamine: {prefer: {}, stop: []}
+  romantic: {prefer: {}, stop: []}
+  theatrical_romantic: {prefer: {}, stop: []}

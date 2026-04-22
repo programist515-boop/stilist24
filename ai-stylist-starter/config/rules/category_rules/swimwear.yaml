@@ -1,0 +1,32 @@
+category: swimwear
+rules:
+
+  flamboyant_gamine:
+    prefer:
+      shape: geometric
+      sub_types: [one_piece, bikini]
+      cut_character: contrasting_diagonals
+      waist_rise: medium                   # средняя посадка плавок
+      color_pattern: [contrast, color_block, diagonal_stripe]
+    stop:
+      - rule: romantic_theme
+        reason: "Романтическая тематика (рюши, бантики) противоположна типажу"
+      - rule: natural_theme
+        reason: "Натуральные пасторальные мотивы и мягкие драпировки неподходящи"
+      - rule: low_rise_cutesy
+        reason: "Сильно заниженные плавки с бантиками — не FG"
+    notes:
+      - "Чёткие геометрические линии, контрастные диагонали — визитная карточка."
+
+  dramatic: {prefer: {}, stop: []}
+  soft_dramatic: {prefer: {}, stop: []}
+  flamboyant_natural: {prefer: {}, stop: []}
+  soft_natural: {prefer: {}, stop: []}
+  natural: {prefer: {}, stop: []}
+  dramatic_classic: {prefer: {}, stop: []}
+  soft_classic: {prefer: {}, stop: []}
+  classic: {prefer: {}, stop: []}
+  soft_gamine: {prefer: {}, stop: []}
+  gamine: {prefer: {}, stop: []}
+  romantic: {prefer: {}, stop: []}
+  theatrical_romantic: {prefer: {}, stop: []}

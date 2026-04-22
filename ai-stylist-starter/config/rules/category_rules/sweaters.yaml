@@ -1,0 +1,38 @@
+category: sweaters
+rules:
+
+  flamboyant_gamine:
+    prefer:
+      knit_density: dense                  # плотной вязки, "стоять колом"
+      length: [cropped, short]             # плотные и объёмные, но короткие
+      pending_neckline_type: [v, turtleneck, asymmetric]  # V-вырез или стойка
+      pattern_character: [geometric, irregular]
+      machine_knit: preferred              # тонкая машинная вязка поверх рубашек
+      collar_type: [stiff_turtleneck, v_neck, cut_out]
+      color_palette: [bright, saturated]
+    stop:
+      - rule: chunky_cable_beige
+        reason: "Бежевый с крупной вязкой — эффект 'бабушка связала' или юного гастарбайтера"
+      - rule: round_closed_neck_symmetric
+        reason: "Ординарный круглый закрытый вырез без акцентов слишком скучен"
+      - rule: oversized_loose
+        reason: "Бесформенный свитер без структуры размывает FG"
+      - rule: soft_drape_knit
+        reason: "Мягкий струящийся трикотаж не держит форму"
+    notes:
+      - "Свитера с забавными геометрическими узорами в оригинальном стиле — хит."
+      - "Яркий джемпер из ангорки — тоже вариант."
+      - "Носить поверх рубашек — создаёт деталировку и вертикаль."
+
+  dramatic: {prefer: {}, stop: []}
+  soft_dramatic: {prefer: {}, stop: []}
+  flamboyant_natural: {prefer: {}, stop: []}
+  soft_natural: {prefer: {}, stop: []}
+  natural: {prefer: {}, stop: []}
+  dramatic_classic: {prefer: {}, stop: []}
+  soft_classic: {prefer: {}, stop: []}
+  classic: {prefer: {}, stop: []}
+  soft_gamine: {prefer: {}, stop: []}
+  gamine: {prefer: {}, stop: []}
+  romantic: {prefer: {}, stop: []}
+  theatrical_romantic: {prefer: {}, stop: []}

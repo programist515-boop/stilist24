@@ -1,0 +1,112 @@
+# Правила силуэта и линий на уровне ОБРАЗА (не отдельной вещи).
+# Применяется в outfit_engine после сборки кандидата-образа.
+#
+# Ссылки на атрибуты вещей с префиксом pending_ означают атрибуты из Фазы 0
+# (см. plans/2026-04-21-каталог-фич-из-отчёта-типажа.md). Пока не появятся —
+# правила валидны как данные, но не применяются сервисом.
+
+silhouette_rules:
+
+  # ---------- flamboyant_gamine ----------
+  flamboyant_gamine:
+    prefer:
+      contrast_top_bottom: required     # контрастный верх/низ
+      silhouette_shape: broken          # разбитый, прерывистый силуэт
+      line_character: angular           # ломаные очертания, резкие края
+      cut: [straight, semi_fitted]      # прямой или полуприлегающий
+      mix_opposing_shapes: bonus        # узкая база + широкая противоположность
+      edge_clarity: sharp               # чёткие линии вырезов/рукавов/подолов
+      shoulder_emphasis: required       # плечи всегда выделены
+    avoid:
+      silhouette_shape: [flowing, smooth_hourglass]
+      line_character: [curved, wavy]
+      vertical_monocolor: true          # одна длинная вертикаль одного цвета
+      oversized_both_top_bottom: true   # бесформенный низ + бесформенный верх
+      draped_without_structure: true
+      raglan_or_dropped_shoulder: true
+    composition_rules:
+      - id: narrow_base_plus_wide_opposite
+        description: "Смешивание противоположных форм: узкая база + широкая противоположность"
+        example: "Юбка по фигуре + широкий квадратный жакет"
+        score_boost: 0.10
+      - id: broken_by_color
+        description: "Разбить длинную вертикаль цветом — не делать моноцвет от макушки до пят"
+        score_boost: 0.08
+      - id: drape_with_angular_counterpart
+        description: "Драпировки допустимы, только если с другим острым элементом в образе"
+        score_boost: 0.05
+      - id: unbroken_vertical
+        description: "Одноцветная вертикаль на весь образ"
+        score_penalty: 0.10
+      - id: soft_top_and_soft_bottom
+        description: "Мягкий верх + мягкий низ без структурных элементов"
+        score_penalty: 0.14
+
+  # ---------- dramatic ----------
+  dramatic:
+    prefer:
+      silhouette_shape: [long_vertical, sleek]
+      line_character: [sharp, clean, elongated]
+      cut: [tailored, clean_skimming]
+      edge_clarity: sharp
+      shoulder_emphasis: neutral
+    avoid:
+      line_character: [fussy, rounded, ornate]
+      silhouette_shape: [broken_cropped, cute]
+    composition_rules: []  # TODO наполнить при появлении гайдов по D
+
+  # ---------- остальные подтипы: placeholder ----------
+  soft_dramatic:
+    prefer: {}
+    avoid: {}
+    composition_rules: []
+
+  flamboyant_natural:
+    prefer: {}
+    avoid: {}
+    composition_rules: []
+
+  soft_natural:
+    prefer: {}
+    avoid: {}
+    composition_rules: []
+
+  natural:
+    prefer: {}
+    avoid: {}
+    composition_rules: []
+
+  dramatic_classic:
+    prefer: {}
+    avoid: {}
+    composition_rules: []
+
+  soft_classic:
+    prefer: {}
+    avoid: {}
+    composition_rules: []
+
+  classic:
+    prefer: {}
+    avoid: {}
+    composition_rules: []
+
+  soft_gamine:
+    prefer: {}
+    avoid: {}
+    composition_rules: []
+
+  gamine:
+    prefer: {}
+    avoid: {}
+    composition_rules: []
+
+  romantic:
+    prefer: {}
+    avoid: {}
+    composition_rules: []
+
+  theatrical_romantic:
+    prefer: {}
+    avoid: {}
+    composition_rules: []
