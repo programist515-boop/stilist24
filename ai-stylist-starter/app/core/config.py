@@ -64,6 +64,11 @@ class Settings(BaseSettings):
     # Set USE_NEW_OUTFIT_ENGINE=false in .env to revert to the old engine.
     use_new_outfit_engine: bool = True
 
+    # Включает ML-путь (FASHN recolor) для «примерки цвета» (color try-on).
+    # По умолчанию выключен — платные вызовы делаются только по явному желанию.
+    # CV-путь (rembg + HSV) работает всегда, без флага.
+    enable_ml_color_tryon: bool = False
+
     # --- FASHN / Auth (unchanged) -----------------------------------------
     fashn_api_key: str = ""
     fashn_base_url: str = "https://api.fashn.ai"

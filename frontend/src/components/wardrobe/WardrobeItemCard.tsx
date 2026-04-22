@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { Badge } from "@/components/ui/Badge";
 import type { WardrobeItem } from "@/lib/schemas";
 
@@ -67,6 +68,12 @@ export function WardrobeItemCard({ item }: { item: WardrobeItem }) {
         ) : (
           <p className="text-xs text-ink-muted">Тегов пока нет</p>
         )}
+        <Link
+          href={`/wardrobe/${item.id}/color-tryon`}
+          className="mt-auto text-xs font-medium text-ink underline-offset-2 hover:underline"
+        >
+          Примерь в цветах палитры →
+        </Link>
       </div>
     </div>
   );

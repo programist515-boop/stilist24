@@ -38,3 +38,27 @@ class PersonalizationService:
         if event_type == "tryon_opened":
             profile["experimentation_score"] = min(1.0, profile.get("experimentation_score", 0.3) + 0.01)
         return profile
+
+    def record_color_preference(
+        self,
+        profile: dict,
+        hex_code: str,
+        liked: bool,
+    ) -> dict:
+        """Записать лайк/дизлайк на цвет в ``color_vector_json``.
+
+        Используется обратной связью из color-tryon: пользователь
+        отмечает понравившиеся варианты палитры, мы постепенно
+        «смещаем» персональный color_vector к его вкусу. Ключ хранится
+        в нижнем регистре без префикса ``#``, чтобы не плодить дубли
+        (``#E8735A`` и ``e8735a`` попадают в одну ячейку).
+        """
+        color_vector = profile.setdefault("color_vector_json", {})
+        key = (hex_code or "").strip().lstrip("#").lower()
+        if not key:
+            return profile
+        if liked:
+            self._bump(color_vector, key, self.STEP_UP)
+        else:
+            self._bump(color_vector, key, -self.STEP_DOWN)
+        return profile

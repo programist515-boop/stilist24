@@ -11,6 +11,7 @@ from app.api.errors import (
 from app.api.routes import (
     auth,
     color,
+    color_tryon,
     events,
     feedback,
     gap_analysis,
@@ -53,6 +54,7 @@ app.add_exception_handler(RequestValidationError, validation_error_handler)
 app.include_router(auth.router, prefix="/auth", tags=["auth"])
 app.include_router(user_analysis.router, prefix="/user", tags=["user"])
 app.include_router(color.router, prefix="/color", tags=["color"])
+app.include_router(color_tryon.router, prefix="/color-tryon", tags=["color-tryon"])
 app.include_router(gap_analysis.router, prefix="/wardrobe", tags=["wardrobe"])
 app.include_router(wardrobe.router, prefix="/wardrobe", tags=["wardrobe"])
 app.include_router(outfits.router, prefix="/outfits", tags=["outfits"])
