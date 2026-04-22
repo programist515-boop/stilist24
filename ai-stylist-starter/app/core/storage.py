@@ -202,35 +202,61 @@ def _check_filename_extension(
         )
 
 
-def _check_magic_bytes(data: bytes, content_type: str) -> None:
-    """Minimal format sniffing — JPEG / PNG / WEBP / AVIF.
+def _detect_mime(data: bytes) -> str | None:
+    """Sniff the real image MIME from the body.
 
-    We only check short prefixes. This catches renamed executables and
-    mismatched mime/body pairs without turning into a full parser.
+    Returns the canonical MIME we support (image/jpeg, image/png,
+    image/webp, image/avif) or ``None`` if the body does not look like
+    any of them. Browsers routinely hand us ``image/jpeg`` regardless
+    of the actual file type (especially HEIC from iPhone), so we never
+    trust the client-supplied Content-Type — magic bytes win.
     """
-    for mime, prefix in _MAGIC_PREFIXES:
-        if mime == content_type:
-            if prefix and not data.startswith(prefix):
-                raise StorageValidationError(
-                    f"file body does not match declared content-type {content_type!r}"
-                )
-            if mime == "image/webp":
-                # WEBP needs a "WEBP" marker at offset 8 after "RIFF<size>".
-                if len(data) < 12 or data[8:12] != b"WEBP":
-                    raise StorageValidationError(
-                        "file body is not a valid WEBP image"
-                    )
-            if mime == "image/avif":
-                # AVIF is an ISOBMFF container: bytes 4–8 must be "ftyp".
-                if len(data) < 12 or data[4:8] != b"ftyp":
-                    raise StorageValidationError(
-                        "file body is not a valid AVIF image"
-                    )
-            return
-    # Unknown mime should have been rejected earlier; be defensive.
-    raise StorageValidationError(
-        f"no magic-byte rule for content-type {content_type!r}"
-    )
+    if data.startswith(b"\xff\xd8\xff"):
+        return "image/jpeg"
+    if data.startswith(b"\x89PNG\r\n\x1a\n"):
+        return "image/png"
+    if data.startswith(b"RIFF") and len(data) >= 12 and data[8:12] == b"WEBP":
+        return "image/webp"
+    # AVIF + HEIC/HEIF share the ISOBMFF container. Bytes 4-8 are always
+    # "ftyp"; the 4-char brand at 8-12 tells them apart.
+    if len(data) >= 12 and data[4:8] == b"ftyp":
+        brand = data[8:12]
+        if brand in (b"avif", b"avis"):
+            return "image/avif"
+    return None
+
+
+def _format_hint(data: bytes) -> str:
+    """Human-readable guess for an unsupported body — used in the
+    error message so the user knows *what* they uploaded rather than
+    just "format not supported"."""
+    if len(data) >= 12 and data[4:8] == b"ftyp":
+        brand = bytes(data[8:12]).decode("ascii", errors="replace")
+        if brand in ("heic", "heix", "hevc", "mif1", "msf1"):
+            return "HEIC/HEIF (iPhone по умолчанию) — сохрани как JPEG"
+        return f"ISOBMFF ({brand!r}) — не поддерживается"
+    if data.startswith(b"GIF8"):
+        return "GIF — не поддерживается"
+    if data.startswith(b"BM"):
+        return "BMP — не поддерживается"
+    if data.startswith(b"II*\x00") or data.startswith(b"MM\x00*"):
+        return "TIFF — не поддерживается"
+    return "неизвестный формат"
+
+
+# Back-compat shim: existing tests call ``_check_magic_bytes(data, ct)``.
+# Replay that signature on top of the new sniffer.
+def _check_magic_bytes(data: bytes, content_type: str) -> None:
+    detected = _detect_mime(data)
+    if detected is None:
+        raise StorageValidationError(
+            f"формат файла не поддерживается: {_format_hint(data)}. "
+            "Поддерживаются JPEG, PNG, WEBP, AVIF."
+        )
+    if detected != content_type:
+        raise StorageValidationError(
+            f"file body does not match declared content-type {content_type!r}"
+        )
 
 
 def _validate(
@@ -241,13 +267,31 @@ def _validate(
     """Orchestrate the small validation helpers.
 
     Returns ``(normalized_content_type, canonical_extension, size)``.
+
+    The canonical content-type is derived from the file body (magic
+    bytes), not from ``content_type``. Browsers send ``image/jpeg``
+    for anything they treat as an image — notably HEIC from iPhone —
+    so client-supplied MIME is not trustworthy. ``content_type`` and
+    ``filename`` are still consulted by the surface-level checks to
+    stop an obvious ``exploit.exe`` labelled as ``image/jpeg`` before
+    it reaches the sniffer.
     """
     size = _check_size(data, settings.storage_max_bytes)
-    ct = _check_content_type(content_type, settings.storage_allowed_mime)
+    _check_content_type(content_type, settings.storage_allowed_mime)
     _check_filename_extension(filename, settings.storage_allowed_ext)
-    _check_magic_bytes(data, ct)
-    ext = _extension_for(ct)
-    return ct, ext, size
+
+    detected = _detect_mime(data)
+    if detected is None:
+        raise StorageValidationError(
+            f"формат файла не поддерживается: {_format_hint(data)}. "
+            "Поддерживаются JPEG, PNG, WEBP, AVIF."
+        )
+    if detected not in set(settings.storage_allowed_mime):
+        raise StorageValidationError(
+            f"содержимое файла — {detected}, но этот формат отключён политикой."
+        )
+    ext = _extension_for(detected)
+    return detected, ext, size
 
 
 # ---------------------------------------------------------------- backends
