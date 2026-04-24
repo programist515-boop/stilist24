@@ -20,6 +20,7 @@ from app.api.routes import (
     preference_quiz_color,
     preference_quiz_identity,
     recommendations,
+    reference_looks,
     shopping,
     today,
     tryon,
@@ -76,6 +77,11 @@ app.include_router(
     preference_quiz_color.router,
     prefix="/preference-quiz/color",
     tags=["preference-quiz"],
+)
+app.include_router(
+    reference_looks.router,
+    prefix="/reference-looks",
+    tags=["reference-looks"],
 )
 
 
