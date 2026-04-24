@@ -14,7 +14,7 @@ from fastapi import APIRouter, Body, Depends, File, HTTPException, UploadFile
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
-from app.api.deps import get_current_user_id, get_db
+from app.api.deps import get_current_persona_id, get_current_user_id, get_db
 from app.core.storage import fresh_public_url
 from app.repositories.user_photo_repository import UserPhotoRepository
 from app.schemas.user_analysis import (
@@ -42,9 +42,9 @@ router = APIRouter()
 @router.get("/photos", response_model=list[AnalyzedPhotoOut])
 def list_user_photos(
     db: Session = Depends(get_db),
-    user_id: uuid.UUID = Depends(get_current_user_id),
+    persona_id: uuid.UUID = Depends(get_current_persona_id),
 ) -> list[dict]:
-    """Return the caller's stored reference photos, freshest first.
+    """Return the current persona's stored reference photos, freshest first.
 
     This endpoint exists so the frontend does not have to rely on a
     stale ``localStorage`` snapshot of the last ``/user/analyze``
@@ -53,7 +53,7 @@ def list_user_photos(
     browser-reachable ``S3_PUBLIC_BASE_URL``) take effect on the next
     page load without forcing the user to re-run the analysis.
     """
-    rows = UserPhotoRepository(db).list_by_user(user_id)
+    rows = UserPhotoRepository(db).list_by_persona(persona_id)
     return [
         {
             "id": str(row.id),
@@ -72,6 +72,7 @@ async def analyze_user(
     portrait_photo: UploadFile = File(...),
     db: Session = Depends(get_db),
     user_id: uuid.UUID = Depends(get_current_user_id),
+    persona_id: uuid.UUID = Depends(get_current_persona_id),
 ) -> dict:
     uploads = [
         AnalysisPhotoUpload(
@@ -94,7 +95,9 @@ async def analyze_user(
         ),
     ]
     try:
-        return UserAnalysisService(db).analyze(user_id=user_id, uploads=uploads)
+        return UserAnalysisService(db).analyze(
+            user_id=user_id, uploads=uploads, persona_id=persona_id
+        )
     except UserAnalysisValidationError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
     except UserAnalysisStorageError as exc:

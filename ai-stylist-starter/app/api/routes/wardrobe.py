@@ -20,7 +20,7 @@ from datetime import date
 from fastapi import APIRouter, Body, Depends, File, Form, UploadFile
 from sqlalchemy.orm import Session
 
-from app.api.deps import get_current_user_id, get_db
+from app.api.deps import get_current_persona_id, get_current_user_id, get_db
 from app.api.errors import ApiError, ErrorCode
 from app.core.storage import (
     StorageError,
@@ -74,6 +74,7 @@ async def upload_item(
     category: str | None = Form(default=None),
     db: Session = Depends(get_db),
     user_id: uuid.UUID = Depends(get_current_user_id),
+    persona_id: uuid.UUID = Depends(get_current_persona_id),
     storage: StorageService = Depends(get_storage_service),
 ) -> dict:
     # Read the uploaded file exactly once. The route stays thin — all
@@ -88,6 +89,7 @@ async def upload_item(
             data=data,
             content_type=image.content_type or "",
             filename=image.filename,
+            persona_id=persona_id,
         )
     except StorageValidationError as exc:
         raise ApiError(
@@ -115,6 +117,7 @@ async def upload_item(
     repo = WardrobeRepository(db)
     item = repo.create(
         user_id=user_id,
+        persona_id=persona_id,
         item_id=item_id,
         image_key=asset.key,
         image_url=asset.url,
@@ -127,11 +130,11 @@ async def upload_item(
 @router.get("/items", response_model=WardrobeListOut)
 def list_items(
     db: Session = Depends(get_db),
-    user_id: uuid.UUID = Depends(get_current_user_id),
+    persona_id: uuid.UUID = Depends(get_current_persona_id),
 ) -> dict:
-    """List the caller's wardrobe items wrapped in ``{items, count}``."""
+    """List the current persona's wardrobe items wrapped in ``{items, count}``."""
     repo = WardrobeRepository(db)
-    items = [_serialize(item) for item in repo.list_by_user(user_id)]
+    items = [_serialize(item) for item in repo.list_by_persona(persona_id)]
     return {"items": items, "count": len(items)}
 
 

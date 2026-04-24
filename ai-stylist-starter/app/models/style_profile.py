@@ -12,7 +12,15 @@ PROFILE_SOURCE_PREFERENCE = "preference"
 class StyleProfile(Base):
     __tablename__ = "style_profiles"
 
-    user_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("users.id"), primary_key=True)
+    # PK is persona_id: one StyleProfile per persona, not per user.
+    # user_id is retained as a NOT NULL indexed column for backward-compat
+    # queries that still resolve by owning account.
+    persona_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("personas.id"), primary_key=True
+    )
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("users.id"), nullable=False, index=True
+    )
     kibbe_type: Mapped[str | None] = mapped_column(String, nullable=True)
     kibbe_confidence: Mapped[float | None] = mapped_column(Float, nullable=True)
     color_profile_json: Mapped[dict] = mapped_column(JSONB, default=dict)

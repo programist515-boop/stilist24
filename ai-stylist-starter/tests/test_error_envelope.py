@@ -51,8 +51,17 @@ from app.api.errors import (  # noqa: E402
 
 
 def _run(coro):
-    """Run an async handler in a fresh event loop (matches tryon tests)."""
-    return asyncio.get_event_loop().run_until_complete(coro)
+    """Run an async handler in a fresh event loop (matches tryon tests).
+
+    ``asyncio.get_event_loop()`` was the implicit default on 3.11 but
+    raises on 3.14 in threads without a running loop. Use an explicit
+    fresh loop to stay compatible across both.
+    """
+    loop = asyncio.new_event_loop()
+    try:
+        return loop.run_until_complete(coro)
+    finally:
+        loop.close()
 
 
 def _body(response) -> dict[str, Any]:

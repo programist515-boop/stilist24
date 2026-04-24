@@ -13,6 +13,8 @@ class WardrobeRepository:
         self,
         user_id: uuid.UUID,
         image_url: str,
+        *,
+        persona_id: uuid.UUID | None = None,
         category: str | None = None,
         attributes: dict | None = None,
         scores: dict | None = None,
@@ -20,8 +22,19 @@ class WardrobeRepository:
         image_key: str | None = None,
         item_id: uuid.UUID | None = None,
     ) -> WardrobeItem:
+        """Insert a ``WardrobeItem`` row.
+
+        ``persona_id`` can be omitted by legacy callers: we then resolve
+        (or create on first use) the user's primary persona so the
+        NOT NULL FK is satisfied without rewriting every route at once.
+        """
+        if persona_id is None:
+            from app.repositories.persona_repository import PersonaRepository
+
+            persona_id = PersonaRepository(self.db).ensure_primary(user_id).id
         item = WardrobeItem(
             user_id=user_id,
+            persona_id=persona_id,
             category=category,
             attributes_json=attributes or {},
             scores_json=scores or {},
@@ -40,9 +53,18 @@ class WardrobeRepository:
         return self.db.get(WardrobeItem, item_id)
 
     def list_by_user(self, user_id: uuid.UUID) -> list[WardrobeItem]:
+        """Account-wide listing across all personas (legacy/admin usage)."""
         stmt = (
             select(WardrobeItem)
             .where(WardrobeItem.user_id == user_id)
+            .order_by(WardrobeItem.created_at.desc())
+        )
+        return list(self.db.execute(stmt).scalars().all())
+
+    def list_by_persona(self, persona_id: uuid.UUID) -> list[WardrobeItem]:
+        stmt = (
+            select(WardrobeItem)
+            .where(WardrobeItem.persona_id == persona_id)
             .order_by(WardrobeItem.created_at.desc())
         )
         return list(self.db.execute(stmt).scalars().all())

@@ -67,6 +67,7 @@ class _StubStorageService:
         data: bytes,
         content_type: str,
         filename: str | None = None,
+        persona_id: uuid.UUID | None = None,
     ) -> StoredAsset:
         self.calls.append(
             {
@@ -76,6 +77,7 @@ class _StubStorageService:
                 "data": data,
                 "content_type": content_type,
                 "filename": filename,
+                "persona_id": persona_id,
             }
         )
         if self._raise_on_slot == slot and self._raise_exc is not None:
@@ -117,6 +119,7 @@ class _StubUserPhotoRepo:
         image_key: str,
         image_url: str,
         photo_id: uuid.UUID | None = None,
+        persona_id: uuid.UUID | None = None,
     ) -> _StubPhotoRow:
         self.calls.append(
             {
@@ -125,6 +128,7 @@ class _StubUserPhotoRepo:
                 "image_key": image_key,
                 "image_url": image_url,
                 "photo_id": photo_id,
+                "persona_id": persona_id,
             }
         )
         if self._raise_on_slot == slot and self._raise_exc is not None:

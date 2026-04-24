@@ -17,6 +17,7 @@ from app.api.routes import (
     gap_analysis,
     insights,
     outfits,
+    personas,
     preference_quiz_color,
     preference_quiz_identity,
     recommendations,
@@ -53,6 +54,7 @@ app.add_exception_handler(HTTPException, http_error_handler)
 app.add_exception_handler(RequestValidationError, validation_error_handler)
 
 app.include_router(auth.router, prefix="/auth", tags=["auth"])
+app.include_router(personas.router, prefix="/personas", tags=["personas"])
 app.include_router(user_analysis.router, prefix="/user", tags=["user"])
 app.include_router(color.router, prefix="/color", tags=["color"])
 app.include_router(color_tryon.router, prefix="/color-tryon", tags=["color-tryon"])

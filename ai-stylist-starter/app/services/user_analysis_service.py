@@ -425,6 +425,7 @@ class UserAnalysisService:
         self,
         user_id: uuid.UUID,
         *,
+        persona_id: uuid.UUID,
         kibbe_type: str | None,
         kibbe_confidence: float | None,
         color_profile: dict | None,
@@ -433,8 +434,11 @@ class UserAnalysisService:
         """Upsert a ``StyleProfile`` row so downstream features can read it.
 
         Uses a Postgres ``INSERT … ON CONFLICT DO UPDATE`` so a second
-        analysis overwrites the previous one atomically. If there is no
-        DB session (unit-test mode with ``db=None``), we silently skip.
+        analysis overwrites the previous one atomically. The conflict
+        target is ``persona_id`` (the new PK after migration 0010) — one
+        style profile per persona. ``user_id`` is still stored so
+        account-wide queries keep working. If there is no DB session
+        (unit-test mode with ``db=None``), we silently skip.
         """
         if self.db is None:
             return
@@ -445,6 +449,7 @@ class UserAnalysisService:
         stmt = (
             pg_insert(StyleProfile)
             .values(
+                persona_id=persona_id,
                 user_id=user_id,
                 kibbe_type=kibbe_type,
                 kibbe_confidence=kibbe_confidence,
@@ -452,7 +457,7 @@ class UserAnalysisService:
                 style_vector_json=style_vector or {},
             )
             .on_conflict_do_update(
-                index_elements=["user_id"],
+                index_elements=["persona_id"],
                 set_={
                     "kibbe_type": kibbe_type,
                     "kibbe_confidence": kibbe_confidence,
@@ -515,8 +520,25 @@ class UserAnalysisService:
         *,
         user_id: uuid.UUID,
         uploads: list[AnalysisPhotoUpload],
+        persona_id: uuid.UUID | None = None,
     ) -> dict:
+        """Run the 3-photo analysis for ``user_id``/``persona_id``.
+
+        ``persona_id`` is optional for backward-compat callers that don't
+        yet pass it through (most existing tests): when omitted and a DB
+        session is available, we resolve the user's primary persona here
+        so every downstream write (storage key, photo row, StyleProfile)
+        sees the same value. Unit-test paths without a DB ``db=None``
+        continue to pass ``None`` all the way through — the stubs don't
+        care.
+        """
         by_slot = self._validate_uploads(uploads)
+
+        effective_persona_id = persona_id
+        if effective_persona_id is None and self.db is not None:
+            from app.repositories.persona_repository import PersonaRepository
+
+            effective_persona_id = PersonaRepository(self.db).ensure_primary(user_id).id
 
         storage = self._get_storage()
         repo = self._get_photo_repo()
@@ -537,6 +559,7 @@ class UserAnalysisService:
                     data=upload.data,
                     content_type=upload.content_type or "",
                     filename=upload.filename,
+                    persona_id=effective_persona_id,
                 )
             except (StorageError, StorageValidationError) as exc:
                 raise UserAnalysisStorageError(
@@ -546,6 +569,7 @@ class UserAnalysisService:
             try:
                 row = repo.create(
                     user_id=user_id,
+                    persona_id=effective_persona_id,
                     slot=slot,
                     image_key=asset.key,
                     image_url=asset.url,
@@ -605,13 +629,19 @@ class UserAnalysisService:
         # Persist the computed analysis into ``style_profiles`` so
         # downstream features (Recommendations, Today, Insights) can
         # read it back without relying on the transient HTTP response.
-        self._persist_style_profile(
-            user_id,
-            kibbe_type=identity.get("main_type"),
-            kibbe_confidence=identity.get("confidence"),
-            color_profile=color,
-            style_vector=style_vector,
-        )
+        # StyleProfile upsert is keyed by persona_id after migration 0010.
+        # We only persist when a persona is resolved — without a DB session
+        # (`db=None` unit tests) this whole method short-circuits inside
+        # _persist_style_profile anyway.
+        if effective_persona_id is not None:
+            self._persist_style_profile(
+                user_id,
+                persona_id=effective_persona_id,
+                kibbe_type=identity.get("main_type"),
+                kibbe_confidence=identity.get("confidence"),
+                color_profile=color,
+                style_vector=style_vector,
+            )
         logger.info(
             "user_analysis: style_profile persisted user=%s kibbe=%s",
             user_id,

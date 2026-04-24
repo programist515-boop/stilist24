@@ -37,6 +37,9 @@ class WardrobeItem(Base):
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     user_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
+    persona_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("personas.id"), nullable=False, index=True
+    )
     category: Mapped[str | None] = mapped_column(String, nullable=True)
     attributes_json: Mapped[dict] = mapped_column(JSONB, default=dict)
     scores_json: Mapped[dict] = mapped_column(JSONB, default=dict)

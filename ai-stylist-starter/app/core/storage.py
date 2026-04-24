@@ -520,22 +520,57 @@ class StorageService:
     # ----- key helpers ----------------------------------------------------
 
     @staticmethod
-    def wardrobe_key(user_id: uuid.UUID | str, item_id: uuid.UUID | str, ext: str) -> str:
+    def wardrobe_key(
+        user_id: uuid.UUID | str,
+        item_id: uuid.UUID | str,
+        ext: str,
+        *,
+        persona_id: uuid.UUID | str | None = None,
+    ) -> str:
+        """Return the canonical S3/MinIO key for a wardrobe image.
+
+        New clients pass ``persona_id`` and get the namespaced layout
+        ``users/{user}/personas/{persona}/wardrobe/{item}{ext}``. Legacy
+        callers omit it and still land at
+        ``users/{user}/wardrobe/{item}{ext}``; stored rows keep whichever
+        key they were written with, so reads continue to work across the
+        migration.
+        """
+        if persona_id is not None:
+            return f"users/{user_id}/personas/{persona_id}/wardrobe/{item_id}{ext}"
         return f"users/{user_id}/wardrobe/{item_id}{ext}"
 
     @staticmethod
     def user_photo_key(
-        user_id: uuid.UUID | str, slot: str, photo_id: uuid.UUID | str, ext: str
+        user_id: uuid.UUID | str,
+        slot: str,
+        photo_id: uuid.UUID | str,
+        ext: str,
+        *,
+        persona_id: uuid.UUID | str | None = None,
     ) -> str:
         slot_clean = slot.strip().lower()
         if slot_clean not in {"front", "side", "portrait"}:
             raise StorageValidationError(
                 f"user photo slot must be front/side/portrait, got {slot!r}"
             )
+        if persona_id is not None:
+            return (
+                f"users/{user_id}/personas/{persona_id}/photos/"
+                f"{slot_clean}/{photo_id}{ext}"
+            )
         return f"users/{user_id}/photos/{slot_clean}/{photo_id}{ext}"
 
     @staticmethod
-    def tryon_key(user_id: uuid.UUID | str, job_id: uuid.UUID | str, ext: str) -> str:
+    def tryon_key(
+        user_id: uuid.UUID | str,
+        job_id: uuid.UUID | str,
+        ext: str,
+        *,
+        persona_id: uuid.UUID | str | None = None,
+    ) -> str:
+        if persona_id is not None:
+            return f"users/{user_id}/personas/{persona_id}/tryon/{job_id}{ext}"
         return f"users/{user_id}/tryon/{job_id}{ext}"
 
     # ----- uploads --------------------------------------------------------
@@ -548,9 +583,10 @@ class StorageService:
         data: bytes,
         content_type: str,
         filename: str | None = None,
+        persona_id: uuid.UUID | str | None = None,
     ) -> StoredAsset:
         ct, ext, size = _validate(data, content_type, filename)
-        key = self.wardrobe_key(user_id, item_id, ext)
+        key = self.wardrobe_key(user_id, item_id, ext, persona_id=persona_id)
         self.backend.put(key, data, content_type=ct)
         return StoredAsset(
             key=key,
@@ -568,9 +604,10 @@ class StorageService:
         data: bytes,
         content_type: str,
         filename: str | None = None,
+        persona_id: uuid.UUID | str | None = None,
     ) -> StoredAsset:
         ct, ext, size = _validate(data, content_type, filename)
-        key = self.user_photo_key(user_id, slot, photo_id, ext)
+        key = self.user_photo_key(user_id, slot, photo_id, ext, persona_id=persona_id)
         self.backend.put(key, data, content_type=ct)
         return StoredAsset(
             key=key,
@@ -587,9 +624,10 @@ class StorageService:
         data: bytes,
         content_type: str,
         filename: str | None = None,
+        persona_id: uuid.UUID | str | None = None,
     ) -> StoredAsset:
         ct, ext, size = _validate(data, content_type, filename)
-        key = self.tryon_key(user_id, job_id, ext)
+        key = self.tryon_key(user_id, job_id, ext, persona_id=persona_id)
         self.backend.put(key, data, content_type=ct)
         return StoredAsset(
             key=key,
