@@ -105,6 +105,85 @@ reference_looks:
     notes:
       - "Сдержанная элегантность — классика, которая не устаревает"
 
+  - id: cl_blouse_pencil_belt
+    name: "Блузка, юбка-карандаш и кожаный ремень"
+    style: office
+    season_hint: all
+    image_url: "/reference_looks/classic/cl_blouse_pencil_belt.jpg"
+    items:
+      - slot: top
+        requires:
+          category: [button_blouse, silk_shell]
+          pending_cut_lines: clean
+          pending_fit: tailored_moderate
+          pending_neckline: [crew, v_moderate, round]
+        optional: false
+      - slot: bottom
+        requires:
+          category: pencil_skirt
+          pending_silhouette: pencil_moderate
+          pending_length: [knee, just_below_knee]
+          pending_waist: defined_moderate
+        optional: false
+      - slot: shoes
+        requires:
+          category: [pumps, mid_heels]
+          pending_heel_type: slim_block
+          pending_toe_shape: [pointed_soft, almond]
+        optional: false
+    accessories:
+      - type: belt
+        requires:
+          width: medium
+          pending_fabric: classic_leather
+          pending_detail_scale: medium
+      - type: bag
+        requires:
+          pending_structure: structured
+          pending_detail_scale: medium
+    notes:
+      - "Один чёткий ремень на талии — единственный акцент"
+      - "Ничего кричащего: золотая середина в длине, структуре, цвете"
+
+  - id: cl_trench_straight_jeans
+    name: "Тренч и прямые джинсы"
+    style: weekend
+    season_hint: spring_autumn
+    image_url: "/reference_looks/classic/cl_trench_straight_jeans.jpg"
+    items:
+      - slot: outerwear
+        requires:
+          category: [trench_coat, belted_coat]
+          pending_cut_lines: clean
+          pending_structure: tailored_moderate
+          pending_length: [knee, just_below_knee]
+        optional: false
+      - slot: top
+        requires:
+          category: [fine_knit, silk_shell, button_shirt]
+          pending_cut_lines: clean
+          pending_fit: tailored_moderate
+        optional: false
+      - slot: bottom
+        requires:
+          category: [straight_jeans, dark_wash_jeans]
+          pending_silhouette: straight_moderate
+          pending_length: full
+        optional: false
+      - slot: shoes
+        requires:
+          category: [loafers, low_heels, ankle_boots_slim]
+          pending_detail_scale: medium
+        optional: false
+    accessories:
+      - type: bag
+        requires:
+          pending_structure: structured
+          pending_detail_scale: medium
+    notes:
+      - "Тренч — вневременной фасон для Classic, работает на любое десятилетие"
+      - "Тёмный деним вместо светлого — чтобы удержать сдержанность"
+
 global_stop_items:
   - pending_cut_lines: [sharp_extreme, soft_extreme]
   - pending_structure: [over_tailored, completely_unstructured]

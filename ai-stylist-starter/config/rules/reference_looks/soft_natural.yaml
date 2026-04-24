@@ -108,6 +108,83 @@ reference_looks:
       - "Средняя длина юбки подчёркивает природные пропорции"
       - "Избегайте жёстких линий и излишней структуры"
 
+  - id: sn_denim_shirt_midi_skirt
+    name: "Джинсовая рубашка и миди-юбка"
+    style: smart_casual
+    season_hint: spring_autumn
+    image_url: "/reference_looks/soft_natural/sn_denim_shirt_midi_skirt.jpg"
+    items:
+      - slot: top
+        requires:
+          category: [chambray_shirt, denim_shirt_soft]
+          pending_fabric: [chambray, washed_denim]
+          pending_cut_lines: relaxed_curved
+          pending_fit: relaxed
+        optional: false
+      - slot: bottom
+        requires:
+          category: [midi_skirt, a_line_midi]
+          pending_silhouette: a_line_soft
+          pending_drape: soft_flowing
+          pending_length: midi
+          pending_fabric: [cotton, linen, viscose]
+        optional: false
+      - slot: shoes
+        requires:
+          category: [sandals, espadrilles, low_loafers]
+          pending_detail_scale: medium
+        optional: false
+    accessories:
+      - type: belt
+        optional: true
+        requires:
+          width: medium
+          pending_fabric: soft_leather
+      - type: bag
+        requires:
+          pending_structure: semi_slouchy
+          pending_fabric: soft_leather
+    notes:
+      - "Заправленная рубашка обозначает талию без корсетного сжатия"
+      - "Юбка миди с движением — любимая пропорция подтипа"
+
+  - id: sn_soft_evening_slip
+    name: "Платье-комбинация с мягкой драпировкой"
+    style: evening
+    season_hint: all
+    image_url: "/reference_looks/soft_natural/sn_soft_evening_slip.jpg"
+    items:
+      - slot: dress
+        requires:
+          category: [slip_dress, bias_cut_dress]
+          pending_silhouette: bias_soft
+          pending_cut_lines: [flowing, curved_soft]
+          pending_drape: soft_flowing
+          pending_fabric: [silk_washed, viscose_satin, soft_satin]
+          pending_length: [midi, maxi_soft]
+          pending_neckline: [v_soft, cowl]
+        optional: false
+      - slot: shoes
+        requires:
+          category: [kitten_heels, block_heels_soft]
+          pending_heel_type: [slim_block, curved]
+          pending_detail_scale: medium
+        optional: false
+    accessories:
+      - type: clutch
+        requires:
+          pending_structure: semi_slouchy
+          pending_fabric: [soft_leather, suede]
+      - type: jewelry
+        requires:
+          pending_detail_scale: medium
+          pending_cut_lines: soft_organic
+          pending_material: [warm_gold, pearl_soft]
+        count_max: 2
+    notes:
+      - "Мягкий драп шёлка = не «струится как жидкость», а слегка обнимает"
+      - "Тёплые органические металлы: старое золото, латунь, жемчуг"
+
 global_stop_items:
   - pending_structure: tailored_rigid
   - pending_cut_lines: sharp_angular

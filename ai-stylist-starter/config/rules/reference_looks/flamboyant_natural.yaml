@@ -118,6 +118,90 @@ reference_looks:
       - "Грубая натуральная фактура — сердце подтипа"
       - "Ремень опциональный: если завязать, то низко на бёдрах"
 
+  - id: fn_denim_maxi_casual
+    name: "Джинсовка оверсайз и макси-брюки"
+    style: casual
+    season_hint: spring_autumn
+    image_url: "/reference_looks/flamboyant_natural/fn_denim_maxi_casual.jpg"
+    items:
+      - slot: outerwear
+        requires:
+          category: [denim_jacket, trucker_jacket]
+          pending_proportion: oversized
+          pending_cut_lines: relaxed
+          pending_length: hip
+        optional: false
+      - slot: top
+        requires:
+          category: [tshirt, longsleeve]
+          pending_fabric: [cotton, cotton_jersey]
+          pending_cut_lines: relaxed
+        optional: false
+      - slot: bottom
+        requires:
+          category: [wide_trousers, flared_jeans]
+          pending_silhouette: wide
+          pending_length: [full, floor_grazing]
+        optional: false
+      - slot: shoes
+        requires:
+          category: [chunky_sneakers, combat_boots, western_boots]
+          pending_detail_scale: [medium, large]
+        optional: false
+    accessories:
+      - type: bag
+        requires:
+          pending_structure: slouchy
+          pending_detail_scale: large
+    notes:
+      - "Макси-пропорция низа + короткий верх = чистая атлетичная длина"
+      - "Крупная обувь держит образ — не надевать деликатные"
+
+  - id: fn_western_leather
+    name: "Western: кожаная куртка и флоу-юбка"
+    style: weekend
+    season_hint: autumn_winter
+    image_url: "/reference_looks/flamboyant_natural/fn_western_leather.jpg"
+    items:
+      - slot: outerwear
+        requires:
+          category: [leather_jacket, suede_jacket]
+          pending_fabric: [tumbled_leather, suede]
+          pending_cut_lines: relaxed
+          pending_detail_scale: large
+        optional: false
+      - slot: top
+        requires:
+          category: [chambray_shirt, western_shirt]
+          pending_cut_lines: relaxed
+          pending_fabric: [chambray, denim_washed]
+        optional: false
+      - slot: bottom
+        requires:
+          category: [midi_skirt, flowing_skirt]
+          pending_silhouette: a_line_relaxed
+          pending_length: midi
+          pending_drape: relaxed
+        optional: false
+      - slot: shoes
+        requires:
+          category: [western_boots, knee_boots]
+          pending_detail_scale: large
+        optional: false
+    accessories:
+      - type: belt
+        requires:
+          width: wide
+          pending_detail_scale: large
+          pending_fabric: natural_leather
+      - type: bag
+        requires:
+          pending_structure: slouchy
+          pending_fabric: tumbled_leather
+    notes:
+      - "Грубая кожа + движение юбки — drama без жёсткости"
+      - "Крупный ремень на низкой талии обозначает, но не пережимает"
+
 global_stop_items:
   - pending_cut_lines: dainty_fitted
   - pending_structure: over_tailored

@@ -102,6 +102,89 @@ reference_looks:
     notes:
       - "Толстый трикотаж + прямая юбка — уравновешенный образ"
 
+  - id: nt_denim_jacket_midi
+    name: "Джинсовая куртка и юбка-миди"
+    style: weekend
+    season_hint: spring_autumn
+    image_url: "/reference_looks/natural/nt_denim_jacket_midi.jpg"
+    items:
+      - slot: outerwear
+        requires:
+          category: [denim_jacket, trucker_jacket]
+          pending_cut_lines: relaxed
+          pending_structure: semi_structured
+          pending_length: hip
+        optional: false
+      - slot: top
+        requires:
+          category: [tshirt, tank, longsleeve]
+          pending_fabric: [cotton, linen]
+          pending_cut_lines: relaxed
+        optional: false
+      - slot: bottom
+        requires:
+          category: [midi_skirt, a_line_midi]
+          pending_silhouette: [straight, a_line_moderate]
+          pending_length: midi
+          pending_fabric: [denim, cotton_twill]
+        optional: false
+      - slot: shoes
+        requires:
+          category: [ankle_boots, chunky_sneakers, loafers]
+          pending_detail_scale: medium
+        optional: false
+    accessories:
+      - type: bag
+        requires:
+          pending_structure: semi_slouchy
+          pending_detail_scale: medium
+    notes:
+      - "Всё натуральное и носимое — тот самый «свой» подтип"
+      - "Никакой филигранной мелочи: одна крупная деталь в обуви и хватит"
+
+  - id: nt_layered_casual
+    name: "Многослойный повседневный лук"
+    style: casual
+    season_hint: spring_autumn
+    image_url: "/reference_looks/natural/nt_layered_casual.jpg"
+    items:
+      - slot: top
+        requires:
+          category: [tshirt, tank]
+          pending_fabric: [cotton, soft_cotton]
+          pending_cut_lines: relaxed
+        optional: false
+      - slot: overshirt
+        requires:
+          category: [overshirt, open_shirt, cardigan_relaxed]
+          pending_cut_lines: relaxed
+          pending_structure: unstructured
+          pending_fabric: [linen, flannel, soft_wool]
+        optional: false
+      - slot: bottom
+        requires:
+          category: [wide_trousers, straight_jeans]
+          pending_silhouette: [straight, wide_straight]
+          pending_cut_lines: relaxed
+        optional: false
+      - slot: shoes
+        requires:
+          category: [chunky_sneakers, loafers, ankle_boots]
+          pending_detail_scale: medium
+        optional: false
+    accessories:
+      - type: belt
+        optional: true
+        requires:
+          width: medium
+          pending_fabric: natural_leather
+      - type: bag
+        requires:
+          pending_structure: semi_slouchy
+    notes:
+      - "Распашная рубашка как второй слой — не застёгивать"
+      - "Естественные слои без зажимов и подворотов"
+
 global_stop_items:
   - pending_cut_lines: sharp_angular
   - pending_structure: over_tailored

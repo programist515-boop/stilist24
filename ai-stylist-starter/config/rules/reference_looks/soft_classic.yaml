@@ -105,6 +105,81 @@ reference_looks:
     notes:
       - "Пояс подчёркивает талию мягко, без резких складок"
 
+  - id: sc_silk_blouse_pencil_skirt
+    name: "Шёлковая блузка и юбка-карандаш"
+    style: office
+    season_hint: all
+    image_url: "/reference_looks/soft_classic/sc_silk_blouse_pencil_skirt.jpg"
+    items:
+      - slot: top
+        requires:
+          category: [silk_blouse, tie_neck_blouse]
+          pending_fabric: silk
+          pending_cut_lines: [clean, soft_curved]
+          pending_neckline: [bow_soft, v_soft, tie_collar]
+        optional: false
+      - slot: bottom
+        requires:
+          category: [pencil_skirt, a_line_skirt]
+          pending_silhouette: [pencil_soft, a_line_moderate]
+          pending_length: [knee, just_below_knee]
+          pending_waist: defined_soft
+        optional: false
+      - slot: shoes
+        requires:
+          category: [pumps, ballet_flats]
+          pending_heel_type: [slim_block, kitten]
+          pending_toe_shape: [pointed_soft, almond]
+        optional: false
+    accessories:
+      - type: bag
+        requires:
+          pending_structure: structured
+          pending_detail_scale: medium
+      - type: jewelry
+        requires:
+          pending_detail_scale: [small, medium]
+          pending_material: [pearl, soft_gold]
+        count_max: 3
+    notes:
+      - "Бант блузки или мягкий V-образный вырез — женственная деталь без драмы"
+      - "Жемчуг работает лучше яркой геометрии"
+
+  - id: sc_midi_dress_crepe
+    name: "Вечернее платье-миди из крепа"
+    style: evening
+    season_hint: all
+    image_url: "/reference_looks/soft_classic/sc_midi_dress_crepe.jpg"
+    items:
+      - slot: dress
+        requires:
+          category: dress
+          pending_silhouette: [sheath_soft, a_line_moderate]
+          pending_cut_lines: [clean, soft_curved]
+          pending_fabric: [crepe, silk_matte, viscose_soft]
+          pending_length: [midi, just_below_knee]
+          pending_waist: defined_soft
+          pending_neckline: [v_soft, boat_soft]
+        optional: false
+      - slot: shoes
+        requires:
+          category: [pumps, slingback_heels]
+          pending_heel_type: [slim_block, kitten]
+        optional: false
+    accessories:
+      - type: clutch
+        requires:
+          pending_structure: semi_structured
+          pending_detail_scale: medium
+      - type: jewelry
+        requires:
+          pending_detail_scale: medium
+          pending_material: [pearl_classic, soft_gold]
+        count_max: 3
+    notes:
+      - "Креп удерживает форму без жёсткости — идеальная ткань SC"
+      - "Никаких пайеток: вечерний шик через крой и цвет"
+
 global_stop_items:
   - pending_cut_lines: [sharp_angular, aggressive_geometric]
   - pending_structure: [unstructured, over_tailored]

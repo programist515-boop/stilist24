@@ -109,6 +109,86 @@ reference_looks:
       - "Бархат — любимая ткань подтипа"
       - "Драма через ткань и силуэт, не через геометрию"
 
+  - id: tr_corset_top_skinny_jeans
+    name: "Корсетный топ и зауженные джинсы"
+    style: casual
+    season_hint: all
+    image_url: "/reference_looks/theatrical_romantic/tr_corset_top_skinny_jeans.jpg"
+    items:
+      - slot: top
+        requires:
+          category: [corset_top_soft, bustier_top, bodysuit_fitted]
+          pending_cut_lines: [curved, crisp]
+          pending_fit: hugging
+          pending_neckline: [sweetheart, v_deep]
+          pending_fabric: [silk, satin, stretch_fabric]
+        optional: false
+      - slot: bottom
+        requires:
+          category: [skinny_jeans_high, high_waisted_skinny]
+          pending_silhouette: skinny_curved
+          pending_waist: high_fitted
+          pending_length: [ankle, just_above_ankle]
+        optional: false
+      - slot: shoes
+        requires:
+          category: [heels, pointed_pumps]
+          pending_heel_type: [stiletto, slim_curved]
+          pending_toe_shape: [pointed_soft, almond]
+        optional: false
+    accessories:
+      - type: bag
+        requires:
+          pending_structure: structured_curved
+          pending_detail_scale: [small, medium]
+      - type: jewelry
+        requires:
+          pending_detail_scale: [medium, large]
+          pending_cut_lines: curved_dramatic
+        count_max: 3
+    notes:
+      - "Корсет подчёркивает грудь и талию, а джинсы с высокой талией удлиняют ноги"
+      - "Одна крупная деталь (серьги или пояс), не всё сразу"
+
+  - id: tr_animal_print_dress_heels
+    name: "Платье с анималистичным принтом и шпильки"
+    style: evening
+    season_hint: all
+    image_url: "/reference_looks/theatrical_romantic/tr_animal_print_dress_heels.jpg"
+    items:
+      - slot: dress
+        requires:
+          category: dress
+          pending_silhouette: [hourglass, fit_and_flare_short]
+          pending_cut_lines: [curved, crisp]
+          pending_waist: nipped
+          pending_pattern_character: [leopard_small, zebra_fine, snake_subtle]
+          pending_fabric: [silk_satin, stretch_silk, structured_crepe]
+          pending_length: [just_above_knee, knee]
+          pending_neckline: [v_deep, wrap, cowl]
+        optional: false
+      - slot: shoes
+        requires:
+          category: [pointed_heels, slingback_heels]
+          pending_heel_type: stiletto
+          pending_toe_shape: pointed_soft
+        optional: false
+    accessories:
+      - type: clutch
+        requires:
+          pending_structure: structured_curved
+          pending_fabric: [satin, soft_leather]
+          pending_detail_scale: small
+      - type: jewelry
+        requires:
+          pending_detail_scale: large
+          pending_cut_lines: curved_dramatic
+          pending_material: [gold, gold_lush]
+        count_max: 2
+    notes:
+      - "Принт мелкий и прилегающий — кривая фигуры важнее узора"
+      - "Одно крупное золото (серьги или браслет) + шпилька завершают драму"
+
 global_stop_items:
   - pending_cut_lines: [sharp_angular_extreme, boxy]
   - pending_structure: [unstructured_loose, boxy_masculine]

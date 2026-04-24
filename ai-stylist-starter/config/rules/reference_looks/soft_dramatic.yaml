@@ -108,6 +108,85 @@ reference_looks:
     notes:
       - "Жесткий жакет + струящийся верх — контраст внутри лука"
 
+  - id: sd_silk_slip_velvet_jacket
+    name: "Шёлковое платье-комбинация под бархатным жакетом"
+    style: evening
+    season_hint: autumn_winter
+    image_url: "/reference_looks/soft_dramatic/sd_silk_slip_velvet_jacket.jpg"
+    items:
+      - slot: dress
+        requires:
+          category: [slip_dress, silk_slip]
+          pending_fabric: [silk, satin]
+          pending_drape: soft_flowing
+          pending_silhouette: column_draped
+          pending_length: [midi, maxi]
+          pending_neckline: [v_deep, cowl]
+        optional: false
+      - slot: outerwear
+        requires:
+          category: [velvet_blazer, structured_jacket]
+          pending_fabric: [velvet, brocade]
+          pending_cut_lines: sharp
+          pending_shoulder: structured
+        optional: false
+      - slot: shoes
+        requires:
+          category: heels
+          pending_heel_type: stiletto
+          pending_toe_shape: pointed
+        optional: false
+    accessories:
+      - type: jewelry
+        requires:
+          pending_detail_scale: large
+          pending_cut_lines: angular
+        count_max: 2
+    notes:
+      - "Мягкое скользящее платье + жёсткий жакет — фирменный контраст SD"
+      - "Крупные украшения работают, если они одни — не распыляться"
+
+  - id: sd_draped_knit_wide_trousers
+    name: "Драпированный трикотаж и широкие брюки"
+    style: smart_casual
+    season_hint: all
+    image_url: "/reference_looks/soft_dramatic/sd_draped_knit_wide_trousers.jpg"
+    items:
+      - slot: top
+        requires:
+          category: [draped_knit_top, wrap_blouse]
+          pending_drape: soft_flowing
+          pending_cut_lines: [draped, curved_sharp]
+          pending_fabric: [silk_jersey, fine_knit]
+          pending_neckline: [v_deep, cowl]
+        optional: false
+      - slot: bottom
+        requires:
+          category: [wide_trousers, palazzo]
+          pending_silhouette: wide_elongated
+          pending_length: [full, floor_grazing]
+          pending_structure: tailored
+        optional: false
+      - slot: shoes
+        requires:
+          category: heels
+          pending_heel_type: [stiletto, slim_block]
+          pending_toe_shape: pointed
+        optional: false
+    accessories:
+      - type: bag
+        requires:
+          pending_structure: structured
+          pending_detail_scale: medium
+      - type: belt
+        optional: true
+        requires:
+          width: medium
+          pending_structure: tailored
+    notes:
+      - "Широкие брюки добавляют роста к драпировке — идеальная lush-вертикаль"
+      - "Ремень только если талия выражена; иначе отказаться, не перетянуть"
+
 global_stop_items:
   - pending_cut_lines: choppy
   - pending_proportion: cropped_rounded

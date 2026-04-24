@@ -102,6 +102,88 @@ reference_looks:
       - "Длинная вертикаль платья-колонны — идеальный фасон"
       - "Украшения — удлинённые, геометричные"
 
+  - id: dr_maxi_coat_column
+    name: "Макси-пальто поверх колонны"
+    style: weekend
+    season_hint: autumn_winter
+    image_url: "/reference_looks/dramatic/dr_maxi_coat_column.jpg"
+    items:
+      - slot: outerwear
+        requires:
+          category: [long_coat, wool_coat]
+          pending_length: [maxi, mid_calf_long]
+          pending_cut_lines: sharp
+          pending_structure: tailored
+          pending_silhouette: straight_column
+        optional: false
+      - slot: top
+        requires:
+          category: [turtleneck, fine_knit_top]
+          pending_cut_lines: clean
+          pending_fit: slim
+        optional: false
+      - slot: bottom
+        requires:
+          category: [straight_trousers, slim_trousers]
+          pending_silhouette: straight_narrow
+          pending_length: full
+        optional: false
+      - slot: shoes
+        requires:
+          category: [knee_high_boots, pointed_heels]
+          pending_toe_shape: pointed
+          pending_detail_scale: minimal
+        optional: false
+    accessories:
+      - type: bag
+        requires:
+          pending_structure: structured
+          pending_silhouette: elongated
+    notes:
+      - "Макси-пальто усиливает вертикаль подтипа — плюс к росту"
+      - "Узкий гольф + узкие брюки под пальто = одна непрерывная линия"
+
+  - id: dr_leather_minimal
+    name: "Кожаные брюки и кашемир"
+    style: smart_casual
+    season_hint: autumn_winter
+    image_url: "/reference_looks/dramatic/dr_leather_minimal.jpg"
+    items:
+      - slot: top
+        requires:
+          category: [turtleneck, fine_knit_top]
+          pending_fabric: [cashmere, merino_fine]
+          pending_cut_lines: clean
+          pending_fit: slim
+        optional: false
+      - slot: bottom
+        requires:
+          category: [leather_trousers, coated_trousers]
+          pending_silhouette: straight_narrow
+          pending_fabric: [leather, coated_denim]
+          pending_fabric_finish: matte
+        optional: false
+      - slot: shoes
+        requires:
+          category: [heels, ankle_boots_sharp]
+          pending_heel_type: stiletto
+          pending_toe_shape: pointed
+        optional: false
+    accessories:
+      - type: bag
+        requires:
+          pending_structure: structured
+          pending_detail_scale: minimal
+      - type: jewelry
+        optional: true
+        requires:
+          pending_detail_scale: large
+          pending_cut_lines: angular
+        count_max: 1
+    notes:
+      - "Одна мощная деталь (крупные серьги или клатч) — хватит на весь лук"
+      - "Кожа и кашемир создают намеренную фактуру без принта"
+
 global_stop_items:
   - pending_cut_lines: [soft_flowing, curved, ruffled]
   - pending_structure: unstructured

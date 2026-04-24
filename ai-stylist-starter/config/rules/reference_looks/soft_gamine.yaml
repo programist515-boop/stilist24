@@ -107,6 +107,76 @@ reference_looks:
     notes:
       - "Короткий жакет + укороченные брюки подчёркивают компактность"
 
+  - id: sg_romper_waist_bow
+    name: "Комбинезон с бантом на талии"
+    style: weekend
+    season_hint: spring_summer
+    image_url: "/reference_looks/soft_gamine/sg_romper_waist_bow.jpg"
+    items:
+      - slot: dress
+        requires:
+          category: [romper, jumpsuit_short]
+          pending_length: [above_knee, mini]
+          pending_cut_lines: [crisp, curved]
+          pending_waist: defined
+          pending_fabric: [cotton_poplin, soft_cotton, structured_crepe]
+          pending_neckline: [sweetheart, scoop, tie_neck]
+        optional: false
+      - slot: shoes
+        requires:
+          category: [ballet_flats, kitten_heels, mary_janes]
+          pending_detail_scale: small
+        optional: false
+    accessories:
+      - type: belt
+        requires:
+          width: narrow
+          pending_detail_scale: small
+      - type: bag
+        requires:
+          pending_structure: structured
+          pending_detail_scale: small
+    notes:
+      - "Короткий комбинезон с акцентом на талии — короткая законченная линия"
+      - "Бант или мягкая сборка — единственный «милый» элемент, не дублировать"
+
+  - id: sg_sweetheart_midi_heels
+    name: "Вечернее миди со сладкой горловиной"
+    style: evening
+    season_hint: all
+    image_url: "/reference_looks/soft_gamine/sg_sweetheart_midi_heels.jpg"
+    items:
+      - slot: dress
+        requires:
+          category: dress
+          pending_silhouette: [fit_and_flare, tea_length]
+          pending_cut_lines: [crisp, curved]
+          pending_waist: defined
+          pending_fabric: [satin, silk, structured_crepe]
+          pending_length: [tea, just_below_knee]
+          pending_neckline: [sweetheart, off_shoulder_short]
+        optional: false
+      - slot: shoes
+        requires:
+          category: [kitten_heels, mary_janes_heel, slim_pumps]
+          pending_heel_type: [kitten, slim_curved]
+          pending_detail_scale: small
+        optional: false
+    accessories:
+      - type: clutch
+        requires:
+          pending_structure: structured
+          pending_detail_scale: small
+      - type: jewelry
+        requires:
+          pending_detail_scale: small
+          pending_cut_lines: curved
+          pending_material: [pearl, soft_gold]
+        count_max: 3
+    notes:
+      - "Юбка короче миди-романтик, ближе к tea length — сохраняет компактность"
+      - "Жемчужные серьги-гвоздики + тонкий браслет — сумма деталей минимальная"
+
 global_stop_items:
   - pending_proportion: elongated_long
   - pending_cut_lines: [flowing, loose_draped]

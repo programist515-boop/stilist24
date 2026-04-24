@@ -111,6 +111,92 @@ reference_looks:
       - "Атлас, бархат, шёлк — ткани, которые обожает Romantic"
       - "Жемчуг и мягкое золото вместо острой геометрии"
 
+  - id: rm_soft_cardigan_silk_skirt
+    name: "Мягкий кардиган и шёлковая юбка"
+    style: smart_casual
+    season_hint: spring_autumn
+    image_url: "/reference_looks/romantic/rm_soft_cardigan_silk_skirt.jpg"
+    items:
+      - slot: top
+        requires:
+          category: [soft_cardigan, fine_knit_wrap]
+          pending_fabric: [cashmere, silk_knit]
+          pending_cut_lines: curved
+          pending_fit: hugging_soft
+          pending_neckline: [v_soft, scoop]
+        optional: false
+      - slot: bottom
+        requires:
+          category: [silk_skirt, satin_midi_skirt]
+          pending_silhouette: [bias_curved, flared_soft]
+          pending_drape: soft_flowing
+          pending_length: midi
+          pending_fabric: [silk, satin, viscose_satin]
+          pending_waist: defined_hugged
+        optional: false
+      - slot: shoes
+        requires:
+          category: [kitten_heels, ballet_flats_curved]
+          pending_heel_type: [slim_curved, kitten]
+          pending_detail_scale: medium
+        optional: false
+    accessories:
+      - type: belt
+        optional: true
+        requires:
+          width: narrow
+          pending_structure: soft
+      - type: bag
+        requires:
+          pending_structure: semi_structured_curved
+          pending_detail_scale: medium
+    notes:
+      - "Обнимающий кардиган + юбка с движением = двойной изгиб"
+      - "Никаких широких прямых линий — всё тянется по фигуре"
+
+  - id: rm_bustier_sarong_summer
+    name: "Корсетный топ и летняя юбка-саронг"
+    style: weekend
+    season_hint: spring_summer
+    image_url: "/reference_looks/romantic/rm_bustier_sarong_summer.jpg"
+    items:
+      - slot: top
+        requires:
+          category: [bustier_top, corset_top_soft]
+          pending_cut_lines: curved
+          pending_fit: hugging
+          pending_neckline: [sweetheart, v_deep]
+          pending_fabric: [silk, satin, fine_cotton]
+        optional: false
+      - slot: bottom
+        requires:
+          category: [sarong_skirt, wrap_skirt_midi]
+          pending_silhouette: wrap_curved
+          pending_drape: soft_flowing
+          pending_length: [midi, maxi_soft]
+          pending_fabric: [silk, viscose, linen_soft]
+        optional: false
+      - slot: shoes
+        requires:
+          category: [sandals_curved, low_wedges_curved]
+          pending_detail_scale: medium
+          pending_heel_type: curved
+        optional: false
+    accessories:
+      - type: bag
+        requires:
+          pending_structure: soft_curved
+          pending_fabric: [silk, soft_leather]
+      - type: jewelry
+        requires:
+          pending_detail_scale: medium
+          pending_cut_lines: curved
+          pending_material: [warm_gold, pearl]
+        count_max: 3
+    notes:
+      - "Корсет = обнимает грудь и талию одним движением, без жёстких швов"
+      - "Саронг добавляет воздух без потери кривой"
+
 global_stop_items:
   - pending_cut_lines: [sharp_angular, aggressive_geometric, choppy]
   - pending_structure: [over_tailored_rigid, boxy]

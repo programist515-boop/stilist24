@@ -101,6 +101,84 @@ reference_looks:
       - "Контраст между верхом и низом — главный принцип"
       - "Высокая линия талии создаёт визуальный разрыв"
 
+  - id: gm_peacoat_cropped_pants
+    name: "Peacoat и укороченные брюки"
+    style: smart_casual
+    season_hint: autumn_winter
+    image_url: "/reference_looks/gamine/gm_peacoat_cropped_pants.jpg"
+    items:
+      - slot: outerwear
+        requires:
+          category: [peacoat, short_wool_coat]
+          pending_length: [hip, short]
+          pending_cut_lines: [crisp, tailored]
+          pending_structure: tailored
+        optional: false
+      - slot: top
+        requires:
+          category: [turtleneck_fine, fine_knit]
+          pending_fit: slim
+          pending_cut_lines: clean
+        optional: false
+      - slot: bottom
+        requires:
+          category: [cigarette_pants, cropped_straight]
+          pending_silhouette: slim_cropped
+          pending_length: ankle
+        optional: false
+      - slot: shoes
+        requires:
+          category: [loafers, oxfords, ankle_boots_slim]
+          pending_detail_scale: small
+        optional: false
+    accessories:
+      - type: bag
+        requires:
+          pending_structure: structured
+          pending_detail_scale: small
+      - type: scarf
+        optional: true
+        requires:
+          pending_pattern_character: [stripe_small, check_small]
+          pending_detail_scale: small
+    notes:
+      - "Короткое пальто + укороченные брюки = две коротких вертикали"
+      - "Видимая щиколотка добавляет лёгкости"
+
+  - id: gm_mod_mini_boots
+    name: "Мод: мини-платье и ботинки"
+    style: evening
+    season_hint: all
+    image_url: "/reference_looks/gamine/gm_mod_mini_boots.jpg"
+    items:
+      - slot: dress
+        requires:
+          category: [mini_dress, shift_dress]
+          pending_length: mini
+          pending_silhouette: [shift, a_line_mini]
+          pending_cut_lines: [crisp, geometric]
+          pending_pattern_character: [color_block, mondrian, geometric]
+        optional: false
+      - slot: shoes
+        requires:
+          category: [ankle_boots_mod, knee_boots_short]
+          pending_detail_scale: [small, medium]
+        optional: false
+    accessories:
+      - type: bag
+        requires:
+          pending_structure: structured
+          pending_detail_scale: small
+      - type: jewelry
+        optional: true
+        requires:
+          pending_detail_scale: small
+          pending_cut_lines: geometric
+        count_max: 2
+    notes:
+      - "Мод-эстетика 60-х — прямой сил типажа"
+      - "Короткое платье + ботинки, нет длины между — компактность сохраняется"
+
 global_stop_items:
   - pending_proportion: elongated_long
   - pending_cut_lines: [flowing, draped_loose]

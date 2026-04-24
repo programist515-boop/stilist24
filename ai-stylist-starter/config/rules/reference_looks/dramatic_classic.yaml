@@ -104,6 +104,89 @@ reference_looks:
     notes:
       - "Элегантность без излишеств — минимум украшений, максимум крою"
 
+  - id: dc_silk_shirt_wool_trousers
+    name: "Шёлковая блузка и шерстяные брюки со стрелками"
+    style: office
+    season_hint: all
+    image_url: "/reference_looks/dramatic_classic/dc_silk_shirt_wool_trousers.jpg"
+    items:
+      - slot: top
+        requires:
+          category: [silk_shirt, silk_blouse]
+          pending_fabric: silk
+          pending_cut_lines: clean
+          pending_fit: tailored
+          pending_neckline: [v_moderate, bow_narrow, band_collar]
+        optional: false
+      - slot: bottom
+        requires:
+          category: [wool_trousers, creased_trousers]
+          pending_silhouette: straight_slim
+          pending_length: [full, just_ankle]
+          pending_structure: tailored
+          pending_detail_scale: minimal  # чёткие стрелки, ничего лишнего
+        optional: false
+      - slot: shoes
+        requires:
+          category: [pumps, pointed_flats]
+          pending_toe_shape: pointed
+          pending_heel_type: [slim_block, kitten]
+        optional: false
+    accessories:
+      - type: bag
+        requires:
+          pending_structure: structured
+          pending_detail_scale: minimal
+      - type: jewelry
+        optional: true
+        requires:
+          pending_detail_scale: small
+          pending_cut_lines: clean_geometric
+        count_max: 2
+    notes:
+      - "Стрелки брюк + чистый шёлк — максимум отточенности без жёсткости"
+      - "Одна тонкая деталь (цепочка или серьги-гвоздики) — не больше"
+
+  - id: dc_wrap_coat_wide_leg
+    name: "Пальто-халат со строгими брюками"
+    style: weekend
+    season_hint: autumn_winter
+    image_url: "/reference_looks/dramatic_classic/dc_wrap_coat_wide_leg.jpg"
+    items:
+      - slot: outerwear
+        requires:
+          category: [wrap_coat, belted_coat]
+          pending_cut_lines: clean
+          pending_structure: tailored
+          pending_length: [midi, just_below_knee]
+          pending_waist: defined_clean
+        optional: false
+      - slot: top
+        requires:
+          category: [turtleneck_fine, silk_shell]
+          pending_cut_lines: clean
+          pending_fit: slim
+        optional: false
+      - slot: bottom
+        requires:
+          category: [straight_trousers, slim_high_waist]
+          pending_silhouette: straight_narrow
+          pending_length: full
+        optional: false
+      - slot: shoes
+        requires:
+          category: [pumps, ankle_boots_slim]
+          pending_toe_shape: pointed
+        optional: false
+    accessories:
+      - type: bag
+        requires:
+          pending_structure: structured
+          pending_detail_scale: [minimal, medium]
+    notes:
+      - "Пояс пальто = чёткая горизонталь на талии, не бант"
+      - "Монохромная палитра (бежевая / графит / винная) — плюс длина"
+
 global_stop_items:
   - pending_cut_lines: [ruffled, fussy, over_dramatic]
   - pending_structure: unstructured
