@@ -4,6 +4,7 @@ export const NAV_ITEMS = [
   { href: "/wardrobe", label: "Гардероб" },
   { href: "/analyze", label: "Анализ" },
   { href: "/style-quiz", label: "Квиз" },
+  { href: "/reference-looks", label: "Референсы" },
   { href: "/recommendations", label: "Рекомендации" },
   { href: "/insights", label: "Аналитика" },
   { href: "/tryon", label: "Примерка" },
