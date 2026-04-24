@@ -1,3 +1,4 @@
+import { getAccessToken, getActivePersonaId } from "@/lib/session";
 import { getUserId } from "@/lib/user-id";
 
 const BASE_URL =
@@ -61,11 +62,22 @@ export async function apiRequest<T = unknown>(
 
   const headers: Record<string, string> = {};
 
-  // Backend resolves the acting user from `X-User-Id` (see app/api/deps.py).
-  // Real JWT auth is on the roadmap; until then we send the local browser
-  // UUID on every request.
-  const userId = getUserId();
-  if (userId) headers["X-User-Id"] = userId;
+  // Auth: when the user is logged in we send the JWT as a Bearer token
+  // and the backend resolves the account from its ``sub`` claim. When
+  // there is no token we fall back to the legacy ``X-User-Id`` header —
+  // this keeps dev browsers that never signed up working. Either way we
+  // forward the active persona (if any) so account-scoped reads/writes
+  // hit the right slice of data.
+  const accessToken = getAccessToken();
+  if (accessToken) {
+    headers["Authorization"] = `Bearer ${accessToken}`;
+  } else {
+    const userId = getUserId();
+    if (userId) headers["X-User-Id"] = userId;
+  }
+
+  const personaId = getActivePersonaId();
+  if (personaId) headers["X-Persona-Id"] = personaId;
 
   let body: BodyInit | undefined;
   if (json !== undefined) {

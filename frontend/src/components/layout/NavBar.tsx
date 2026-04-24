@@ -4,12 +4,14 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/cn";
 import { NAV_ITEMS } from "./nav-items";
+import { PersonaSwitcher } from "./PersonaSwitcher";
+import { AccountMenu } from "./AccountMenu";
 
 export function NavBar() {
   const pathname = usePathname();
   return (
     <header className="sticky top-0 z-10 border-b border-canvas-border bg-canvas/80 backdrop-blur">
-      <div className="container-page flex h-16 items-center justify-between">
+      <div className="container-page flex h-16 items-center justify-between gap-4">
         <Link href="/" className="font-display text-xl tracking-tight">
           AI Stylist
         </Link>
@@ -32,6 +34,10 @@ export function NavBar() {
             );
           })}
         </nav>
+        <div className="flex items-center gap-2">
+          <PersonaSwitcher />
+          <AccountMenu />
+        </div>
       </div>
     </header>
   );
