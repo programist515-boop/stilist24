@@ -120,7 +120,7 @@ class TestOutfitScorerIntegration:
         items = _outfit()
         result = scorer.score(items)
         assert set(result.breakdown.keys()) == {
-            "color_harmony", "silhouette", "preference",
+            "color_harmony", "color_combination", "silhouette", "preference",
             "palette_fit", "occasion", "reuse", "weather",
         }
 

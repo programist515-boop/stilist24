@@ -24,6 +24,7 @@ from dataclasses import dataclass, field
 from typing import Any
 
 from app.services.outfits.scoring.base import ScorerResult
+from app.services.outfits.scoring.color_combination import ColorCombinationScorer
 from app.services.outfits.scoring.color_harmony import ColorHarmonyScorer
 from app.services.outfits.scoring.occasion import OccasionScorer
 from app.services.outfits.scoring.palette_fit import PaletteFitScorer
@@ -73,6 +74,7 @@ class OutfitScore:
 
 _DEFAULT_SCORERS: dict[str, type] = {
     "color_harmony": ColorHarmonyScorer,
+    "color_combination": ColorCombinationScorer,
     "silhouette": SilhouetteScorer,
     "preference": PreferenceScorer,
     "palette_fit": PaletteFitScorer,
