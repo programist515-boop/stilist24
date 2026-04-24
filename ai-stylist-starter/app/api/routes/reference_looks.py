@@ -16,7 +16,7 @@ import uuid
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
-from app.api.deps import get_current_user_id, get_db
+from app.api.deps import get_current_persona_id, get_current_user_id, get_db
 from app.repositories.wardrobe_repository import WardrobeRepository
 from app.schemas.reference_looks import (
     MatchedItemOut,
@@ -25,7 +25,7 @@ from app.schemas.reference_looks import (
     ReferenceLooksResponse,
 )
 from app.services.reference_matcher import ReferenceMatcher
-from app.services.style_profile_resolver import get_active_profile_by_user_id
+from app.services.style_profile_resolver import get_active_profile_by_persona_id
 
 router = APIRouter()
 
@@ -44,13 +44,14 @@ def _build_matcher() -> ReferenceMatcher:
 def list_reference_looks(
     db: Session = Depends(get_db),
     user_id: uuid.UUID = Depends(get_current_user_id),
+    persona_id: uuid.UUID = Depends(get_current_persona_id),
 ) -> ReferenceLooksResponse:
-    profile = get_active_profile_by_user_id(user_id, db)
+    profile = get_active_profile_by_persona_id(persona_id, db)
     subtype = profile.kibbe_type
     if not subtype:
         return ReferenceLooksResponse(subtype=None, looks=[])
 
-    wardrobe = WardrobeRepository(db).list_by_user(user_id)
+    wardrobe = WardrobeRepository(db).list_by_persona(persona_id)
     matcher = _build_matcher()
     matches = matcher.match_wardrobe(wardrobe, subtype)
 

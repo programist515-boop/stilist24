@@ -10,6 +10,7 @@ import { PageHeader } from "@/components/layout/PageHeader";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import { PhotoSlot } from "@/components/analysis/PhotoSlot";
 import { AnalysisResultCard } from "@/components/analysis/AnalysisResultCard";
+import { IdentityDNACard } from "@/components/analysis/IdentityDNACard";
 import { analyzeUser } from "@/lib/api/user";
 import { trackEvent } from "@/lib/api/events";
 import { saveLastAnalysis } from "@/lib/local-store";
@@ -133,6 +134,7 @@ export default function AnalyzePage() {
             </div>
           </Card>
           <AnalysisResultCard result={mutation.data} />
+          <IdentityDNACard />
           <Card className="border-sky-200 bg-sky-50">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div className="max-w-xl">

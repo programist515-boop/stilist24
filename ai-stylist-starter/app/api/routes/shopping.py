@@ -12,7 +12,7 @@ import uuid
 from fastapi import APIRouter, Body, Depends, File, Form, UploadFile
 from sqlalchemy.orm import Session
 
-from app.api.deps import get_current_user_id, get_db
+from app.api.deps import get_current_persona_id, get_current_user_id, get_db
 from app.models.shopping_candidate import ShoppingCandidate
 from app.repositories.wardrobe_repository import WardrobeRepository
 from app.schemas.shopping import PurchaseEvalOut, ShoppingCandidateIn
@@ -26,7 +26,7 @@ router = APIRouter()
 _build_user_context = build_user_context_from_db
 
 
-def _wardrobe_as_dicts(db: Session, user_id: uuid.UUID) -> list[dict]:
+def _wardrobe_as_dicts(db: Session, persona_id: uuid.UUID) -> list[dict]:
     repo = WardrobeRepository(db)
     return [
         {
@@ -37,7 +37,7 @@ def _wardrobe_as_dicts(db: Session, user_id: uuid.UUID) -> list[dict]:
             "cost": i.cost,
             "wear_count": i.wear_count or 0,
         }
-        for i in repo.list_by_user(user_id)
+        for i in repo.list_by_persona(persona_id)
     ]
 
 
@@ -49,6 +49,7 @@ async def evaluate_purchase(
     retailer: str | None = Form(default=None),
     db: Session = Depends(get_db),
     user_id: uuid.UUID = Depends(get_current_user_id),
+    persona_id: uuid.UUID = Depends(get_current_persona_id),
 ) -> dict:
     """Evaluate a prospective purchase.
 
@@ -59,7 +60,7 @@ async def evaluate_purchase(
     Returns ``decision`` (buy/maybe/skip), ``confidence``, ``reasons``,
     ``warnings``, ``pairs_with_count``, and per-scorer ``subscores``.
     """
-    wardrobe = _wardrobe_as_dicts(db, user_id)
+    wardrobe = _wardrobe_as_dicts(db, persona_id)
     user_context = _build_user_context(db, user_id)
 
     if image is not None:

@@ -102,7 +102,9 @@ def start_identity_quiz(
     user_id: uuid.UUID = Depends(get_current_user_id),
 ) -> IdentityQuizStartResponse:
     # Read algorithmic winner from StyleProfile.kibbe_type if we have one.
-    profile = db.get(StyleProfile, user_id)
+    from app.services.style_profile_resolver import load_style_profile
+
+    profile = load_style_profile(user_id=user_id, db=db)
     algorithmic_subtype = profile.kibbe_type if profile is not None else None
 
     candidates = identity_quiz.build_stock_candidates(
@@ -280,10 +282,15 @@ def complete_identity_quiz(
     winner = result.get("winner")
     confidence = float(result.get("confidence") or 0.0)
 
-    # Persist into StyleProfile.
-    profile = db.get(StyleProfile, user_id)
+    # Persist into StyleProfile — keyed by primary persona of the user
+    # (PK of style_profiles is persona_id since migration 0010).
+    from app.repositories.persona_repository import PersonaRepository
+    from app.services.style_profile_resolver import load_style_profile
+
+    primary = PersonaRepository(db).ensure_primary(user_id)
+    profile = load_style_profile(persona_id=primary.id, db=db)
     if profile is None:
-        profile = StyleProfile(user_id=user_id)
+        profile = StyleProfile(persona_id=primary.id, user_id=user_id)
         db.add(profile)
     if winner is not None:
         profile.kibbe_type_preference = winner

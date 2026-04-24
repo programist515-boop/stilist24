@@ -111,6 +111,7 @@ def apply_color_override(
     body: ColorOverrideIn,
     db: Session = Depends(get_db),
     user_id: uuid.UUID = Depends(get_current_user_id),
+    persona_id: uuid.UUID = Depends(get_current_persona_id),
 ) -> dict:
     """Apply manual corrections to the auto-detected color profile.
 
@@ -121,8 +122,9 @@ def apply_color_override(
     from sqlalchemy.dialects.postgresql import insert as pg_insert
 
     from app.models.style_profile import StyleProfile
+    from app.services.style_profile_resolver import load_style_profile
 
-    row = db.query(StyleProfile).filter(StyleProfile.user_id == user_id).first()
+    row = load_style_profile(persona_id=persona_id, db=db)
     if row is None:
         raise HTTPException(status_code=404, detail="No style profile found — run /user/analyze first")
 
@@ -169,16 +171,17 @@ def apply_color_override(
         color_result = ColorEngine().analyze(axes) if axes else existing_color
         color_result["manual_override"] = bool(applied)
 
-    # Persist updates
+    # Persist updates — PK is persona_id after migration 0010.
     stmt = (
         pg_insert(StyleProfile)
         .values(
+            persona_id=persona_id,
             user_id=user_id,
             color_profile_json=color_result,
             color_overrides_json=existing_overrides,
         )
         .on_conflict_do_update(
-            index_elements=["user_id"],
+            index_elements=["persona_id"],
             set_={
                 "color_profile_json": color_result,
                 "color_overrides_json": existing_overrides,

@@ -20,7 +20,7 @@ import uuid
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
-from app.api.deps import get_current_user_id, get_db
+from app.api.deps import get_current_persona_id, get_current_user_id, get_db
 from app.schemas.color_tryon import (
     ColorTryOnFeedback,
     ColorTryOnResponse,
@@ -88,6 +88,7 @@ def record_color_tryon_feedback(
     payload: ColorTryOnFeedback,
     db: Session = Depends(get_db),
     user_id: uuid.UUID = Depends(get_current_user_id),
+    persona_id: uuid.UUID = Depends(get_current_persona_id),
 ) -> dict:
     """Отметить конкретный вариант как «нравится / не нравится».
 
@@ -95,9 +96,9 @@ def record_color_tryon_feedback(
     и постепенно учит персональный color_vector пользователя.
     """
     service = ColorTryOnService(db)
-    # Ранняя проверка: item существует и принадлежит пользователю.
+    # Ранняя проверка: item существует и принадлежит активной персоне.
     item = service.wardrobe.get_by_id(item_id)
-    if item is None or item.user_id != user_id:
+    if item is None or item.persona_id != persona_id:
         raise HTTPException(status_code=404, detail="item not found")
 
     service.record_feedback(

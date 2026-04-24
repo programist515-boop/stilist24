@@ -103,9 +103,9 @@ def build_user_context_from_db(
 
     Thin wrapper over :func:`build_user_context` for use in route handlers.
     """
-    from app.models.style_profile import StyleProfile
     from app.repositories.personalization_repository import PersonalizationRepository
+    from app.services.style_profile_resolver import load_style_profile
 
-    style = db.get(StyleProfile, user_id)
+    style = load_style_profile(user_id=user_id, db=db)
     perso = PersonalizationRepository(db).get_or_create(user_id)
     return build_user_context(style, perso)

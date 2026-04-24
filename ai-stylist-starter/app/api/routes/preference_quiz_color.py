@@ -93,7 +93,9 @@ def _algorithmic_family(db: Session, user_id: uuid.UUID) -> str | None:
     missing profile just means the family cards show in canonical
     alphabetical order instead of being re-ranked.
     """
-    row = db.get(StyleProfile, user_id)
+    from app.services.style_profile_resolver import load_style_profile
+
+    row = load_style_profile(user_id=user_id, db=db)
     if row is None:
         return None
     color = dict(row.color_profile_json or {})

@@ -143,19 +143,20 @@ def confirm_item(
     payload: WardrobeConfirmIn,
     db: Session = Depends(get_db),
     user_id: uuid.UUID = Depends(get_current_user_id),
+    persona_id: uuid.UUID = Depends(get_current_persona_id),
 ) -> dict:
     """Verify attributes on an existing wardrobe item.
 
     * ``item_id`` is a real UUID (Pydantic rejects malformed strings
       before we get here — the error envelope handler turns them into
       a ``VALIDATION_ERROR`` 422 response).
-    * A missing item, or one owned by a different user, is a **404**
+    * A missing item, or one owned by a different persona, is a **404**
       through the error envelope. No more ``{"status": "not_found"}``
       200 body.
     """
     repo = WardrobeRepository(db)
     item = repo.get_by_id(payload.item_id)
-    if item is None or item.user_id != user_id:
+    if item is None or item.persona_id != persona_id:
         raise ApiError(
             code=ErrorCode.NOT_FOUND,
             message="wardrobe item not found",
@@ -190,17 +191,18 @@ def item_versatility(
     item_id: uuid.UUID,
     db: Session = Depends(get_db),
     user_id: uuid.UUID = Depends(get_current_user_id),
+    persona_id: uuid.UUID = Depends(get_current_persona_id),
 ) -> dict:
     """Return how many valid outfit combinations this item enables."""
     repo = WardrobeRepository(db)
     item = repo.get_by_id(item_id)
-    if item is None or item.user_id != user_id:
+    if item is None or item.persona_id != persona_id:
         raise ApiError(
             code=ErrorCode.NOT_FOUND,
             message="wardrobe item not found",
             status_code=404,
         )
-    wardrobe = repo.list_by_user(user_id)
+    wardrobe = repo.list_by_persona(persona_id)
     items_as_dicts = [
         {
             **(i.attributes_json or {}),
@@ -221,11 +223,12 @@ def mark_item_worn(
     item_id: uuid.UUID,
     db: Session = Depends(get_db),
     user_id: uuid.UUID = Depends(get_current_user_id),
+    persona_id: uuid.UUID = Depends(get_current_persona_id),
 ) -> dict:
     """Increment wear_count for an item the user has marked as worn."""
     repo = WardrobeRepository(db)
     item = repo.get_by_id(item_id)
-    if item is None or item.user_id != user_id:
+    if item is None or item.persona_id != persona_id:
         raise ApiError(
             code=ErrorCode.NOT_FOUND,
             message="wardrobe item not found",
@@ -254,11 +257,12 @@ def log_item_worn(
     notes: str | None = Body(default=None),
     db: Session = Depends(get_db),
     user_id: uuid.UUID = Depends(get_current_user_id),
+    persona_id: uuid.UUID = Depends(get_current_persona_id),
 ) -> dict:
     """Log a wear event for a wardrobe item."""
     repo = WardrobeRepository(db)
     item = repo.get_by_id(item_id)
-    if item is None or item.user_id != user_id:
+    if item is None or item.persona_id != persona_id:
         raise ApiError(code=ErrorCode.NOT_FOUND, message="wardrobe item not found", status_code=404)
     from app.services.wardrobe.wear_log_service import WearLogService
     return WearLogService(db).log_item_worn(
@@ -275,11 +279,12 @@ def get_wear_log(
     item_id: uuid.UUID,
     db: Session = Depends(get_db),
     user_id: uuid.UUID = Depends(get_current_user_id),
+    persona_id: uuid.UUID = Depends(get_current_persona_id),
 ) -> dict:
     """Get wear history for a wardrobe item."""
     repo = WardrobeRepository(db)
     item = repo.get_by_id(item_id)
-    if item is None or item.user_id != user_id:
+    if item is None or item.persona_id != persona_id:
         raise ApiError(code=ErrorCode.NOT_FOUND, message="wardrobe item not found", status_code=404)
     from app.services.wardrobe.wear_log_service import WearLogService
     history = WearLogService(db).get_history(user_id=user_id, item_id=item_id)
@@ -295,10 +300,11 @@ def get_wear_log(
 def get_orphan_items(
     db: Session = Depends(get_db),
     user_id: uuid.UUID = Depends(get_current_user_id),
+    persona_id: uuid.UUID = Depends(get_current_persona_id),
 ) -> dict:
     """Return wardrobe items ranked by orphan score (hardest to outfit first)."""
     wardrobe_repo = WardrobeRepository(db)
-    items = wardrobe_repo.list_by_user(user_id)
+    items = wardrobe_repo.list_by_persona(persona_id)
     items_as_dicts = [
         {
             "id": str(i.id),
@@ -315,7 +321,8 @@ def get_orphan_items(
     from app.services.analytics.item_graph import ItemCompatibilityGraph
     from app.services.analytics.orphan_detector import detect_batch
 
-    style = db.get(StyleProfile, user_id)
+    from app.services.style_profile_resolver import load_style_profile
+    style = load_style_profile(user_id=user_id, db=db)
     palette_hex: list[str] = []
     if style and style.color_profile_json:
         palette_hex = style.color_profile_json.get("palette_hex", [])
@@ -328,11 +335,11 @@ def get_orphan_items(
 @router.get("/analytics/redundancy")
 def get_redundancy(
     db: Session = Depends(get_db),
-    user_id: uuid.UUID = Depends(get_current_user_id),
+    persona_id: uuid.UUID = Depends(get_current_persona_id),
 ) -> dict:
-    """Return redundancy clusters in the user's wardrobe."""
+    """Return redundancy clusters in the current persona's wardrobe."""
     wardrobe_repo = WardrobeRepository(db)
-    items = wardrobe_repo.list_by_user(user_id)
+    items = wardrobe_repo.list_by_persona(persona_id)
     items_as_dicts = [
         {
             "id": str(i.id),
@@ -349,10 +356,11 @@ def get_redundancy(
 def get_extended_gaps(
     db: Session = Depends(get_db),
     user_id: uuid.UUID = Depends(get_current_user_id),
+    persona_id: uuid.UUID = Depends(get_current_persona_id),
 ) -> dict:
     """Extended gap analysis: layering, occasion, palette, imbalance, overbought."""
     wardrobe_repo = WardrobeRepository(db)
-    items = wardrobe_repo.list_by_user(user_id)
+    items = wardrobe_repo.list_by_persona(persona_id)
     items_as_dicts = [
         {
             "id": str(i.id),
@@ -362,7 +370,8 @@ def get_extended_gaps(
         }
         for i in items
     ]
-    style = db.get(StyleProfile, user_id)
+    from app.services.style_profile_resolver import load_style_profile
+    style = load_style_profile(user_id=user_id, db=db)
     palette_hex: list[str] = []
     if style and style.color_profile_json:
         palette_hex = style.color_profile_json.get("palette_hex", [])
@@ -376,7 +385,7 @@ def update_item_attributes(
     item_id: uuid.UUID,
     updates: dict = Body(...),
     db: Session = Depends(get_db),
-    user_id: uuid.UUID = Depends(get_current_user_id),
+    persona_id: uuid.UUID = Depends(get_current_persona_id),
 ) -> dict:
     """Apply manual attribute corrections to a wardrobe item.
 
@@ -389,7 +398,7 @@ def update_item_attributes(
     """
     repo = WardrobeRepository(db)
     item = repo.get_by_id(item_id)
-    if item is None or item.user_id != user_id:
+    if item is None or item.persona_id != persona_id:
         raise ApiError(
             code=ErrorCode.NOT_FOUND,
             message="wardrobe item not found",

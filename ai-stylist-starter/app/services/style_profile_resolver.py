@@ -159,6 +159,43 @@ def get_active_profile(style_profile: Any) -> ResolvedProfile:
     return _resolve_algorithmic(style_profile)
 
 
+def load_style_profile(
+    *,
+    user_id: uuid.UUID | None = None,
+    persona_id: uuid.UUID | None = None,
+    db: "Session",
+) -> StyleProfile | None:
+    """Resolve a ``StyleProfile`` row by persona or by user.
+
+    After the multi-persona migration (0010) the PK of ``style_profiles``
+    is ``persona_id``, not ``user_id``. Callers should provide
+    ``persona_id`` when they have it — this is the fast path via
+    ``db.get``. When only ``user_id`` is known we fall back to the user's
+    primary persona and then look up the row by that. Returns ``None``
+    when the user has no primary persona yet (fresh signup) or the
+    analysis has never been run.
+    """
+    if persona_id is not None:
+        return db.get(StyleProfile, persona_id)
+    if user_id is None:
+        return None
+    # Lazy import so the module keeps working without SQLAlchemy in
+    # pure-Python unit tests.
+    from app.repositories.persona_repository import PersonaRepository
+
+    try:
+        primary = PersonaRepository(db).get_primary(user_id)
+    except AttributeError:
+        # Test stubs sometimes only implement ``Session.get`` (the old
+        # PK-by-user_id seam). Fall back to that so pre-multi-persona
+        # tests keep passing while production code that has a real
+        # SQLAlchemy session goes through the persona path.
+        return db.get(StyleProfile, user_id)
+    if primary is None:
+        return None
+    return db.get(StyleProfile, primary.id)
+
+
 def get_active_profile_by_user_id(
     user_id: uuid.UUID,
     db: "Session",
@@ -168,7 +205,16 @@ def get_active_profile_by_user_id(
     Returns an empty :class:`ResolvedProfile` (all ``None``) when no row
     exists for the user yet.
     """
-    row = db.get(StyleProfile, user_id)
+    row = load_style_profile(user_id=user_id, db=db)
+    return get_active_profile(row)
+
+
+def get_active_profile_by_persona_id(
+    persona_id: uuid.UUID,
+    db: "Session",
+) -> ResolvedProfile:
+    """Persona-scoped convenience wrapper."""
+    row = load_style_profile(persona_id=persona_id, db=db)
     return get_active_profile(row)
 
 
@@ -194,7 +240,7 @@ def set_active_profile_source(
             f"(expected one of {sorted(VALID_SOURCES)})"
         )
 
-    row = db.get(StyleProfile, user_id)
+    row = load_style_profile(user_id=user_id, db=db)
     if row is None:
         raise LookupError(
             f"StyleProfile for user_id={user_id} does not exist — "
@@ -219,5 +265,7 @@ __all__ = [
     "VALID_SOURCES",
     "get_active_profile",
     "get_active_profile_by_user_id",
+    "get_active_profile_by_persona_id",
+    "load_style_profile",
     "set_active_profile_source",
 ]

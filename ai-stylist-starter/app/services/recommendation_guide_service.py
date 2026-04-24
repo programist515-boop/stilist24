@@ -338,9 +338,9 @@ class RecommendationGuideService:
             return self._style_profile_loader(user_id)
         if self.db is None:
             return None
-        from app.models.style_profile import StyleProfile  # lazy
+        from app.services.style_profile_resolver import load_style_profile
 
-        return self.db.get(StyleProfile, user_id)
+        return load_style_profile(user_id=user_id, db=self.db)
 
     def _load_personalization(self, user_id: uuid.UUID):
         if self._personalization_loader is not None:

@@ -2,7 +2,7 @@ import uuid
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
-from app.api.deps import get_current_user_id, get_db
+from app.api.deps import get_current_persona_id, get_current_user_id, get_db
 from app.core.config import settings
 from app.schemas.today import TodayResponse
 from app.services.today_service import TodayService
@@ -23,7 +23,11 @@ def get_today(
     occasion: str | None = None,
     db: Session = Depends(get_db),
     user_id: uuid.UUID = Depends(get_current_user_id),
+    persona_id: uuid.UUID = Depends(get_current_persona_id),
 ) -> dict:
     return _make_today_service(db).get_today(
-        user_id=user_id, weather=weather, occasion=occasion
+        user_id=user_id,
+        persona_id=persona_id,
+        weather=weather,
+        occasion=occasion,
     )

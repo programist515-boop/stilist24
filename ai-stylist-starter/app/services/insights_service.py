@@ -94,14 +94,21 @@ class InsightsService:
 
         return EventRepository(self.db).list_by_user(user_id)
 
-    def _load_wardrobe(self, user_id: uuid.UUID) -> list[dict]:
+    def _load_wardrobe(
+        self, user_id: uuid.UUID, persona_id: uuid.UUID | None = None
+    ) -> list[dict]:
         if self._wardrobe_loader is not None:
             return self._wardrobe_loader(user_id)
         if self.db is None:
             return []
         from app.repositories.wardrobe_repository import WardrobeRepository
 
-        raw = WardrobeRepository(self.db).list_by_user(user_id)
+        repo = WardrobeRepository(self.db)
+        raw = (
+            repo.list_by_persona(persona_id)
+            if persona_id is not None
+            else repo.list_by_user(user_id)
+        )
         return [_to_flat_item(i) for i in raw]
 
     def _load_personalization(self, user_id: uuid.UUID):
@@ -117,14 +124,18 @@ class InsightsService:
 
     # ----------------------------------------------------------------- public
 
-    def weekly(self, user_id: uuid.UUID) -> dict:
+    def weekly(
+        self,
+        user_id: uuid.UUID,
+        persona_id: uuid.UUID | None = None,
+    ) -> dict:
         now = _to_utc(self._now())
         window_start = now - timedelta(days=7)
 
         events = self._load_events(user_id)
         week_events = [e for e in events if self._in_window(e, window_start, now)]
 
-        wardrobe = self._load_wardrobe(user_id)
+        wardrobe = self._load_wardrobe(user_id, persona_id=persona_id)
         personalization = self._load_personalization(user_id)
 
         notes: list[str] = []

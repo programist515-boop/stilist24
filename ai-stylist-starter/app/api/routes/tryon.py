@@ -21,7 +21,7 @@ import uuid
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
-from app.api.deps import get_current_user_id, get_db
+from app.api.deps import get_current_persona_id, get_current_user_id, get_db
 from app.core.storage import fresh_public_url
 from app.repositories.tryon_repository import TryOnRepository
 from app.schemas.tryon import TryOnGenerateIn, TryOnJobOut
@@ -99,7 +99,15 @@ def get_tryon_job(
     job_id: uuid.UUID,
     db: Session = Depends(get_db),
     user_id: uuid.UUID = Depends(get_current_user_id),
+    persona_id: uuid.UUID = Depends(get_current_persona_id),
 ) -> dict:
+    """Tryon jobs are keyed by the account user_id, not persona.
+
+    We still accept ``persona_id`` in the dependency so the frontend
+    always sends a consistent header set, but ownership is checked at
+    the account level (a job spans whichever persona was active when
+    it was created).
+    """
     repo = TryOnRepository(db)
     job = repo.get_by_id(job_id)
     if job is None or job.user_id != user_id:

@@ -17,7 +17,7 @@ import uuid
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
-from app.api.deps import get_current_user_id, get_db
+from app.api.deps import get_current_persona_id, get_current_user_id, get_db
 from app.schemas.recommendations import RecommendationGuideResponse
 from app.services.recommendation_guide_service import (
     RecommendationGuideService,
@@ -30,5 +30,10 @@ router = APIRouter()
 def get_style_guide(
     db: Session = Depends(get_db),
     user_id: uuid.UUID = Depends(get_current_user_id),
+    persona_id: uuid.UUID = Depends(get_current_persona_id),
 ) -> dict:
+    # Ensure the dependency is invoked (persona cache kept fresh for
+    # downstream consumers); the guide currently keys on user_id because
+    # StyleProfile resolves to primary persona internally.
+    _ = persona_id
     return RecommendationGuideService(db).get_guide(user_id)

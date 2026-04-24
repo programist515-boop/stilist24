@@ -15,6 +15,7 @@ from app.api.routes import (
     events,
     feedback,
     gap_analysis,
+    identity_dna,
     insights,
     outfits,
     personas,
@@ -55,6 +56,7 @@ app.add_exception_handler(RequestValidationError, validation_error_handler)
 
 app.include_router(auth.router, prefix="/auth", tags=["auth"])
 app.include_router(personas.router, prefix="/personas", tags=["personas"])
+app.include_router(identity_dna.router, prefix="/identity-dna", tags=["identity-dna"])
 app.include_router(user_analysis.router, prefix="/user", tags=["user"])
 app.include_router(color.router, prefix="/color", tags=["color"])
 app.include_router(color_tryon.router, prefix="/color-tryon", tags=["color-tryon"])

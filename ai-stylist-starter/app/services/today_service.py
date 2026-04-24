@@ -91,7 +91,9 @@ class TodayService:
 
     # --------------------------------------------------------- data loading
 
-    def _load_wardrobe(self, user_id: uuid.UUID) -> list[dict]:
+    def _load_wardrobe(
+        self, user_id: uuid.UUID, persona_id: uuid.UUID | None = None
+    ) -> list[dict]:
         if self._wardrobe_loader is not None:
             return self._wardrobe_loader(user_id)
         if self.db is None:
@@ -99,7 +101,12 @@ class TodayService:
         # Lazy import so the service can be unit-tested without SQLAlchemy.
         from app.repositories.wardrobe_repository import WardrobeRepository
 
-        raw = WardrobeRepository(self.db).list_by_user(user_id)
+        repo = WardrobeRepository(self.db)
+        raw = (
+            repo.list_by_persona(persona_id)
+            if persona_id is not None
+            else repo.list_by_user(user_id)
+        )
         return [_to_flat_item(i) for i in raw]
 
     def _load_style_profile(self, user_id: uuid.UUID):
@@ -107,9 +114,9 @@ class TodayService:
             return self._style_profile_loader(user_id)
         if self.db is None:
             return None
-        from app.models.style_profile import StyleProfile
+        from app.services.style_profile_resolver import load_style_profile
 
-        return self.db.get(StyleProfile, user_id)
+        return load_style_profile(user_id=user_id, db=self.db)
 
     def _load_personalization(self, user_id: uuid.UUID):
         if self._personalization_loader is not None:
@@ -138,9 +145,10 @@ class TodayService:
         user_id: uuid.UUID,
         weather: str | None = None,
         occasion: str | None = None,
+        persona_id: uuid.UUID | None = None,
     ) -> dict:
         notes: list[str] = []
-        items = self._load_wardrobe(user_id)
+        items = self._load_wardrobe(user_id, persona_id=persona_id)
 
         if not items:
             return {
