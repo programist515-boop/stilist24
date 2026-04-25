@@ -17,20 +17,258 @@ rules:
         match: { sub_type: wide_brim_hat, fabric_rigidity: soft }
       - rule: symmetric_beanie_neutral
         reason: "Симметричная бежевая шапка с косами — 'бабушкин' эффект"
-        # match не заполнен: «с косами» — атрибут вязки, его нет
     notes:
       - "Лютые морозы — враг номер один FG. Зима не лучшее время для стиля."
       - "Берет и кепка 'Гаврош' — идеальные варианты."
 
-  dramatic: {prefer: {}, stop: []}
-  soft_dramatic: {prefer: {}, stop: []}
-  flamboyant_natural: {prefer: {}, stop: []}
-  soft_natural: {prefer: {}, stop: []}
-  natural: {prefer: {}, stop: []}
-  dramatic_classic: {prefer: {}, stop: []}
-  soft_classic: {prefer: {}, stop: []}
-  classic: {prefer: {}, stop: []}
-  soft_gamine: {prefer: {}, stop: []}
-  gamine: {prefer: {}, stop: []}
-  romantic: {prefer: {}, stop: []}
-  theatrical_romantic: {prefer: {}, stop: []}
+  dramatic:
+    prefer:
+      size: [medium, sleek_large]
+      shape: [angular_clean, elongated, sleek_geometric]
+      sub_types: [fedora_sleek, sleek_top_hat, structured_cap]
+      winter_rule:
+        preferred: [fine_machine_knit_solid, sleek_beret]
+        avoid: [chunky_cable, fluffy_pom]
+    stop:
+      - rule: round_soft
+        reason: "Круглые мягкие шапки ломают чистоту длинной линии"
+        match: { shape: round }
+      - rule: cute_pompom
+        reason: "Помпоны и милые декоры чужды строгости Dramatic"
+        match: { detail: pompom }
+      - rule: chunky_cable
+        reason: "Объёмная косичка ломает sleek-силуэт"
+        match: { knit_density: chunky }
+    notes:
+      - "Sleek фетровая fedora или тонкий мериносовый берет — формула Dramatic."
+
+  soft_dramatic:
+    prefer:
+      size: [medium, statement_lustrous]
+      shape: [wide_brim_dramatic, sculptural_lush, statement_curved]
+      sub_types: [wide_brim_hat_lustrous, statement_turban, sculptural_beret]
+      winter_rule:
+        preferred: [lustrous_beret, wide_brim_wool]
+        avoid: [utility_basic, chunky_boyish]
+    stop:
+      - rule: utility_minimal
+        reason: "Утилитарные минималистичные шапки убирают lush-статус"
+        match: { style: utility }
+      - rule: cute_small
+        reason: "Маленькие милые формы крадут крупный масштаб SD"
+        match: { size: small }
+      - rule: chunky_boyish
+        reason: "Объёмная мужская вязка скрывает кривые SD"
+        match: { knit_density: chunky, fit: oversized }
+    notes:
+      - "Wide-brim чёрная шляпа или статусный тюрбан — формула SD."
+
+  flamboyant_natural:
+    prefer:
+      size: [large, oversized_natural]
+      shape: [wide_brim_blunt, slouchy, oversized_organic]
+      sub_types: [wide_brim_floppy, slouchy_beanie_chunky, fedora_natural]
+      winter_rule:
+        preferred: [chunky_cable_knit, hand_knit_natural]
+        avoid: [tiny_compact, dressy_glossy]
+    stop:
+      - rule: dainty_small
+        reason: "Мелкие изящные шапочки теряются на крупном масштабе"
+        match: { size: small }
+      - rule: structured_pillbox
+        reason: "Строгие коробочки чужды расслабленной природе"
+        match: { sub_type: pillbox }
+      - rule: glossy_dressy_extreme
+        reason: "Очень глянцевые нарядные ломают casual-natural"
+        match: { finish: extreme_glossy }
+    notes:
+      - "Wide-brim фетр, объёмная домашняя вязка — формула FN."
+
+  soft_natural:
+    prefer:
+      size: [medium, large_soft]
+      shape: [floppy_soft, slouchy_gentle, brim_curved_soft]
+      sub_types: [soft_floppy_hat, slouchy_beanie_medium, soft_beret]
+      winter_rule:
+        preferred: [soft_merino_beanie, slouchy_knit]
+        avoid: [stiff_structured, sharp_geometric]
+    stop:
+      - rule: stiff_structured_extreme
+        reason: "Очень жёсткие структурные шапки ломают мягкость SN"
+        match: { fabric_rigidity: extreme_rigid }
+      - rule: sharp_geometric
+        reason: "Острые геометричные формы чужды soft_curved"
+        match: { shape: sharp_extreme }
+      - rule: ornate_decorative
+        reason: "Мелкие декоративные детали чужды natural-эстетике"
+        match: { detail_scale: small, has_ornament: true }
+    notes:
+      - "Мягкая floppy-шляпа или slouchy beanie — формула SN."
+
+  natural:
+    prefer:
+      size: [medium, large_natural]
+      shape: [wide_brim_natural, slouchy_blunt, simple_cap]
+      sub_types: [wide_brim_simple, beanie_simple, baseball_cap]
+      winter_rule:
+        preferred: [chunky_knit_natural, simple_beanie]
+        avoid: [dressy_decorative, sharp_geometric]
+    stop:
+      - rule: ornate_decorative
+        reason: "Декоративные мелкие детали чужды утилитарной природе"
+        match: { detail_scale: small, has_ornament: true }
+      - rule: dressy_glossy
+        reason: "Глянцевые нарядные шапки не вписываются в casual"
+        match: { finish: lustrous }
+      - rule: tiny_compact_dressy
+        reason: "Мелкие нарядные шапочки чужды расслабленной природе"
+        match: { size: small, occasion: dressy }
+    notes:
+      - "Wide-brim соломенная или простая beanie — естественная база."
+
+  dramatic_classic:
+    prefer:
+      size: [medium, refined_clean]
+      shape: [structured_clean, fedora_refined, beret_polished]
+      sub_types: [refined_fedora, sleek_beret, structured_pillbox]
+      winter_rule:
+        preferred: [fine_merino_beret, refined_beanie]
+        avoid: [chunky_cable, slouchy_oversized]
+    stop:
+      - rule: ornate_decorative
+        reason: "Декоративные оправы и оборки ломают строгость DC"
+        match: { detail_scale: small, has_ornament: true }
+      - rule: slouchy_oversized
+        reason: "Свободные slouchy шапки убирают дисциплину силуэта"
+        match: { fit: slouchy }
+      - rule: chunky_cable_extreme
+        reason: "Очень объёмная косичка ломает чистоту"
+        match: { knit_density: extreme_chunky }
+    notes:
+      - "Polished fedora или refined beret — формула DC."
+
+  soft_classic:
+    prefer:
+      size: [medium, refined_soft]
+      shape: [refined_curved, beret_soft, brim_classic_curved]
+      sub_types: [refined_beret, soft_brim_hat, polished_cloche]
+      winter_rule:
+        preferred: [fine_merino_beanie, refined_beret]
+        avoid: [chunky_aggressive, sharp_structured]
+    stop:
+      - rule: sharp_aggressive
+        reason: "Острые угловатые формы ломают мягкую гармонию SC"
+        match: { shape: sharp_extreme }
+      - rule: chunky_oversized
+        reason: "Объёмная агрессивная вязка ломает утончённость"
+        match: { knit_density: chunky }
+      - rule: ornate_baroque
+        reason: "Барочный декор ломает сдержанность"
+        match: { style_category: baroque }
+    notes:
+      - "Refined cloche или soft beret — формула SC."
+
+  classic:
+    prefer:
+      size: [medium]
+      shape: [classic_brim, refined_curved, structured_balanced]
+      sub_types: [classic_fedora, beret_classic, refined_beanie]
+      winter_rule:
+        preferred: [fine_merino_beanie, simple_beret]
+        avoid: [extreme_oversized, ornate_decorative]
+    stop:
+      - rule: extreme_size
+        reason: "Очень крупные или очень мелкие — крайности вне Classic"
+        match: { size: [oversized_extreme, ultra_small] }
+      - rule: avant_garde
+        reason: "Авангардные смелые формы ломают сдержанность"
+        match: { style_category: avant_garde }
+      - rule: ornate_baroque
+        reason: "Барочный декор чужд балансу Classic"
+        match: { style_category: baroque }
+    notes:
+      - "Классический берет или fedora нейтрального тона — золотая середина."
+
+  soft_gamine:
+    prefer:
+      size: [small, compact_refined]
+      shape: [compact_curved, beret_small, cloche_compact]
+      sub_types: [small_beret, refined_beanie_compact, compact_cloche]
+      winter_rule:
+        preferred: [refined_compact_beanie, small_beret]
+        avoid: [oversized_chunky, slouchy_loose]
+    stop:
+      - rule: oversized_loose
+        reason: "Большие свободные шапки крадут компактность SG"
+        match: { size: oversized }
+      - rule: sharp_aggressive
+        reason: "Острые агрессивные формы убирают женственность"
+        match: { shape: sharp_extreme }
+      - rule: chunky_extreme
+        reason: "Очень объёмная вязка перегружает компактные пропорции"
+        match: { knit_density: extreme_chunky }
+    notes:
+      - "Маленький compact beret или refined cloche — формула SG."
+
+  gamine:
+    prefer:
+      size: [small, compact_geometric]
+      shape: [compact_geometric, beret_compact, geometric_cap]
+      sub_types: [small_beret, geometric_cap_compact, compact_pillbox]
+      winter_rule:
+        preferred: [fine_machine_knit_compact, color_block_beanie]
+        avoid: [chunky_oversized, slouchy_loose]
+    stop:
+      - rule: oversized_loose
+        reason: "Большие свободные шапки крадут компактность"
+        match: { size: oversized }
+      - rule: ornate_decorative
+        reason: "Декоративные мелочи добавляют шум"
+        match: { detail_scale: small, has_ornament: true }
+      - rule: round_soft_extreme
+        reason: "Очень мягкие округлые формы ломают чёткость геометрии"
+        match: { shape: round_soft }
+    notes:
+      - "Compact beret или geometric кепка — формула Gamine."
+
+  romantic:
+    prefer:
+      size: [medium, lush_curved]
+      shape: [round_lush, brim_curved_soft, cloche_feminine]
+      sub_types: [floppy_hat_curved, lush_cloche, feminine_beret]
+      winter_rule:
+        preferred: [soft_merino_beret, lustrous_beanie]
+        avoid: [utility_basic, sharp_aggressive]
+    stop:
+      - rule: utility_basic
+        reason: "Утилитарные базовые формы убирают женственность"
+        match: { style: utility }
+      - rule: sharp_angular
+        reason: "Острые угловатые формы конфликтуют с округлой природой"
+        match: { shape: sharp_extreme }
+      - rule: chunky_boyish
+        reason: "Объёмная мужская вязка скрывает кривые"
+        match: { knit_density: chunky, style: boyish }
+    notes:
+      - "Lush cloche или feminine beret — формула Romantic."
+
+  theatrical_romantic:
+    prefer:
+      size: [medium, defined_curved]
+      shape: [pillbox_lush, defined_brim, sculptural_curved]
+      sub_types: [lush_pillbox, defined_brim_hat, statement_beret]
+      winter_rule:
+        preferred: [lustrous_beret_compact, defined_beanie]
+        avoid: [utility_basic, slouchy_extreme]
+    stop:
+      - rule: utility_basic
+        reason: "Утилитарные базовые формы ломают театральность"
+        match: { style: utility }
+      - rule: slouchy_oversized
+        reason: "Slouchy свободные формы скрывают компактные кривые"
+        match: { fit: slouchy }
+      - rule: sharp_angular_extreme
+        reason: "Очень острые геометричные формы рубят кривые"
+        match: { shape: sharp_extreme }
+    notes:
+      - "Lush pillbox или statement beret — формула pin-up TR."

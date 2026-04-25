@@ -20,15 +20,230 @@ rules:
       - "Угловатая форма + контрастная оправа — визитная карточка."
       - "Смелые, современные или авангардные формы — всё подходит."
 
-  dramatic: {prefer: {}, stop: []}
-  soft_dramatic: {prefer: {}, stop: []}
-  flamboyant_natural: {prefer: {}, stop: []}
-  soft_natural: {prefer: {}, stop: []}
-  natural: {prefer: {}, stop: []}
-  dramatic_classic: {prefer: {}, stop: []}
-  soft_classic: {prefer: {}, stop: []}
-  classic: {prefer: {}, stop: []}
-  soft_gamine: {prefer: {}, stop: []}
-  gamine: {prefer: {}, stop: []}
-  romantic: {prefer: {}, stop: []}
-  theatrical_romantic: {prefer: {}, stop: []}
+  dramatic:
+    prefer:
+      shape: [angular_sleek, geometric_extended, cat_eye_sharp]
+      frame: [solid_dark, sleek_metal, monochrome]
+      size: [medium, large_sleek]
+      sub_types: [sleek_shield, angular_oversized_sharp]
+    stop:
+      - rule: round_soft
+        reason: "Круглые мягкие оправы ломают чистоту длинной линии"
+        match: { shape: round }
+      - rule: ornate_decorated
+        reason: "Декоративные оправы с орнаментом ломают строгость"
+        match: { detail_scale: small, has_ornament: true }
+      - rule: cute_tiny
+        reason: "Мелкие милые формы крадут командную линию"
+        match: { size: tiny }
+    notes:
+      - "Sleek чёрный shield или sharp cat-eye — формула Dramatic."
+
+  soft_dramatic:
+    prefer:
+      shape: [cat_eye_lush, oversized_curved_sharp, sculptural_round_dramatic]
+      frame: [tortoise_lustrous, gold_dramatic, statement_color]
+      size: [large, oversized]
+      sub_types: [oversized_cat_eye, lush_round_dramatic]
+    stop:
+      - rule: small_minimal
+        reason: "Мелкие минималистичные оправы не передают lush-статус SD"
+        match: { size: small }
+      - rule: utility_basic
+        reason: "Утилитарные базовые формы убирают театральность"
+        match: { style: utility }
+      - rule: sharp_angular_extreme
+        reason: "Очень острые геометричные формы рубят кривые"
+        match: { shape: sharp_extreme }
+    notes:
+      - "Oversized cat-eye в черепаховой оправе — формула SD."
+
+  flamboyant_natural:
+    prefer:
+      shape: [round_blunt, oversized_organic, square_blunt]
+      frame: [tortoise_natural, wood_finish, blunt_metal]
+      size: [large, oversized_blunt]
+      sub_types: [oversized_round_natural, blunt_square_aviator]
+    stop:
+      - rule: dainty_small
+        reason: "Мелкие изящные оправы теряются на крупном масштабе FN"
+        match: { size: small }
+      - rule: cat_eye_sharp
+        reason: "Острый cat-eye чужд расслабленной природе"
+        match: { shape: cat_eye_extreme }
+      - rule: glossy_dressy_extreme
+        reason: "Очень глянцевые нарядные оправы ломают casual"
+        match: { finish: extreme_glossy }
+    notes:
+      - "Крупные blunt-формы в черепаховой оправе — формула FN."
+
+  soft_natural:
+    prefer:
+      shape: [round_soft, oval_gentle, square_softened]
+      frame: [tortoise_soft, blunt_metal_warm, natural_finish]
+      size: [medium, large_soft]
+      sub_types: [soft_round_natural, gentle_oval_aviator]
+    stop:
+      - rule: sharp_geometric_extreme
+        reason: "Острые геометричные формы ломают мягкость SN"
+        match: { shape: sharp_extreme }
+      - rule: extreme_dressy_glossy
+        reason: "Очень нарядные глянцевые оправы ломают relaxed"
+        match: { finish: extreme_glossy }
+      - rule: ornate_decorative
+        reason: "Декоративные мелкие детали чужды natural-эстетике"
+        match: { detail_scale: small, has_ornament: true }
+    notes:
+      - "Мягкие округлые формы в тёплой оправе — формула SN."
+
+  natural:
+    prefer:
+      shape: [round_blunt, oval_simple, square_blunt]
+      frame: [tortoise, blunt_metal, simple_finish]
+      size: [medium, large_natural]
+      sub_types: [round_natural_aviator, blunt_oval]
+    stop:
+      - rule: ornate_decorative
+        reason: "Декоративные мелкие детали чужды утилитарной природе"
+        match: { detail_scale: small, has_ornament: true }
+      - rule: cat_eye_sharp
+        reason: "Острый cat-eye чужд расслабленной природе"
+        match: { shape: cat_eye_extreme }
+      - rule: glossy_dressy
+        reason: "Глянцевые нарядные оправы не вписываются в casual"
+        match: { finish: lustrous }
+    notes:
+      - "Простые blunt-формы в матовой оправе — естественная база."
+
+  dramatic_classic:
+    prefer:
+      shape: [angular_clean, rectangle_sharp, cat_eye_subtle]
+      frame: [polished_metal, sleek_dark, refined_solid]
+      size: [medium, refined_large]
+      sub_types: [refined_rectangle, sleek_cat_eye_subtle]
+    stop:
+      - rule: round_soft
+        reason: "Круглые мягкие оправы ломают чистоту DC"
+        match: { shape: round }
+      - rule: ornate_decorative
+        reason: "Декоративные оправы ломают строгость"
+        match: { detail_scale: small, has_ornament: true }
+      - rule: oversized_extreme
+        reason: "Очень крупные оправы вне дисциплины DC"
+        match: { size: oversized_extreme }
+    notes:
+      - "Sleek прямоугольные оправы — формула DC."
+
+  soft_classic:
+    prefer:
+      shape: [oval_refined, soft_rectangle, cat_eye_subtle]
+      frame: [refined_tortoise, polished_warm, soft_metal]
+      size: [medium, refined_medium]
+      sub_types: [refined_oval, soft_cat_eye]
+    stop:
+      - rule: sharp_angular_extreme
+        reason: "Очень острые угловатые оправы ломают мягкость SC"
+        match: { shape: sharp_extreme }
+      - rule: oversized_extreme
+        reason: "Очень крупные оправы крадут утончённость"
+        match: { size: oversized_extreme }
+      - rule: ornate_baroque
+        reason: "Декоративные барокко-оправы ломают сдержанность"
+        match: { style_category: baroque }
+    notes:
+      - "Refined oval в тёплой оправе — формула SC."
+
+  classic:
+    prefer:
+      shape: [oval_classic, rectangle_classic, aviator_classic]
+      frame: [tortoise_classic, refined_metal, simple_solid]
+      size: [medium]
+      sub_types: [classic_aviator, refined_rectangle_simple]
+    stop:
+      - rule: extreme_shape
+        reason: "Крайние формы — слишком острые или слишком мягкие — вне Classic"
+        match: { shape: [sharp_extreme, soft_extreme] }
+      - rule: avant_garde
+        reason: "Авангардные смелые формы ломают сдержанность"
+        match: { style_category: avant_garde }
+      - rule: ornate_decorative
+        reason: "Декоративные оправы чужды балансу Classic"
+        match: { detail_scale: small, has_ornament: true }
+    notes:
+      - "Классический aviator или прямоугольная оправа — золотая середина."
+
+  soft_gamine:
+    prefer:
+      shape: [cat_eye_compact, round_compact, geometric_small]
+      frame: [refined_tortoise, polished_warm, color_compact]
+      size: [small, medium_compact]
+      sub_types: [compact_cat_eye, refined_round_small]
+    stop:
+      - rule: oversized_large
+        reason: "Очень крупные оправы крадут компактность SG"
+        match: { size: oversized }
+      - rule: sharp_aggressive
+        reason: "Острые агрессивные формы убирают женственность"
+        match: { shape: sharp_extreme }
+      - rule: utility_basic
+        reason: "Утилитарные базовые формы ломают утончённость"
+        match: { style: utility }
+    notes:
+      - "Compact cat-eye в refined-оправе — формула SG."
+
+  gamine:
+    prefer:
+      shape: [angular_compact, geometric_sharp_small, cat_eye_compact]
+      frame: [solid_color, sharp_metal, color_block]
+      size: [small, medium_compact]
+      sub_types: [angular_compact, geometric_compact_color]
+    stop:
+      - rule: oversized_loose
+        reason: "Очень крупные оправы крадут компактность"
+        match: { size: oversized }
+      - rule: round_soft
+        reason: "Мягкие круглые формы ломают чёткость геометрии"
+        match: { shape: round }
+      - rule: ornate_decorative
+        reason: "Декоративные мелочи добавляют шум"
+        match: { detail_scale: small, has_ornament: true }
+    notes:
+      - "Compact геометричные оправы color-block — формула Gamine."
+
+  romantic:
+    prefer:
+      shape: [round_lush, oval_curved, cat_eye_soft]
+      frame: [tortoise_lustrous, rose_gold, lustrous_warm]
+      size: [medium, lush_medium]
+      sub_types: [lush_round, soft_cat_eye]
+    stop:
+      - rule: sharp_angular_extreme
+        reason: "Острые угловатые формы конфликтуют с округлой природой"
+        match: { shape: sharp_extreme }
+      - rule: utility_basic
+        reason: "Утилитарные базовые формы убирают женственность"
+        match: { style: utility }
+      - rule: oversized_blunt
+        reason: "Крупные blunt-формы ломают мягкие кривые"
+        match: { shape: blunt_extreme, size: oversized }
+    notes:
+      - "Lush круглые формы в rose-gold — формула Romantic."
+
+  theatrical_romantic:
+    prefer:
+      shape: [cat_eye_defined, oversized_curved_sharp, lush_round_dramatic]
+      frame: [tortoise_lustrous, polished_dark, statement_lustrous]
+      size: [medium, large_curved]
+      sub_types: [defined_cat_eye, lush_oversized_curved]
+    stop:
+      - rule: oversized_blunt
+        reason: "Blunt-крупные формы скрывают компактные кривые TR"
+        match: { shape: blunt_extreme, size: oversized }
+      - rule: utility_basic
+        reason: "Утилитарные базовые формы убирают театральность"
+        match: { style: utility }
+      - rule: sharp_angular_extreme
+        reason: "Очень острые геометричные формы рубят кривые"
+        match: { shape: sharp_extreme }
+    notes:
+      - "Defined cat-eye в lustrous-оправе — формула pin-up TR."

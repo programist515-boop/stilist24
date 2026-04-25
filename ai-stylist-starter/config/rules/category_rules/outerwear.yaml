@@ -36,7 +36,6 @@ rules:
           match: { fur_type: long_pile }
         - rule: classic_luxury_look
           reason: "Классический 'дорого-богато' не про FG"
-          # match не заполнен: «luxury look» — высокоуровневая характеристика
         - rule: hood_with_fur
           reason: "Капюшон с мехом в морозы — лучше укутаться в шарф"
           match: { hood_type: fur_trimmed }
@@ -68,15 +67,331 @@ rules:
       stop: []
 
   dramatic:
-    coat: {prefer: {}, stop: []}
-  soft_dramatic: {coat: {prefer: {}, stop: []}}
-  flamboyant_natural: {coat: {prefer: {}, stop: []}}
-  soft_natural: {coat: {prefer: {}, stop: []}}
-  natural: {coat: {prefer: {}, stop: []}}
-  dramatic_classic: {coat: {prefer: {}, stop: []}}
-  soft_classic: {coat: {prefer: {}, stop: []}}
-  classic: {coat: {prefer: {}, stop: []}}
-  soft_gamine: {coat: {prefer: {}, stop: []}}
-  gamine: {coat: {prefer: {}, stop: []}}
-  romantic: {coat: {prefer: {}, stop: []}}
-  theatrical_romantic: {coat: {prefer: {}, stop: []}}
+    coat:
+      prefer:
+        length: [long, full_length]
+        fit: [tailored, sleek_skimming]
+        pending_structure: structured
+        details: [clean_lapels, sleek_buttons, narrow_collar]
+        color_policy: [monochromatic, deep_solid]
+      stop:
+        - rule: cropped_short
+          reason: "Cropped формы рубят длинную вертикаль Dramatic"
+          match: { length: cropped }
+        - rule: shapeless_oversized
+          reason: "Бесформенное пальто ломает чёткую линию"
+          match: { fit: oversized, structure: unstructured }
+        - rule: rounded_decorative
+          reason: "Округлые декоративные лацканы чужды чистоте линии"
+          match: { lapel_shape: rounded }
+      notes:
+        - "Длинное чёрное пальто tailored fit — фирменная база Dramatic."
+    trench:
+      prefer:
+        length: [long, ankle]
+        pending_structure: structured
+        color_policy: [classic_dark, monochromatic]
+      stop:
+        - rule: oversized_unstructured
+          reason: "Свободный неструктурированный тренч ломает чёткость"
+          match: { fit: oversized }
+
+  soft_dramatic:
+    coat:
+      prefer:
+        length: [long, full_length]
+        fit: [tailored_with_drape, fitted_lush]
+        pending_structure: structured
+        details: [statement_collar, lush_belt, draped_panels]
+        color_policy: [rich_solid, jewel_tones, animal_print_glam]
+      stop:
+        - rule: cropped_compact
+          reason: "Cropped ломает lush-вертикаль SD"
+          match: { length: cropped }
+        - rule: utility_minimal
+          reason: "Утилитарные минималистичные пальто убирают lush-статус"
+          match: { style: utility }
+        - rule: boyish_unfitted
+          reason: "Прямой boyish крой скрывает кривые SD"
+          match: { fit: oversized }
+      notes:
+        - "Длинное wrap-coat с поясом из rich материалов — формула SD."
+    fur_coat:
+      prefer:
+        fur_type: [mink_lustrous, fox_lush, statement_fur]
+        collar: [statement_lush, dramatic]
+        color_palette: [rich, jewel_tones]
+      stop:
+        - rule: utility_basic
+          reason: "Базовые утилитарные шубы чужды lush-эстетике"
+          match: { style: utility }
+
+  flamboyant_natural:
+    coat:
+      prefer:
+        length: [long, mid_calf, ankle]
+        fit: [relaxed, oversized_easy]
+        pending_structure: semi_structured
+        details: [oversized_pockets, blunt_collar, easy_belt]
+        color_policy: [solid_natural, earth_tones, large_check]
+        materials: [wool_natural, alpaca, herringbone, tweed_chunky]
+      stop:
+        - rule: tight_fitted
+          reason: "Обтягивающее пальто ломает расслабленную линию FN"
+          match: { fit: fitted }
+        - rule: dainty_decorative
+          reason: "Мелкие декоры теряются на крупном масштабе"
+          match: { detail_scale: small }
+        - rule: glossy_dressy
+          reason: "Глянцевые нарядные пальто чужды natural-эстетике"
+          match: { finish: extreme_glossy }
+      notes:
+        - "Oversized wool coat в большую клетку — формула FN."
+    puffer:
+      prefer:
+        silhouette: [oversized_relaxed, blunt_easy]
+        length: [mid_thigh, mid_calf]
+        color_policy: [solid_natural, earth_tones]
+
+  soft_natural:
+    coat:
+      prefer:
+        length: [mid_thigh, knee, mid_calf]
+        fit: [semi_fitted, relaxed]
+        pending_structure: semi_structured
+        details: [soft_collar, gentle_belt, refined_buttons]
+        color_policy: [solid_soft, warm_neutrals, soft_check]
+        materials: [soft_wool, cashmere_blend, soft_camel]
+      stop:
+        - rule: stiff_overtailored
+          reason: "Жёсткий over-tailored крой деформирует мягкие плечи SN"
+          match: { structure: tailored_rigid }
+        - rule: cropped_busy
+          reason: "Cropped busy формы ломают плавность линий"
+          match: { length: cropped }
+        - rule: sharp_geometric_extreme
+          reason: "Острые геометричные формы чужды soft_curved"
+          match: { cut_lines: angular_sharp }
+      notes:
+        - "Soft camel coat с мягким поясом — формула SN."
+    trench:
+      prefer:
+        length: [knee, mid_calf]
+        fit: [relaxed, semi_fitted]
+        color_policy: [classic_soft, warm_neutrals]
+
+  natural:
+    coat:
+      prefer:
+        length: [knee, mid_calf, mid_thigh]
+        fit: [relaxed, semi_fitted]
+        pending_structure: semi_structured
+        details: [simple_collar, casual_belt, blunt_buttons]
+        color_policy: [solid_natural, earth_tones]
+        materials: [wool, herringbone, tweed_natural, denim]
+      stop:
+        - rule: tight_overtailored
+          reason: "Жёсткий fitted крой деформирует расслабленную линию"
+          match: { fit: fitted }
+        - rule: dainty_decor
+          reason: "Декоративные мелкие детали чужды утилитарной природе"
+          match: { detail_scale: small, has_ornament: true }
+        - rule: glossy_dressy
+          reason: "Глянцевые нарядные пальто не вписываются в casual"
+          match: { finish: lustrous }
+      notes:
+        - "Простое wool coat в neutral или денимовое — естественная база."
+    puffer:
+      prefer:
+        silhouette: [relaxed, blunt]
+        color_policy: [solid_natural, earth_tones]
+    trench:
+      prefer:
+        length: [knee, mid_calf]
+        color_policy: [classic_neutral]
+
+  dramatic_classic:
+    coat:
+      prefer:
+        length: [knee, mid_calf, long]
+        fit: [tailored, clean_skimming]
+        pending_structure: tailored_clean
+        details: [clean_lapels, refined_buttons, sleek_collar]
+        color_policy: [solid_clean, classic_dark, refined_neutrals]
+        materials: [fine_wool, refined_cashmere, polished_camel]
+      stop:
+        - rule: oversized_loose
+          reason: "Свободный крой убирает дисциплину силуэта DC"
+          match: { fit: oversized }
+        - rule: ruffled_decor
+          reason: "Декоративная мягкость противоречит строгости"
+          match: { detail_scale: small, has_ornament: true }
+        - rule: chunky_unstructured
+          reason: "Объёмная неструктурированная форма ломает чистоту"
+          match: { structure: unstructured }
+      notes:
+        - "Refined polished camel coat tailored fit — формула DC."
+    trench:
+      prefer:
+        length: [knee, mid_calf]
+        fit: [tailored, clean_skimming]
+        color_policy: [classic_neutral, refined_dark]
+
+  soft_classic:
+    coat:
+      prefer:
+        length: [knee, mid_thigh, mid_calf]
+        fit: [semi_fitted, tailored_moderate]
+        pending_structure: semi_tailored
+        details: [refined_collar, gentle_belt, polished_buttons]
+        color_policy: [solid_refined, warm_neutrals, soft_classic]
+        materials: [fine_wool, cashmere, refined_camel]
+      stop:
+        - rule: sharp_aggressive
+          reason: "Острые угловатые линии ломают мягкую гармонию SC"
+          match: { cut_lines: angular_sharp }
+        - rule: oversized_boxy
+          reason: "Boxy крой скрывает мягкую талию"
+          match: { fit: oversized }
+        - rule: chunky_extreme
+          reason: "Очень объёмная форма ломает утончённость"
+          match: { structure: chunky_extreme }
+      notes:
+        - "Refined cashmere coat semi-fitted с мягким поясом — формула SC."
+    trench:
+      prefer:
+        length: [knee, mid_calf]
+        fit: [semi_fitted, soft_belted]
+        color_policy: [classic_warm, soft_neutrals]
+
+  classic:
+    coat:
+      prefer:
+        length: [knee, mid_calf, mid_thigh]
+        fit: [tailored_moderate, semi_fitted]
+        pending_structure: tailored_moderate
+        details: [classic_lapels, simple_buttons, refined_collar]
+        color_policy: [solid_classic, classic_neutrals]
+        materials: [wool, cashmere, classic_camel]
+        symmetry: required
+      stop:
+        - rule: cropped_aggressive
+          reason: "Crop вне умеренной классической пропорции"
+          match: { length: cropped }
+        - rule: oversized_loose
+          reason: "Оверсайз чужд сбалансированной классике"
+          match: { fit: oversized }
+        - rule: ornate_decorative
+          reason: "Декоративные мелочи ломают сдержанность"
+          match: { detail_scale: small, has_ornament: true }
+      notes:
+        - "Классическое camel coat до колена — золотая середина Classic."
+    trench:
+      prefer:
+        length: [knee, mid_calf]
+        fit: [tailored_moderate, semi_fitted]
+        color_policy: [classic_beige, classic_neutral]
+
+  soft_gamine:
+    coat:
+      prefer:
+        length: [cropped, mid_thigh, knee]
+        fit: [fitted, semi_fitted]
+        pending_structure: tailored
+        details: [refined_buttons, small_lapels, fitted_belt]
+        color_policy: [solid_refined, color_block_compact, polished_warm]
+        pending_detail_scale: small
+      stop:
+        - rule: long_oversized
+          reason: "Длинный oversize крадёт компактность SG"
+          match: { length: long, fit: oversized }
+        - rule: stiff_aggressive
+          reason: "Жёсткий аггресивный крой убирает женственность"
+          match: { cut_lines: sharp_extreme }
+        - rule: chunky_extreme
+          reason: "Очень объёмная форма перегружает компактные пропорции"
+          match: { structure: chunky_extreme }
+      notes:
+        - "Refined cropped или mid-thigh coat fitted — формула SG."
+    biker_jacket:
+      prefer: {always: true}
+      stop: []
+
+  gamine:
+    coat:
+      prefer:
+        length: [cropped, mid_thigh]
+        fit: [fitted, semi_fitted]
+        pending_structure: tailored
+        details: [geometric_buttons, sharp_collar, compact_lapels]
+        color_policy: [color_block, solid_bright, geometric_pattern]
+        pending_detail_scale: small
+      stop:
+        - rule: long_flowing
+          reason: "Длинный плавный крой крадёт компактность"
+          match: { length: long }
+        - rule: oversized_loose
+          reason: "Оверсайз убирает контраст пропорций"
+          match: { fit: oversized }
+        - rule: ruffled_decorative
+          reason: "Рюши и декор чужды чёткой геометрии"
+          match: { sub_type: ruffled }
+      notes:
+        - "Compact color-block coat — формула Gamine."
+    biker_jacket:
+      prefer: {always: true}
+      stop: []
+
+  romantic:
+    coat:
+      prefer:
+        length: [knee, mid_thigh, hugging_long]
+        fit: [fitted, hugging]
+        pending_structure: semi_structured
+        details: [curved_collar, soft_belt, decorative_buttons]
+        color_policy: [solid_lustrous, soft_pastels, lush_jewel_tones]
+        materials: [soft_wool, cashmere_lush, lustrous_satin]
+      stop:
+        - rule: boxy_masculine
+          reason: "Прямой boxy крой скрывает кривые Romantic"
+          match: { fit: oversized }
+        - rule: utility_safari
+          reason: "Утилитарные сафари-формы убирают женственность"
+          match: { sub_type: utility }
+        - rule: sharp_angular_extreme
+          reason: "Острые угловатые линии чужды округлой природе"
+          match: { cut_lines: angular_sharp }
+      notes:
+        - "Hugging fit lustrous coat с поясом — формула Romantic."
+    fur_coat:
+      prefer:
+        fur_type: [soft_curved_fur, lustrous_lush, fox_soft]
+        collar: [soft_lush_collar, curved_lush]
+        color_palette: [soft, jewel_tones, lush_neutrals]
+
+  theatrical_romantic:
+    coat:
+      prefer:
+        length: [knee, mid_thigh, hugging_compact]
+        fit: [fitted, hugging]
+        pending_structure: tailored_lush
+        details: [defined_collar, statement_belt, sculpted_buttons]
+        color_policy: [solid_lustrous, jewel_tones, polished_dark]
+        materials: [polished_wool, lustrous_cashmere, satin_blend]
+      stop:
+        - rule: boxy_oversized
+          reason: "Оверсайз скрывает компактные кривые TR"
+          match: { fit: oversized }
+        - rule: straight_unfitted
+          reason: "Прямая неприлегающая форма ломает песочные часы"
+          match: { fit: straight }
+        - rule: utility_basic
+          reason: "Утилитарные базовые пальто убирают театральность"
+          match: { style: utility }
+      notes:
+        - "Hugging fit polished coat с defined-поясом — формула pin-up TR."
+    fur_coat:
+      prefer:
+        fur_type: [defined_curved, lustrous_compact, polished_mink]
+        collar: [defined_curved_collar, lustrous_lush]
+        color_palette: [polished_dark, jewel_tones, classic_lustrous]

@@ -13,7 +13,6 @@ rules:
     stop:
       - rule: chunky_cable_beige
         reason: "Бежевый с крупной вязкой — эффект 'бабушка связала' или юного гастарбайтера"
-        # match не заполнен: нужны атрибуты knit_density + color_family — нет
       - rule: round_closed_neck_symmetric
         reason: "Ординарный круглый закрытый вырез без акцентов слишком скучен"
         match: { neckline_type: round, pattern_symmetry: symmetric }
@@ -28,15 +27,257 @@ rules:
       - "Яркий джемпер из ангорки — тоже вариант."
       - "Носить поверх рубашек — создаёт деталировку и вертикаль."
 
-  dramatic: {prefer: {}, stop: []}
-  soft_dramatic: {prefer: {}, stop: []}
-  flamboyant_natural: {prefer: {}, stop: []}
-  soft_natural: {prefer: {}, stop: []}
-  natural: {prefer: {}, stop: []}
-  dramatic_classic: {prefer: {}, stop: []}
-  soft_classic: {prefer: {}, stop: []}
-  classic: {prefer: {}, stop: []}
-  soft_gamine: {prefer: {}, stop: []}
-  gamine: {prefer: {}, stop: []}
-  romantic: {prefer: {}, stop: []}
-  theatrical_romantic: {prefer: {}, stop: []}
+  dramatic:
+    prefer:
+      knit_density: [medium, fine_machine]
+      length: [long, mid_hip, tucked]
+      pending_neckline_type: [v_deep, turtleneck_sleek, mock_turtleneck]
+      pattern_character: solid_clean
+      collar_type: [sleek_turtleneck, v_neck_sharp]
+      color_palette: [monochromatic_deep, rich_solid]
+    stop:
+      - rule: chunky_oversized_cable
+        reason: "Объёмная косичка ломает чистоту длинной линии"
+        match: { knit_density: chunky, fit: oversized }
+      - rule: cropped_cute
+        reason: "Cropped рубит длинную вертикаль Dramatic"
+        match: { length: cropped }
+      - rule: fluffy_mohair
+        reason: "Пушистый мохер размывает чёткий силуэт"
+        match: { fabric_finish: fluffy }
+      - rule: dropped_shoulder
+        reason: "Спущенное плечо смягчает структуру плеча"
+        match: { sleeve_type: dropped_shoulder }
+    notes:
+      - "Тонкий чёрный кашемир с горлом — фирменная база Dramatic."
+
+  soft_dramatic:
+    prefer:
+      knit_density: [fine, medium]
+      length: [long, mid_hip]
+      pending_neckline_type: [v_deep, off_shoulder, cowl, draped_neck]
+      pattern_character: [solid, subtle_lustrous]
+      collar_type: [draped_neck, v_neck_lush]
+      pending_fabric: [cashmere, silk_blend, fine_merino]
+    stop:
+      - rule: boyish_cable_chunky
+        reason: "Простая мужская косичка скрывает lush-кривые SD"
+        match: { knit_density: chunky, fit: oversized }
+      - rule: cropped_compact
+        reason: "Cropped ломает lush-вертикаль SD"
+        match: { length: cropped }
+      - rule: dropped_shoulder
+        reason: "Спущенное плечо размывает командную линию SD"
+        match: { sleeve_type: dropped_shoulder }
+    notes:
+      - "Мягкий кашемир с глубоким V и драпировкой — формула SD."
+
+  flamboyant_natural:
+    prefer:
+      knit_density: [chunky, hand_knit, cable]
+      length: [long_tunic, mid_hip, oversized]
+      pending_neckline_type: [v_relaxed, scoop, turtleneck_chunky]
+      pattern_character: [cable, fair_isle, natural_texture]
+      collar_type: [chunky_turtleneck, shawl_collar]
+      pending_fabric: [wool_chunky, alpaca, hand_knit_natural]
+    stop:
+      - rule: tight_fitted_thin
+        reason: "Тонкий обтягивающий свитер ломает крупный масштаб FN"
+        match: { knit_density: fine, fit: fitted }
+      - rule: dainty_decorative
+        reason: "Декоративные мелкие детали теряются на крупном масштабе"
+        match: { detail_scale: small }
+      - rule: stiff_structured
+        reason: "Жёсткая структура чужда расслабленной природе"
+        match: { fabric_rigidity: extreme_rigid }
+    notes:
+      - "Крупная домашняя вязка из шерсти — визитная карточка."
+
+  soft_natural:
+    prefer:
+      knit_density: [medium, soft_drape]
+      length: [mid_hip, long_relaxed]
+      pending_neckline_type: [v_soft, scoop, soft_turtleneck, cowl]
+      pattern_character: [solid_natural, subtle_texture]
+      collar_type: [soft_cowl, v_neck_relaxed]
+      pending_fabric: [merino_soft, cashmere_soft, alpaca_soft]
+    stop:
+      - rule: stiff_chunky_extreme
+        reason: "Очень жёсткая объёмная вязка ломает мягкие линии SN"
+        match: { knit_density: extreme_chunky }
+      - rule: tight_fitted
+        reason: "Обтягивающий свитер ломает relaxed-линию SN"
+        match: { fit: fitted }
+      - rule: sharp_geometric_pattern
+        reason: "Острый геометричный паттерн чужд soft_curved"
+        match: { pattern_character: sharp_geometric }
+    notes:
+      - "Мягкий cowl из merino, средняя длина с soft drape — формула SN."
+
+  natural:
+    prefer:
+      knit_density: [medium, chunky, cable]
+      length: [mid_hip, long_relaxed]
+      pending_neckline_type: [v_relaxed, scoop, turtleneck_relaxed, henley]
+      pattern_character: [cable, natural_texture, solid_neutral]
+      collar_type: [shawl_collar, henley, turtleneck]
+      pending_fabric: [wool_natural, cotton_chunky, merino]
+    stop:
+      - rule: ornate_decorative
+        reason: "Декоративные мелкие детали чужды утилитарной природе"
+        match: { detail_scale: small, has_ornament: true }
+      - rule: tight_fitted_glossy
+        reason: "Обтягивающий блестящий трикотаж не вписывается в casual"
+        match: { fit: fitted, fabric_finish: lustrous }
+      - rule: cropped_dressy
+        reason: "Cropped нарядный свитер чужд расслабленной природе"
+        match: { length: cropped }
+    notes:
+      - "Кабельная вязка, шерсть, релакс-крой — естественная база natural."
+
+  dramatic_classic:
+    prefer:
+      knit_density: [fine, fine_merino]
+      length: [mid_hip, tucked]
+      pending_neckline_type: [v_clean, mock_turtleneck, crew_clean]
+      pattern_character: [solid_clean, subtle_stripe]
+      collar_type: [clean_v, mock_neck, crew_neck]
+      pending_fabric: [fine_merino, fine_cashmere]
+    stop:
+      - rule: chunky_oversized
+        reason: "Объёмная вязка ломает чистоту DC"
+        match: { knit_density: chunky, fit: oversized }
+      - rule: ruffled_decorative
+        reason: "Декор и рюши на трикотаже ломают строгость"
+        match: { sub_type: ruffled }
+      - rule: fluffy_mohair
+        reason: "Пушистый мохер размывает чёткие линии"
+        match: { fabric_finish: fluffy }
+    notes:
+      - "Тонкий мериносовый свитер solid цвета с чистым V — DC-классика."
+
+  soft_classic:
+    prefer:
+      knit_density: [fine, soft_medium]
+      length: [mid_hip, semi_tucked]
+      pending_neckline_type: [v_soft, crew_refined, mock_neck_soft, cowl_subtle]
+      pattern_character: [solid, subtle_texture]
+      collar_type: [soft_v, refined_crew, light_cowl]
+      pending_fabric: [fine_cashmere, merino_soft, soft_silk_blend]
+    stop:
+      - rule: chunky_aggressive
+        reason: "Объёмная агрессивная вязка ломает утончённость SC"
+        match: { knit_density: chunky }
+      - rule: sharp_angular_neckline
+        reason: "Острый геометричный вырез чужд мягким линиям"
+        match: { neckline_type: angular_sharp }
+      - rule: oversized_boxy
+        reason: "Boxy крой скрывает мягкую талию"
+        match: { fit: oversized }
+    notes:
+      - "Мягкий кашемир, refined v-neck, чистые цвета — формула SC."
+
+  classic:
+    prefer:
+      knit_density: [fine, medium]
+      length: [mid_hip, tucked]
+      pending_neckline_type: [v_moderate, crew_clean, mock_turtleneck]
+      pattern_character: [solid, subtle_stripe]
+      collar_type: [clean_v, refined_crew, mock_neck]
+      pending_fabric: [merino, cashmere, fine_wool]
+    stop:
+      - rule: extreme_chunky_or_thin
+        reason: "Крайности плотности — вне умеренной классической базы"
+        match: { knit_density: [extreme_chunky, ultra_thin] }
+      - rule: cropped_aggressive
+        reason: "Cropped вне сбалансированной классической пропорции"
+        match: { length: cropped }
+      - rule: ornate_decorative
+        reason: "Декор ломает сдержанность Classic"
+        match: { detail_scale: small, has_ornament: true }
+    notes:
+      - "Кашемировый v-neck нейтрального тона — золотая середина Classic."
+
+  soft_gamine:
+    prefer:
+      knit_density: [fine, medium]
+      length: [cropped, short, semi_tucked]
+      pending_neckline_type: [v_compact, scoop_curved, peter_pan, mock_neck]
+      pattern_character: [solid_bright, small_pattern]
+      collar_type: [refined_crew, small_v, compact_cowl]
+      pending_detail_scale: small
+    stop:
+      - rule: chunky_oversized
+        reason: "Объёмный oversize свитер крадёт компактность SG"
+        match: { knit_density: chunky, fit: oversized }
+      - rule: long_loose
+        reason: "Длинный свободный свитер скрывает компактные пропорции"
+        match: { length: long, fit: oversized }
+      - rule: sharp_aggressive
+        reason: "Жёсткий агрессивный крой убирает женственность"
+        match: { cut_lines: sharp_extreme }
+    notes:
+      - "Cropped кашемир с маленьким воротником — формула SG."
+
+  gamine:
+    prefer:
+      knit_density: [fine, medium]
+      length: [cropped, short]
+      pending_neckline_type: [v, mock_neck, geometric_neckline]
+      pattern_character: [solid_bright, geometric_compact]
+      collar_type: [crew_clean, mock_neck, small_v]
+      pending_detail_scale: small
+    stop:
+      - rule: chunky_oversized
+        reason: "Объёмный oversize свитер крадёт компактность"
+        match: { knit_density: chunky, fit: oversized }
+      - rule: long_flowing
+        reason: "Длинный плавный свитер скрывает компактные пропорции"
+        match: { length: long }
+      - rule: ruffled_decorative
+        reason: "Рюши и декор чужды чёткой геометрии Gamine"
+        match: { sub_type: ruffled }
+    notes:
+      - "Чёткий cropped свитер яркого цвета — формула Gamine."
+
+  romantic:
+    prefer:
+      knit_density: [fine, soft_medium]
+      length: [mid_hip, hugging]
+      pending_neckline_type: [v_curved, sweetheart, scoop_soft, cowl_drape]
+      pattern_character: [solid, soft_texture]
+      collar_type: [soft_cowl, scoop_neck, draped_neck]
+      pending_fabric: [angora, cashmere_soft, fine_merino, mohair_subtle]
+    stop:
+      - rule: chunky_boyish
+        reason: "Объёмная мужская косичка скрывает кривые Romantic"
+        match: { knit_density: chunky, fit: oversized }
+      - rule: sharp_angular
+        reason: "Острые угловатые формы чужды округлым линиям"
+        match: { cut_lines: angular }
+      - rule: utility_unfitted
+        reason: "Утилитарные неприлегающие свитеры ломают женственность"
+        match: { fit: straight }
+    notes:
+      - "Мягкий angora, hugging fit, sweetheart-вырез — формула Romantic."
+
+  theatrical_romantic:
+    prefer:
+      knit_density: [fine, fitted_dense]
+      length: [hugging, mid_hip, fitted]
+      pending_neckline_type: [v_deep_curved, sweetheart_defined, off_shoulder]
+      pattern_character: [solid_lustrous, subtle_texture]
+      collar_type: [sculpted_v, defined_neck, off_shoulder]
+      pending_fabric: [fine_cashmere, silk_blend, fitted_merino]
+    stop:
+      - rule: chunky_oversized
+        reason: "Объёмный oversize свитер скрывает компактные кривые TR"
+        match: { knit_density: chunky, fit: oversized }
+      - rule: boxy_unfitted
+        reason: "Прямая неприлегающая форма ломает песочные часы"
+        match: { fit: straight }
+      - rule: dropped_shoulder
+        reason: "Спущенное плечо размывает структуру TR"
+        match: { sleeve_type: dropped_shoulder }
+    notes:
+      - "Fitted кашемир с глубоким V-вырезом — формула pin-up TR."

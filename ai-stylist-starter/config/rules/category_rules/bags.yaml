@@ -19,20 +19,259 @@ rules:
         match: { sub_type: tote, detail_scale: large }
       - rule: delicate_romantic_bow
         reason: "Нежные сумочки с бантиками — романтика, не FG"
-        # match не заполнен: «бантики» — отдельный атрибут, его нет
     notes:
       - "Вечерний вариант — клатчи из металлик, парча."
       - "Узкие или средние по толщине портфели с жёсткой формой — отличная рабочая сумка."
 
-  dramatic: {prefer: {}, stop: []}
-  soft_dramatic: {prefer: {}, stop: []}
-  flamboyant_natural: {prefer: {}, stop: []}
-  soft_natural: {prefer: {}, stop: []}
-  natural: {prefer: {}, stop: []}
-  dramatic_classic: {prefer: {}, stop: []}
-  soft_classic: {prefer: {}, stop: []}
-  classic: {prefer: {}, stop: []}
-  soft_gamine: {prefer: {}, stop: []}
-  gamine: {prefer: {}, stop: []}
-  romantic: {prefer: {}, stop: []}
-  theatrical_romantic: {prefer: {}, stop: []}
+  dramatic:
+    prefer:
+      shape: [structured_clean, sleek_rectangular, sleek_long]
+      sub_types: [structured_tote, sleek_clutch, top_handle_clean, briefcase_sleek]
+      pending_detail_scale: [medium, large_clean]
+      color_policy: [monochromatic, deep_solid]
+      trim: [minimal_metal, sleek_hardware]
+      materials: [smooth_leather, patent, sleek_calfskin]
+    stop:
+      - rule: slouchy_soft
+        reason: "Мягкие бесформенные сумки ломают чистоту длинной линии"
+        match: { sub_type: hobo, structure: unstructured }
+      - rule: ornate_decorated
+        reason: "Декоративные пряжки и оборки чужды строгости"
+        match: { detail_scale: small, has_ornament: true }
+      - rule: dainty_small
+        reason: "Мелкие изящные сумочки крадут command-вертикаль"
+        match: { size: tiny }
+    notes:
+      - "Sleek чёрный structured tote или briefcase — формула Dramatic."
+
+  soft_dramatic:
+    prefer:
+      shape: [structured_lush, large_statement, lustrous_clean]
+      sub_types: [oversized_tote_lustrous, lush_shoulder_bag, statement_clutch_lustrous]
+      pending_detail_scale: [large, statement]
+      color_policy: [solid_lustrous, jewel_tones, animal_print_glam]
+      trim: [polished_metal, statement_hardware, gem_accent]
+      materials: [smooth_leather, patent, exotic_lustrous, snake_print]
+    stop:
+      - rule: utility_minimal
+        reason: "Утилитарные минималистичные сумки убирают lush-статус"
+        match: { style: utility }
+      - rule: dainty_small
+        reason: "Мелкие сумочки крадут крупный масштаб SD"
+        match: { size: tiny }
+      - rule: boyish_unfitted
+        reason: "Boyish прямые сумки скрывают статус"
+        match: { style: boyish }
+    notes:
+      - "Lustrous oversized tote или statement clutch — формула SD."
+
+  flamboyant_natural:
+    prefer:
+      shape: [slouchy_oversized, hobo_blunt, oversized_tote_natural]
+      sub_types: [slouchy_hobo, oversized_tote, weekender, bucket_oversized]
+      pending_detail_scale: [large, oversized]
+      color_policy: [solid_natural, earth_tones, warm_neutrals]
+      trim: [blunt_metal, simple_hardware, natural_buckle]
+      materials: [thick_leather, suede, woven_natural, canvas_natural]
+    stop:
+      - rule: dainty_small
+        reason: "Мелкие изящные сумочки теряются на крупном масштабе FN"
+        match: { size: tiny }
+      - rule: structured_pillbox
+        reason: "Строгие коробочки чужды расслабленной природе"
+        match: { sub_type: box_bag, structure: extreme_rigid }
+      - rule: glossy_dressy
+        reason: "Очень глянцевые нарядные сумки чужды natural-эстетике"
+        match: { finish: extreme_glossy }
+    notes:
+      - "Slouchy hobo из distressed leather — формула FN."
+
+  soft_natural:
+    prefer:
+      shape: [soft_curved, gentle_slouchy, hobo_refined]
+      sub_types: [soft_hobo, refined_tote, slouchy_shoulder, bucket_soft]
+      pending_detail_scale: [medium, large_soft]
+      color_policy: [solid_soft, warm_neutrals, refined_natural]
+      trim: [soft_metal, refined_hardware, gentle_buckle]
+      materials: [soft_leather, suede, woven_natural]
+    stop:
+      - rule: stiff_structured_extreme
+        reason: "Очень жёсткие структурные сумки ломают мягкость SN"
+        match: { structure: extreme_rigid }
+      - rule: sharp_aggressive
+        reason: "Острые геометричные формы чужды soft_curved"
+        match: { shape: sharp_extreme }
+      - rule: ornate_decorative
+        reason: "Декоративные мелкие детали чужды natural-эстетике"
+        match: { detail_scale: small, has_ornament: true }
+    notes:
+      - "Мягкая slouchy hobo в нейтральном тоне — формула SN."
+
+  natural:
+    prefer:
+      shape: [simple_relaxed, hobo_casual, tote_simple]
+      sub_types: [casual_tote, hobo_simple, crossbody_natural, weekender]
+      pending_detail_scale: [medium, large]
+      color_policy: [solid_natural, earth_tones, simple_neutrals]
+      trim: [simple_metal, blunt_buckle]
+      materials: [leather, canvas, denim, woven_natural]
+    stop:
+      - rule: ornate_decorative
+        reason: "Декоративные мелкие детали чужды утилитарной природе"
+        match: { detail_scale: small, has_ornament: true }
+      - rule: glossy_dressy
+        reason: "Глянцевые нарядные сумки не вписываются в casual"
+        match: { finish: lustrous }
+      - rule: structured_box
+        reason: "Жёсткие коробочки чужды расслабленной природе"
+        match: { sub_type: box_bag }
+    notes:
+      - "Простая crossbody или canvas tote — естественная база."
+
+  dramatic_classic:
+    prefer:
+      shape: [structured_refined, sleek_rectangular, polished_clean]
+      sub_types: [structured_tote, top_handle_refined, sleek_clutch, briefcase_polished]
+      pending_detail_scale: [medium, refined]
+      color_policy: [solid_clean, refined_neutrals, classic_dark]
+      trim: [polished_minimal, refined_hardware]
+      materials: [smooth_leather, patent_subtle, refined_calfskin]
+    stop:
+      - rule: slouchy_unstructured
+        reason: "Мягкие бесформенные сумки ломают строгость DC"
+        match: { sub_type: hobo, structure: unstructured }
+      - rule: ornate_baroque
+        reason: "Барочный декор ломает строгость"
+        match: { style_category: baroque }
+      - rule: oversized_extreme
+        reason: "Очень крупные сумки вне дисциплины DC"
+        match: { size: oversized_extreme }
+    notes:
+      - "Refined structured tote или top-handle — формула DC."
+
+  soft_classic:
+    prefer:
+      shape: [refined_curved, soft_structured, gentle_polished]
+      sub_types: [refined_tote, soft_shoulder, polished_crossbody, classic_handbag]
+      pending_detail_scale: [medium, refined_soft]
+      color_policy: [solid_refined, soft_neutrals, classic_warm]
+      trim: [refined_metal, soft_hardware]
+      materials: [soft_leather, refined_calfskin, polished_pebbled]
+    stop:
+      - rule: sharp_aggressive
+        reason: "Острые угловатые формы ломают мягкость SC"
+        match: { shape: sharp_extreme }
+      - rule: oversized_boxy
+        reason: "Boxy крупные сумки крадут утончённость"
+        match: { fit: oversized_boxy }
+      - rule: ornate_baroque
+        reason: "Барочный декор ломает сдержанность"
+        match: { style_category: baroque }
+    notes:
+      - "Refined shoulder bag в polished pebbled leather — формула SC."
+
+  classic:
+    prefer:
+      shape: [classic_balanced, structured_refined, refined_simple]
+      sub_types: [classic_tote, top_handle_classic, refined_shoulder, classic_crossbody]
+      pending_detail_scale: [medium]
+      color_policy: [solid_classic, classic_neutrals]
+      trim: [classic_metal, refined_hardware]
+      materials: [smooth_leather, refined_calfskin]
+      symmetry: required
+    stop:
+      - rule: extreme_size
+        reason: "Очень крупные или очень мелкие — крайности вне Classic"
+        match: { size: [oversized_extreme, ultra_small] }
+      - rule: avant_garde
+        reason: "Авангардные смелые формы ломают сдержанность"
+        match: { style_category: avant_garde }
+      - rule: ornate_baroque
+        reason: "Барочный декор чужд балансу Classic"
+        match: { style_category: baroque }
+    notes:
+      - "Классический top-handle или structured tote в neutral — золотая середина."
+
+  soft_gamine:
+    prefer:
+      shape: [compact_curved, refined_small, structured_compact]
+      sub_types: [small_refined_handbag, compact_crossbody, mini_tote, refined_clutch_small]
+      pending_detail_scale: [small, compact]
+      color_policy: [solid_refined, color_block_compact, polished_warm]
+      trim: [refined_metal_small, polished_hardware_compact]
+      materials: [soft_leather, polished_pebbled_small, patent_compact]
+    stop:
+      - rule: oversized_extreme
+        reason: "Очень крупные сумки крадут компактность SG"
+        match: { size: oversized }
+      - rule: sharp_aggressive
+        reason: "Острые агрессивные формы убирают женственность"
+        match: { shape: sharp_extreme }
+      - rule: slouchy_loose
+        reason: "Мягкие свободные сумки ломают компактные пропорции"
+        match: { structure: unstructured, size: large }
+    notes:
+      - "Refined compact handbag — формула SG."
+
+  gamine:
+    prefer:
+      shape: [compact_geometric, sharp_compact, structured_small]
+      sub_types: [geometric_compact_bag, sharp_compact_crossbody, mini_geometric_tote]
+      pending_detail_scale: [small, compact_geometric]
+      color_policy: [color_block_compact, solid_bright, geometric_pattern]
+      trim: [polished_metal_compact, sharp_hardware_small]
+      materials: [smooth_leather, patent_compact, polished_calfskin]
+    stop:
+      - rule: oversized_loose
+        reason: "Очень крупные сумки крадут компактность"
+        match: { size: oversized }
+      - rule: slouchy_unstructured
+        reason: "Мягкие бесформенные сумки ломают чёткость"
+        match: { sub_type: hobo, structure: unstructured }
+      - rule: ornate_baroque
+        reason: "Декоративные мелочи добавляют шум"
+        match: { detail_scale: small, has_ornament: true }
+    notes:
+      - "Compact geometric bag в color-block — формула Gamine."
+
+  romantic:
+    prefer:
+      shape: [round_lush, curved_soft, sculptural_curved]
+      sub_types: [round_handbag, lush_shoulder, soft_clutch, lush_tote]
+      pending_detail_scale: [medium, lush_curved]
+      color_policy: [solid_lustrous, soft_pastels, lush_jewel_tones]
+      trim: [polished_metal_curved, lustrous_hardware]
+      materials: [soft_leather, satin, lustrous_calfskin, suede_lush]
+    stop:
+      - rule: sharp_angular
+        reason: "Острые угловатые формы конфликтуют с округлой природой"
+        match: { shape: sharp_extreme }
+      - rule: utility_basic
+        reason: "Утилитарные базовые сумки убирают женственность"
+        match: { style: utility }
+      - rule: boxy_masculine
+        reason: "Boxy мужские формы скрывают кривые Romantic"
+        match: { shape: boxy_extreme }
+    notes:
+      - "Lush round handbag в satin или soft leather — формула Romantic."
+
+  theatrical_romantic:
+    prefer:
+      shape: [defined_curved, sculpted_lush, lustrous_compact]
+      sub_types: [defined_handbag, lush_clutch, sculpted_shoulder, compact_pin_up_bag]
+      pending_detail_scale: [medium, lustrous]
+      color_policy: [solid_lustrous, lush_jewel_tones, animal_print_classic]
+      trim: [polished_metal_defined, lustrous_hardware]
+      materials: [patent, satin, smooth_lustrous_leather, exotic_polished]
+    stop:
+      - rule: utility_basic
+        reason: "Утилитарные базовые сумки ломают театральность"
+        match: { style: utility }
+      - rule: oversized_loose
+        reason: "Большие свободные сумки скрывают компактные кривые TR"
+        match: { fit: oversized }
+      - rule: boyish_blunt
+        reason: "Прямые boyish формы убирают женственность"
+        match: { style: boyish }
+    notes:
+      - "Defined patent handbag или lush clutch — формула pin-up TR."

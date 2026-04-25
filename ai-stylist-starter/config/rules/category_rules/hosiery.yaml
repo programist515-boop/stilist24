@@ -23,15 +23,272 @@ rules:
       - "Дневные — матовые телесные, они освежают и утончённо вписываются в творческий образ."
       - "Если кажется клоунадой — напоминаем: FG не классический типаж, ей подходит взрывной вид."
 
-  dramatic: {prefer: {}, stop: []}
-  soft_dramatic: {prefer: {}, stop: []}
-  flamboyant_natural: {prefer: {}, stop: []}
-  soft_natural: {prefer: {}, stop: []}
-  natural: {prefer: {}, stop: []}
-  dramatic_classic: {prefer: {}, stop: []}
-  soft_classic: {prefer: {}, stop: []}
-  classic: {prefer: {}, stop: []}
-  soft_gamine: {prefer: {}, stop: []}
-  gamine: {prefer: {}, stop: []}
-  romantic: {prefer: {}, stop: []}
-  theatrical_romantic: {prefer: {}, stop: []}
+  dramatic:
+    prefer:
+      day:
+        type: [matte_solid_dark, opaque_black]
+        note: "Плотные матовые колготки тёмного тона — продолжение длинной вертикали"
+      evening:
+        type: [ultra_sheer_glossy_black, sleek_shiny]
+        note: "Ультра-прозрачные блестящие чулки — для вечера"
+      color_strategy: monochrome_with_shoes  # колготки в цвет обуви — вертикаль
+    stop:
+      - rule: pattern_busy
+        reason: "Узорчатые колготки рубят чистую длинную линию"
+        match: { pattern: busy }
+      - rule: cute_socks_visible
+        reason: "Видимые носки с пышным декором ломают строгую вертикаль"
+        match: { sub_type: cute_socks }
+      - rule: opaque_white_pastel
+        reason: "Светлые плотные колготки крадут длину ног"
+        match: { color: [white, pastel] }
+    leg_line_strategy:
+      default: "Колготки в цвет обуви — продолжение длинной вертикали"
+    notes:
+      - "Чёрные плотные днём, прозрачные глянцевые вечером."
+
+  soft_dramatic:
+    prefer:
+      day:
+        type: [sheer_skin_lustrous, semi_opaque_black]
+        note: "Прозрачные с лёгким блеском — подчёркивают lush-ноги"
+      evening:
+        type: [ultra_sheer_glossy, satin_shimmer]
+        note: "Глянцевые ультра-прозрачные — статус SD"
+      color_strategy: lustrous_with_shoes
+    stop:
+      - rule: matte_dense_basic
+        reason: "Матовые плотные базовые колготки не передают lush-статус"
+        match: { finish: matte_basic }
+      - rule: pattern_busy_geometric
+        reason: "Геометричные узоры рубят кривые SD"
+        match: { pattern: geometric_busy }
+      - rule: cute_socks_dainty
+        reason: "Декоративные носки с мелочью чужды крупному масштабу"
+        match: { sub_type: cute_socks }
+    notes:
+      - "Глянец и лёгкий блеск — фирменный финиш SD."
+
+  flamboyant_natural:
+    prefer:
+      day:
+        type: [matte_nude_natural, opaque_neutral, knee_socks_natural]
+        note: "Матовые натуральные тона — расслабленно и естественно"
+      evening:
+        type: [sheer_natural, semi_opaque_subtle]
+        note: "Минималистичные прозрачные — SOFT-вечер"
+      socks_strategy: chunky_knit_visible_with_boots
+    stop:
+      - rule: glossy_dressy
+        reason: "Глянцевые нарядные колготки чужды natural-естественности"
+        match: { finish: lustrous }
+      - rule: dainty_lace_pattern
+        reason: "Кружевные узоры теряются на крупном масштабе FN"
+        match: { pattern: lace }
+      - rule: extreme_dark_dressy
+        reason: "Очень тёмные нарядные колготки контрастируют с casual-природой"
+        match: { color: jet_black, occasion: dressy }
+    notes:
+      - "Шерстяные носки видимые в ботинках — фирменный приём."
+
+  soft_natural:
+    prefer:
+      day:
+        type: [matte_nude_natural, sheer_skin_soft]
+        note: "Мягкие телесные — естественная база"
+      evening:
+        type: [sheer_subtle_soft, semi_opaque_neutral]
+        note: "Лёгкие прозрачные с мягким финишем"
+      color_strategy: blend_with_skin
+    stop:
+      - rule: stiff_glossy
+        reason: "Жёсткие глянцевые колготки ломают мягкую природу SN"
+        match: { finish: lustrous_stiff }
+      - rule: sharp_geometric_pattern
+        reason: "Острый геометричный узор чужд soft_curved"
+        match: { pattern: sharp_geometric }
+      - rule: extreme_color_block
+        reason: "Очень яркие контрастные цвета ломают мягкость"
+        match: { color: neon }
+    notes:
+      - "Мягкие нюды и лёгкая прозрачность — естественный финиш SN."
+
+  natural:
+    prefer:
+      day:
+        type: [opaque_neutral, matte_nude, casual_socks]
+        note: "Простые матовые в натуральных тонах"
+      evening:
+        type: [sheer_neutral, simple_dressy]
+        note: "Минималистичная классика для вечера"
+      socks_strategy: visible_thick_with_boots_casual
+    stop:
+      - rule: ornate_decorative
+        reason: "Декоративные мелкие узоры чужды утилитарной природе"
+        match: { detail_scale: small, has_ornament: true }
+      - rule: glossy_dressy
+        reason: "Глянцевые нарядные не вписываются в casual"
+        match: { finish: lustrous }
+      - rule: lace_pattern
+        reason: "Кружевные узоры — не natural-эстетика"
+        match: { pattern: lace }
+    notes:
+      - "Шерстяные носки в ботинках, простые непрозрачные — естественная база."
+
+  dramatic_classic:
+    prefer:
+      day:
+        type: [matte_neutral, opaque_clean, sheer_natural]
+        note: "Чистые нейтральные оттенки — строгая база"
+      evening:
+        type: [sheer_clean, semi_opaque_refined]
+        note: "Минималистичные прозрачные — refined-вечер"
+      color_strategy: clean_with_shoes
+    stop:
+      - rule: pattern_busy
+        reason: "Узорчатые колготки ломают строгость DC"
+        match: { pattern: busy }
+      - rule: cute_socks_visible
+        reason: "Видимые носки с декором чужды чистой структуре"
+        match: { sub_type: cute_socks }
+      - rule: extreme_color
+        reason: "Очень яркие или бледные цвета вне зоны DC"
+        match: { color: [neon, pastel_extreme] }
+    notes:
+      - "Чёрные или нюдовые матовые — фирменная база DC."
+
+  soft_classic:
+    prefer:
+      day:
+        type: [sheer_natural, matte_nude_soft, semi_opaque_neutral]
+        note: "Мягкие нюды — refined-база SC"
+      evening:
+        type: [sheer_refined, soft_lustrous]
+        note: "Утончённые прозрачные с лёгким финишем"
+      color_strategy: blend_refined
+    stop:
+      - rule: sharp_geometric
+        reason: "Острый геометричный узор ломает мягкость SC"
+        match: { pattern: sharp_geometric }
+      - rule: extreme_dark_basic
+        reason: "Очень тёмные базовые колготки крадут утончённость"
+        match: { color: jet_black }
+      - rule: ornate_excessive
+        reason: "Чрезмерная декоративность ломает сдержанность"
+        match: { detail_scale: small, has_ornament: true }
+    notes:
+      - "Лёгкая прозрачность, нюдовые тона — refined-формула SC."
+
+  classic:
+    prefer:
+      day:
+        type: [matte_nude, opaque_neutral, sheer_natural]
+        note: "Сдержанная нейтральная база"
+      evening:
+        type: [sheer_clean, semi_opaque_classic]
+        note: "Минималистичные прозрачные — классика вечера"
+      color_strategy: nude_or_match_shoes
+    stop:
+      - rule: extreme_pattern
+        reason: "Крайности — узор или однотонный — вне зоны Classic"
+        match: { pattern: [busy, extreme] }
+      - rule: cute_socks_decor
+        reason: "Декоративные носки чужды сдержанности"
+        match: { sub_type: cute_socks }
+      - rule: extreme_color
+        reason: "Очень яркие цвета ломают сдержанность Classic"
+        match: { color: neon }
+    notes:
+      - "Нюдовые матовые днём, прозрачные классические вечером."
+
+  soft_gamine:
+    prefer:
+      day:
+        type: [sheer_skin, matte_nude, opaque_subtle_color]
+        note: "Прозрачные с лёгким финишем — компактный изящный образ"
+      evening:
+        type: [ultra_sheer_subtle_glow, soft_lustrous]
+        note: "Прозрачные с мягким блеском"
+      pattern_bonus: [polka_dot_small, fine_pattern]
+      socks_strategy: small_pattern_compact
+    stop:
+      - rule: chunky_thick_knit
+        reason: "Объёмные толстые колготки крадут компактность SG"
+        match: { density: chunky }
+      - rule: harsh_dark_basic
+        reason: "Резко-тёмные базовые ломают утончённость"
+        match: { color: jet_black }
+      - rule: extreme_pattern
+        reason: "Очень крупный узор перегружает компактные пропорции"
+        match: { pattern: large_busy }
+    notes:
+      - "Тонкие прозрачные с маленьким принтом — формула SG."
+
+  gamine:
+    prefer:
+      day:
+        type: [matte_nude, opaque_subtle, sheer_skin]
+        note: "Компактные чистые тона"
+      evening:
+        type: [sheer_clean, opaque_color_block]
+        note: "Чистые прозрачные или color-block"
+      pattern_bonus: [polka_dot_small, geometric_compact]
+      socks_strategy: visible_compact_sharp
+    stop:
+      - rule: chunky_oversized
+        reason: "Объёмные плотные колготки крадут компактность"
+        match: { density: chunky }
+      - rule: ruffled_decorative
+        reason: "Декоративные оборки чужды чёткой геометрии"
+        match: { detail: ruffled }
+      - rule: long_flowing_lace
+        reason: "Длинные плавные кружева ломают компактность"
+        match: { pattern: lace }
+    notes:
+      - "Чёткие компактные тона, маленький горошек — формула Gamine."
+
+  romantic:
+    prefer:
+      day:
+        type: [sheer_skin_soft, matte_nude_natural, lace_subtle]
+        note: "Прозрачные нюды с лёгким финишем"
+      evening:
+        type: [ultra_sheer_lustrous, lace_subtle_decorative]
+        note: "Глянцевые прозрачные с тонким кружевом"
+      pattern_bonus: [lace, subtle_floral]
+      color_strategy: blend_skin_soft
+    stop:
+      - rule: harsh_geometric
+        reason: "Острый геометричный узор чужд кривым линиям"
+        match: { pattern: sharp_geometric }
+      - rule: chunky_utility
+        reason: "Объёмные утилитарные колготки убирают женственность"
+        match: { density: chunky }
+      - rule: extreme_dark_matte
+        reason: "Очень тёмные плотные ломают мягкость Romantic"
+        match: { color: jet_black, finish: matte_basic }
+    notes:
+      - "Прозрачные с тонким кружевом — формула Romantic."
+
+  theatrical_romantic:
+    prefer:
+      day:
+        type: [sheer_lustrous, matte_nude_refined, fishnet_subtle]
+        note: "Глянцевые прозрачные подчёркивают компактные кривые"
+      evening:
+        type: [ultra_sheer_glossy, lace_defined, fishnet_classic]
+        note: "Высокий блеск, статусные сетки — pin-up"
+      pattern_bonus: [fishnet_classic, lace_defined]
+      color_strategy: lustrous_with_shoes
+    stop:
+      - rule: chunky_dense
+        reason: "Объёмные плотные колготки скрывают компактные кривые TR"
+        match: { density: chunky }
+      - rule: utility_socks_visible
+        reason: "Утилитарные носки ломают театральную женственность"
+        match: { sub_type: utility_socks }
+      - rule: extreme_dark_matte
+        reason: "Очень тёмные плотные базовые крадут lush-блеск"
+        match: { color: jet_black, finish: matte_basic }
+    notes:
+      - "Сетка-fishnet и атласные прозрачные — формула pin-up TR."

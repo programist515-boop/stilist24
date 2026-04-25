@@ -18,10 +18,8 @@ rules:
         match: { shape: round }
       - rule: delicate_chain_layered
         reason: "Тонкие многослойные цепочки без акцента — слишком нежно"
-        # match не заполнен: «многослойные» — отдельный атрибут, его нет
       - rule: pearl_classic_strand
         reason: "Классическая жемчужная нить без геометрии — 'хорошая девочка'"
-        # match не заполнен: «жемчуг» — атрибут материала, его нет
       - rule: bulky_overwhelming
         reason: "Громоздкое крупное украшение — 'перебор'"
         match: { detail_scale: large, size: large_bulky }
@@ -30,15 +28,281 @@ rules:
       - "Не бойтесь быть немного эксцентричной. Украшения могут добавить юмора в образ."
       - "Необычные броши — отличный акцент."
 
-  dramatic: {prefer: {}, stop: []}
-  soft_dramatic: {prefer: {}, stop: []}
-  flamboyant_natural: {prefer: {}, stop: []}
-  soft_natural: {prefer: {}, stop: []}
-  natural: {prefer: {}, stop: []}
-  dramatic_classic: {prefer: {}, stop: []}
-  soft_classic: {prefer: {}, stop: []}
-  classic: {prefer: {}, stop: []}
-  soft_gamine: {prefer: {}, stop: []}
-  gamine: {prefer: {}, stop: []}
-  romantic: {prefer: {}, stop: []}
-  theatrical_romantic: {prefer: {}, stop: []}
+  dramatic:
+    prefer:
+      count_per_outfit: {min: 1, max: 2}
+      size: [medium, large_sleek]
+      shape: [angular_sleek, geometric_clean, elongated]
+      stones: [faceted_clean, cut_sleek]
+      sub_types: [statement_earrings_long, sleek_pendant_long, sculptural_cuff, geometric_ring_clean]
+      style_category: [modern_clean, sleek_minimal, architectural]
+      earring_rule: "длинные стремящиеся вниз — продолжение длинной линии"
+      necklace_rule: "длинная цепочка с чёткой подвеской — продолжает вертикаль"
+    stop:
+      - rule: round_dainty
+        reason: "Мелкие круглые формы ломают чистоту длинной линии"
+        match: { shape: round, size: small }
+      - rule: ruffled_ornate
+        reason: "Декоративные оборки и викторианские формы чужды чёткости"
+        match: { style_category: victorian }
+      - rule: pearl_layered_dainty
+        reason: "Многослойные мелкие жемчужины — слишком нежно для Dramatic"
+        match: { detail_scale: small }
+    notes:
+      - "Длинные геометричные серьги, минималистичные браслеты-cuff — формула Dramatic."
+
+  soft_dramatic:
+    prefer:
+      count_per_outfit: {min: 1, max: 3}
+      size: [large, statement_lustrous]
+      shape: [sculptural_lush, sweeping_curves, statement_geometric]
+      stones: [large_gemstones, lustrous_pearls_baroque, faceted_dramatic]
+      sub_types: [statement_earrings_sweeping, lush_necklace_collar, sculptural_cuff_wide, statement_cocktail_ring]
+      style_category: [glamorous, baroque_modern, lush_statement]
+      earring_rule: "крупные сметающие движения — драматизм"
+      necklace_rule: "статусное крупное колье на груди — lush-акцент"
+    stop:
+      - rule: dainty_chain_layered
+        reason: "Тонкие многослойные цепочки чужды крупному масштабу SD"
+        match: { detail_scale: small }
+      - rule: utility_minimal
+        reason: "Утилитарные минималистичные украшения убирают lush-статус"
+        match: { style_category: minimal_utility }
+      - rule: cute_decorative_small
+        reason: "Милые мелкие декоры ломают театральность SD"
+        match: { detail_scale: small }
+    notes:
+      - "Крупные жемчуга барокко, статусные колье — формула SD."
+
+  flamboyant_natural:
+    prefer:
+      count_per_outfit: {min: 1, max: 2}
+      size: [large_blunt, oversized_natural]
+      shape: [organic_blunt, irregular_natural, asymmetric_relaxed]
+      stones: [raw_stones, wood, leather, natural_materials]
+      sub_types: [statement_earrings_organic, natural_pendant_wood, leather_cuff, oversized_ring_organic]
+      style_category: [bohemian, artisanal, natural_organic]
+      earring_rule: "крупные органические формы — расслабленный масштаб"
+      necklace_rule: "длинные подвески из натуральных материалов"
+    stop:
+      - rule: dainty_pearls
+        reason: "Мелкие жемчуга и тонкие цепочки теряются на крупном масштабе"
+        match: { detail_scale: small }
+      - rule: precious_dressy_glossy
+        reason: "Драгоценные нарядные камни чужды natural-эстетике"
+        match: { stones: precious_glossy }
+      - rule: sharp_geometric_extreme
+        reason: "Острые геометричные формы ломают организную природу"
+        match: { shape: sharp_extreme }
+    notes:
+      - "Деревянные подвески, кожаные браслеты, асимметричные формы — формула FN."
+
+  soft_natural:
+    prefer:
+      count_per_outfit: {min: 1, max: 3}
+      size: [medium_soft, flowing_natural]
+      shape: [organic_curved, soft_irregular, gentle_drape]
+      stones: [pearls_subtle, semi_precious, soft_metals]
+      sub_types: [refined_drop_earrings, layered_subtle_chains, soft_bracelet, organic_ring]
+      style_category: [bohemian_refined, natural_elegant, organic_soft]
+      earring_rule: "мягкие капельки или органические формы средней длины"
+      necklace_rule: "лёгкие подвески, многослойные тонкие цепочки"
+    stop:
+      - rule: stiff_geometric_extreme
+        reason: "Очень острые геометричные формы ломают мягкость SN"
+        match: { shape: sharp_extreme }
+      - rule: bulky_heavy
+        reason: "Громоздкие тяжёлые украшения чужды мягкой природе"
+        match: { detail_scale: large, size: bulky }
+      - rule: glossy_dressy_extreme
+        reason: "Очень глянцевые нарядные камни ломают relaxed-эстетику"
+        match: { finish: extreme_glossy }
+    notes:
+      - "Мягкие капельки, многослойные тонкие цепочки, жемчуг — формула SN."
+
+  natural:
+    prefer:
+      count_per_outfit: {min: 1, max: 2}
+      size: [medium, simple]
+      shape: [organic_blunt, simple_geometric, natural_irregular]
+      stones: [matte_metals, wood, leather, natural_stones]
+      sub_types: [simple_studs, natural_pendant, leather_bracelet, plain_ring]
+      style_category: [casual_minimal, natural, artisanal_simple]
+      earring_rule: "простые формы, не отвлекают от лица"
+      necklace_rule: "простой подвес, без bling"
+    stop:
+      - rule: ornate_decorative
+        reason: "Декоративные мелкие камни чужды утилитарной природе"
+        match: { detail_scale: small, has_ornament: true }
+      - rule: glossy_dressy
+        reason: "Глянцевые нарядные камни не вписываются в casual"
+        match: { finish: lustrous }
+      - rule: sharp_geometric_extreme
+        reason: "Острые геометричные формы ломают организную природу"
+        match: { shape: sharp_extreme }
+    notes:
+      - "Простые серьги, кожаный браслет, без излишеств — естественная база natural."
+
+  dramatic_classic:
+    prefer:
+      count_per_outfit: {min: 1, max: 2}
+      size: [medium, refined_clean]
+      shape: [clean_geometric, polished_minimal, structured_simple]
+      stones: [polished_pearls, faceted_clean_diamond, clean_metals]
+      sub_types: [pearl_studs_clean, refined_chain, sleek_bracelet, classic_signet_ring]
+      style_category: [polished_classic, sleek_modern, refined_minimal]
+      earring_rule: "чистые формы, продолжение строгой линии"
+      necklace_rule: "тонкая цепочка с минималистичной подвеской"
+    stop:
+      - rule: ornate_baroque
+        reason: "Баррочный декор ломает чистоту DC"
+        match: { style_category: baroque }
+      - rule: bohemian_organic
+        reason: "Органические богемные формы чужды строгости"
+        match: { style_category: bohemian }
+      - rule: large_statement_lush
+        reason: "Очень крупные lush-украшения вне зоны DC"
+        match: { size: bulky }
+    notes:
+      - "Жемчужные серьги-гвоздики, тонкая золотая цепочка — формула DC."
+
+  soft_classic:
+    prefer:
+      count_per_outfit: {min: 1, max: 3}
+      size: [medium, refined_soft]
+      shape: [soft_geometric, gentle_curves, refined_drape]
+      stones: [pearls_subtle, soft_gemstones, refined_metals]
+      sub_types: [refined_drop_earrings, layered_chain_subtle, soft_bracelet, simple_band_ring]
+      style_category: [refined_classic, soft_elegant, polished_subtle]
+      earring_rule: "мягкие капельки или жемчужины, утончённо"
+      necklace_rule: "лёгкая цепочка с тонкой подвеской или жемчугом"
+    stop:
+      - rule: bulky_heavy
+        reason: "Громоздкие тяжёлые украшения ломают утончённость SC"
+        match: { detail_scale: large }
+      - rule: sharp_aggressive
+        reason: "Острые угловатые формы чужды мягким линиям"
+        match: { shape: sharp_extreme }
+      - rule: bohemian_organic_extreme
+        reason: "Богемные органические формы ломают полированность SC"
+        match: { style_category: bohemian_extreme }
+    notes:
+      - "Жемчужные капельки, тонкая цепочка с подвеской — формула SC."
+
+  classic:
+    prefer:
+      count_per_outfit: {min: 1, max: 2}
+      size: [medium, classic_refined]
+      shape: [classic_simple, balanced_geometric, refined_clean]
+      stones: [pearls_classic, faceted_clean, clean_metals]
+      sub_types: [pearl_studs_classic, simple_chain, classic_bracelet, simple_band_ring]
+      style_category: [classic, refined, sdержанная]
+      earring_rule: "чистые сдержанные формы — баланс"
+      necklace_rule: "классическая жемчужная нить или тонкая цепочка"
+      symmetry: required
+    stop:
+      - rule: extreme_size
+        reason: "Очень крупные или очень мелкие — крайности вне Classic"
+        match: { size: [bulky, ultra_small] }
+      - rule: avant_garde_bold
+        reason: "Авангардные смелые формы ломают сдержанность"
+        match: { style_category: avant_garde }
+      - rule: ornate_baroque
+        reason: "Барочный декор чужд балансу Classic"
+        match: { style_category: baroque }
+    notes:
+      - "Классическая жемчужная нить, гвоздики, простое кольцо — золотая середина Classic."
+
+  soft_gamine:
+    prefer:
+      count_per_outfit: {min: 1, max: 3}
+      size: [small, compact_refined]
+      shape: [small_geometric, refined_curved, compact_sculptural]
+      stones: [small_pearls, faceted_small, polished_metals]
+      sub_types: [small_studs_compact, short_pendant, refined_bracelet, small_ring_compact]
+      style_category: [refined_compact, polished_petite, classic_soft]
+      earring_rule: "маленькие чёткие формы — компактный масштаб"
+      necklace_rule: "короткая цепочка с маленькой подвеской"
+      pending_detail_scale: small
+    stop:
+      - rule: bulky_heavy
+        reason: "Громоздкие тяжёлые украшения перегружают компактные пропорции SG"
+        match: { detail_scale: large }
+      - rule: long_flowing
+        reason: "Длинные плавные формы крадут компактность"
+        match: { length: long }
+      - rule: harsh_aggressive
+        reason: "Острые агрессивные формы убирают женственность"
+        match: { shape: sharp_extreme }
+    notes:
+      - "Маленькие жемчужные гвоздики, короткая цепочка — формула SG."
+
+  gamine:
+    prefer:
+      count_per_outfit: {min: 1, max: 3}
+      size: [small, compact_geometric]
+      shape: [small_geometric, sharp_compact, geometric_compact]
+      stones: [faceted_small, polished_metals, color_block_stones]
+      sub_types: [geometric_studs, short_chain_geometric, sharp_compact_ring, simple_cuff]
+      style_category: [geometric_modern, compact_sharp, color_block]
+      earring_rule: "маленькие чёткие геометричные формы"
+      necklace_rule: "короткая цепочка с геометричной подвеской"
+      pending_detail_scale: small
+    stop:
+      - rule: bulky_oversized
+        reason: "Громоздкие крупные украшения крадут компактность"
+        match: { size: bulky }
+      - rule: long_flowing
+        reason: "Длинные плавные формы ломают чёткость"
+        match: { length: long }
+      - rule: ornate_baroque
+        reason: "Декоративные мелочи ломают чёткость геометрии"
+        match: { style_category: baroque }
+    notes:
+      - "Чёткая геометрия в компактном масштабе — формула Gamine."
+
+  romantic:
+    prefer:
+      count_per_outfit: {min: 2, max: 4}
+      size: [medium, lush_curved]
+      shape: [round, curved, organic_soft, sculptural_curved]
+      stones: [pearls_lustrous, soft_gemstones, lustrous_metals]
+      sub_types: [pearl_drops, lush_pendant, layered_chains_subtle, lush_cocktail_ring]
+      style_category: [feminine_classic, lush_curved, romantic_glamour]
+      earring_rule: "круглые жемчужные капельки — мягкость"
+      necklace_rule: "lustrous подвес или жемчуг — round акцент"
+    stop:
+      - rule: sharp_angular_extreme
+        reason: "Острые угловатые формы конфликтуют с округлой природой"
+        match: { shape: sharp_extreme }
+      - rule: utility_minimal
+        reason: "Утилитарные минималистичные украшения убирают женственность"
+        match: { style_category: minimal_utility }
+      - rule: bohemian_organic_raw
+        reason: "Сырые органические материалы чужды polished-Romantic"
+        match: { stones: raw_natural }
+    notes:
+      - "Жемчужные капельки, lustrous-цепочка — формула Romantic."
+
+  theatrical_romantic:
+    prefer:
+      count_per_outfit: {min: 1, max: 3}
+      size: [medium_lush, statement_curved]
+      shape: [defined_curved, sculptural_lush, hourglass_dramatic]
+      stones: [pearls_baroque, lustrous_gems, polished_metals]
+      sub_types: [statement_drops_lush, defined_pendant, polished_cuff_curved, statement_cocktail_ring]
+      style_category: [glamorous_classic, pin_up, lush_defined]
+      earring_rule: "крупные lustrous-капли — статус"
+      necklace_rule: "lush подвес, чётко прилегающий к ключицам"
+    stop:
+      - rule: sharp_angular_extreme
+        reason: "Острые угловатые формы ломают кривые TR"
+        match: { shape: sharp_extreme }
+      - rule: utility_minimal
+        reason: "Утилитарные украшения убирают театральность"
+        match: { style_category: minimal_utility }
+      - rule: bohemian_organic_raw
+        reason: "Сырые натуральные материалы чужды polished-TR"
+        match: { stones: raw_natural }
+    notes:
+      - "Lustrous жемчуг, defined cuff, statement-серьги — формула pin-up TR."

@@ -31,20 +31,261 @@ rules:
         match: { sub_type: tiered }
       - rule: soft_deep_pleats_from_hip
         reason: "Глубокие мягкие складки начинающиеся на бёдрах размывают силуэт"
-        # match не заполнен: «начинающиеся на бёдрах» — атрибута нет
     notes:
       - "Асимметрично расположенные детали, запахи, перехлёст в крое, нестандартный принт — идеал."
       - "Неверная длина: важно избегать 'ни туда ни сюда' — по бедру или по колено, ниже — только строгая прямая."
 
-  dramatic: {prefer: {}, stop: []}
-  soft_dramatic: {prefer: {}, stop: []}
-  flamboyant_natural: {prefer: {}, stop: []}
-  soft_natural: {prefer: {}, stop: []}
-  natural: {prefer: {}, stop: []}
-  dramatic_classic: {prefer: {}, stop: []}
-  soft_classic: {prefer: {}, stop: []}
-  classic: {prefer: {}, stop: []}
-  soft_gamine: {prefer: {}, stop: []}
-  gamine: {prefer: {}, stop: []}
-  romantic: {prefer: {}, stop: []}
-  theatrical_romantic: {prefer: {}, stop: []}
+  dramatic:
+    prefer:
+      fit: [pencil, straight_long, sleek_column]
+      length: [long, mid_calf, knee_long]
+      details: [clean_slit, minimal_seams]
+      pending_fabric_rigidity: [medium, rigid]
+      pending_pattern_character: [solid, subtle_lustrous]
+    stop:
+      - rule: a_line_volume
+        reason: "А-образная пышная форма ломает чистую вертикаль Dramatic"
+        match: { fit: a_line }
+      - rule: ruffled_tiered
+        reason: "Оборки и ярусы чужды чёткой длинной линии"
+        match: { sub_type: tiered }
+      - rule: cropped_mini
+        reason: "Очень короткая юбка ломает фирменную длину"
+        match: { length: mini }
+      - rule: circle_flared_soft
+        reason: "Солнце-клёш с мягкой тканью теряет линию"
+        match: { fit: circle }
+    notes:
+      - "Юбка-карандаш длины миди — фирменная база Dramatic."
+
+  soft_dramatic:
+    prefer:
+      fit: [pencil, draped_column, fitted_long]
+      length: [long, mid_calf]
+      details: [draped_panel, statement_slit, refined_drape]
+      pending_fabric_rigidity: [medium, semi_soft]
+      pending_pattern_character: [solid, lustrous, subtle_texture]
+      pending_fabric: [silk, satin, structured_crepe]
+    stop:
+      - rule: boyish_a_line
+        reason: "А-образная форма не подчёркивает lush-кривые SD"
+        match: { fit: a_line, fabric_rigidity: stiff }
+      - rule: cropped_mini
+        reason: "Cropped мини ломает lush-вертикаль"
+        match: { length: mini }
+      - rule: ruffled_dainty
+        reason: "Мелкие оборки чужды крупному масштабу SD"
+        match: { detail_scale: small }
+    notes:
+      - "Длинная юбка из шёлка с разрезом — формула SD."
+
+  flamboyant_natural:
+    prefer:
+      fit: [maxi, wide_easy, a_line_relaxed]
+      length: [long, mid_calf, ankle]
+      details: [oversized_pockets, blunt_hem, casual_drape]
+      pending_fabric_rigidity: [soft, medium]
+      pending_pattern_character: [solid_natural, large_abstract, ethnic]
+      pending_fabric: [linen, cotton, denim, soft_wool]
+    stop:
+      - rule: tight_pencil
+        reason: "Узкая юбка-карандаш ломает расслабленный масштаб FN"
+        match: { fit: pencil }
+      - rule: dainty_tea_length
+        reason: "Чайная длина с мелкими деталями теряется на крупном масштабе"
+        match: { length: tea, detail_scale: small }
+      - rule: structured_aline_strict
+        reason: "Жёсткая А-форма чужда расслабленной природе"
+        match: { fit: a_line, fabric_rigidity: extreme_rigid }
+    notes:
+      - "Длинная льняная maxi с большими карманами — формула FN."
+
+  soft_natural:
+    prefer:
+      fit: [a_line_soft, gentle_flare, midi_relaxed]
+      length: [knee, mid_calf, midi]
+      details: [soft_drape, gentle_wrap, refined_pleats]
+      pending_fabric_rigidity: [soft, semi_soft]
+      pending_pattern_character: [soft_floral, subtle_pattern]
+      pending_fabric: [soft_cotton, viscose, soft_linen, silk_blend]
+    stop:
+      - rule: pencil_strict
+        reason: "Строгая юбка-карандаш ломает мягкую линию SN"
+        match: { fit: pencil, fabric_rigidity: extreme_rigid }
+      - rule: sharp_geometric_pleats
+        reason: "Острые геометричные складки чужды soft_curved"
+        match: { sub_type: knife_pleats }
+      - rule: stiff_aline_extreme
+        reason: "Жёсткая А-форма ломает мягкость"
+        match: { fit: a_line, fabric_rigidity: extreme_rigid }
+    notes:
+      - "Юбка midi с мягким wrap — формула SN."
+
+  natural:
+    prefer:
+      fit: [a_line_relaxed, midi_easy, slip_relaxed]
+      length: [knee, midi, mid_calf]
+      details: [casual_pockets, blunt_hem, simple_seams]
+      pending_fabric_rigidity: [soft, medium]
+      pending_pattern_character: [solid, natural_texture, simple_pattern]
+      pending_fabric: [cotton, linen, denim, chambray, soft_wool]
+    stop:
+      - rule: pencil_dressy
+        reason: "Узкая нарядная юбка-карандаш ломает casual-естественность"
+        match: { fit: pencil, fabric_finish: lustrous }
+      - rule: ornate_decorative
+        reason: "Декоративные мелкие детали чужды утилитарной природе"
+        match: { detail_scale: small, has_ornament: true }
+      - rule: ruffled_tiered
+        reason: "Оборки и ярусы ломают расслабленный силуэт"
+        match: { sub_type: tiered }
+    notes:
+      - "Денимовая midi или льняная a-line — естественная база natural."
+
+  dramatic_classic:
+    prefer:
+      fit: [pencil, sheath_clean, a_line_moderate]
+      length: [knee, mid_calf]
+      details: [clean_seams, minimal_buttons, subtle_slit]
+      pending_fabric_rigidity: [medium, rigid]
+      pending_pattern_character: [solid, subtle_pinstripe]
+      pending_fabric: [crepe, fine_wool, structured_cotton]
+    stop:
+      - rule: ruffled_tiered
+        reason: "Оборки и ярусы ломают строгость DC"
+        match: { sub_type: tiered }
+      - rule: oversized_loose
+        reason: "Свободный крой убирает дисциплину силуэта"
+        match: { fit: loose }
+      - rule: peasant_unstructured
+        reason: "Крестьянский крой без структуры чужд DC"
+        match: { sub_type: peasant }
+    notes:
+      - "Безупречно скроенная юбка-карандаш до колена — основа DC."
+
+  soft_classic:
+    prefer:
+      fit: [a_line_moderate, sheath_soft, gentle_flare]
+      length: [knee, midi]
+      details: [refined_pleats, subtle_drape, clean_seams]
+      pending_fabric_rigidity: [medium, semi_soft]
+      pending_pattern_character: [solid, subtle_print]
+      pending_fabric: [crepe, soft_wool, silk_blend]
+    stop:
+      - rule: sharp_pencil_extreme
+        reason: "Очень узкая жёсткая юбка-карандаш ломает мягкость SC"
+        match: { fit: pencil, fabric_rigidity: extreme_rigid }
+      - rule: oversized_boxy
+        reason: "Boxy крой скрывает мягкую талию"
+        match: { fit: oversized }
+      - rule: ornate_excessive
+        reason: "Чрезмерная декоративность ломает сдержанность"
+        match: { detail_scale: small, has_ornament: true }
+    notes:
+      - "Юбка А-силуэта средней длины из крепа — формула SC."
+
+  classic:
+    prefer:
+      fit: [a_line_moderate, pencil_moderate, sheath_clean]
+      length: [knee, just_below_knee]
+      details: [clean_seams, minimal_buttons]
+      pending_fabric_rigidity: [medium]
+      pending_pattern_character: [solid, subtle_classic_print]
+      pending_fabric: [wool, crepe, cotton]
+      symmetry: required
+    stop:
+      - rule: extreme_pencil_or_aline
+        reason: "Крайности — слишком узкая или слишком широкая — вне зоны Classic"
+        match: { fit: [extreme_pencil, full_circle] }
+      - rule: cropped_aggressive
+        reason: "Crop вне умеренной классической пропорции"
+        match: { length: mini }
+      - rule: ornate_showy
+        reason: "Декоративные показные детали ломают сдержанность"
+        match: { detail_scale: small, has_ornament: true }
+    notes:
+      - "Юбка-карандаш до колена нейтрального тона — золотая середина Classic."
+
+  soft_gamine:
+    prefer:
+      fit: [a_line_compact, fit_and_flare, pencil_short]
+      length: [mini, above_knee, knee]
+      details: [small_pleats, refined_buttons, gentle_flare]
+      pending_fabric_rigidity: [medium, rigid]
+      pending_pattern_character: [small_print, polka_dot, geometric_compact]
+      pending_detail_scale: small
+    stop:
+      - rule: long_loose
+        reason: "Длинная свободная юбка крадёт компактность SG"
+        match: { length: long, fit: loose }
+      - rule: sharp_aggressive
+        reason: "Жёсткий агрессивный крой убирает женственность"
+        match: { cut_lines: sharp_extreme }
+      - rule: oversized_volume
+        reason: "Громоздкий объём перегружает компактные пропорции"
+        match: { fit: oversized }
+    notes:
+      - "Fit-and-flare короткая юбка с маленьким принтом — формула SG."
+
+  gamine:
+    prefer:
+      fit: [a_line_compact, pencil_short, slim_fit]
+      length: [mini, above_knee]
+      details: [small_pleats, geometric_buttons, sharp_seams]
+      pending_fabric_rigidity: [medium, rigid]
+      pending_pattern_character: [geometric_compact, small_print, color_block]
+      pending_detail_scale: small
+    stop:
+      - rule: long_flowing
+        reason: "Длинная плавная юбка крадёт компактность"
+        match: { length: long }
+      - rule: oversized_loose
+        reason: "Оверсайз убирает контраст пропорций"
+        match: { fit: oversized }
+      - rule: ruffled_tiered
+        reason: "Оборки и ярусы чужды чёткой геометрии"
+        match: { sub_type: tiered }
+    notes:
+      - "Геометричная мини с чёткими швами — формула Gamine."
+
+  romantic:
+    prefer:
+      fit: [fit_and_flare, full_curved, a_line_soft]
+      length: [knee, midi]
+      details: [soft_ruffles, gentle_drape, sweetheart_pleats]
+      pending_fabric_rigidity: [soft, semi_soft]
+      pending_pattern_character: [floral_soft, soft_print, small_floral]
+      pending_fabric: [chiffon, silk, soft_jersey]
+    stop:
+      - rule: pencil_strict
+        reason: "Строгая узкая юбка скрывает кривые Romantic"
+        match: { fit: pencil, fabric_rigidity: extreme_rigid }
+      - rule: utility_safari
+        reason: "Утилитарные сафари-формы убирают женственность"
+        match: { sub_type: utility }
+      - rule: sharp_angular_seams
+        reason: "Острые геометричные швы чужды округлым линиям"
+        match: { cut_lines: angular_sharp }
+    notes:
+      - "Юбка fit-and-flare из шифона с лёгкими оборками — формула Romantic."
+
+  theatrical_romantic:
+    prefer:
+      fit: [pencil_curved, fit_and_flare_compact, hourglass_skirt]
+      length: [knee, above_knee, mid_calf]
+      details: [defined_pleats, statement_slit, sculpted_drape]
+      pending_fabric_rigidity: [medium, semi_soft]
+      pending_pattern_character: [solid_lustrous, subtle_print]
+      pending_fabric: [satin, silk, structured_crepe]
+    stop:
+      - rule: oversized_boxy
+        reason: "Оверсайз скрывает компактные кривые TR"
+        match: { fit: oversized }
+      - rule: utility_unfitted
+        reason: "Утилитарные неприлегающие юбки ломают песочные часы"
+        match: { fit: straight }
+      - rule: dropped_waist
+        reason: "Заниженная талия размывает hourglass-структуру"
+        match: { waistline: dropped }
+    notes:
+      - "Атласная юбка-карандаш с подчёркнутой талией — формула pin-up TR."

@@ -15,10 +15,8 @@ rules:
         match: { sub_type: ruffled }
       - rule: tightly_fitting
         reason: "Очень обтягивающие блузы подчёркивают кривые, а FG нуждается в разбитом силуэте"
-        # match не заполнен: «очень обтягивающие» требует уточнения сверх fit
       - rule: symmetric_traditional
         reason: "Симметричная традиционная блуза без деталей — слишком 'хорошая девочка'"
-        # match не заполнен: правило требует «без деталей», нет атрибута
       - rule: fine_soft_fabric
         reason: "Тонкая мягкая ткань не держит форму"
         match: { fabric_rigidity: soft }
@@ -27,15 +25,251 @@ rules:
       - "Если нужен классический вид — с брошкой или угловатой фурнитурой."
       - "Поверх белой классической рубашки — яркий кардиган, не жакет (не взрослить)."
 
-  dramatic: {prefer: {}, stop: []}
-  soft_dramatic: {prefer: {}, stop: []}
-  flamboyant_natural: {prefer: {}, stop: []}
-  soft_natural: {prefer: {}, stop: []}
-  natural: {prefer: {}, stop: []}
-  dramatic_classic: {prefer: {}, stop: []}
-  soft_classic: {prefer: {}, stop: []}
-  classic: {prefer: {}, stop: []}
-  soft_gamine: {prefer: {}, stop: []}
-  gamine: {prefer: {}, stop: []}
-  romantic: {prefer: {}, stop: []}
-  theatrical_romantic: {prefer: {}, stop: []}
+  dramatic:
+    prefer:
+      cut: [tailored_clean, sleek_long]
+      pending_neckline_type: [v_deep, sharp_collar, structured_high]
+      trim: minimal_clean
+      pending_fabric_rigidity: [medium, rigid]
+      pending_fabric_finish: [matte_smooth, satin_sleek]
+      length: [long, tucked_tunic]
+    stop:
+      - rule: ruffled_busy
+        reason: "Рюши и оборки ломают чистоту длинной линии"
+        match: { sub_type: ruffled }
+      - rule: peasant_blouse
+        reason: "Крестьянские свободные блузы чужды чёткой геометрии"
+        match: { sub_type: peasant }
+      - rule: cropped_cute
+        reason: "Cropped формы рубят длинную вертикаль Dramatic"
+        match: { length: cropped }
+      - rule: dropped_shoulder
+        reason: "Спущенное плечо размывает командную линию плеча"
+        match: { sleeve_type: dropped_shoulder }
+    notes:
+      - "Шёлковая блуза с глубоким V-вырезом, идеально заправленная — фирменный приём."
+
+  soft_dramatic:
+    prefer:
+      cut: [tailored_with_drape, semi_fitted]
+      pending_neckline_type: [v_deep, draped_v, off_shoulder, cowl]
+      pending_fabric_rigidity: [medium, semi_soft]
+      pending_fabric_finish: [satin, silk, lustrous]
+      details: [draped_panels, statement_collar]
+    stop:
+      - rule: boyish_unfitted
+        reason: "Прямой boyish крой скрывает кривые SD"
+        match: { fit: oversized }
+      - rule: cropped_compact
+        reason: "Cropped ломает lush-вертикаль SD"
+        match: { length: cropped }
+      - rule: dainty_ruffles
+        reason: "Мелкие рюши и складочки чужды крупному масштабу"
+        match: { detail_scale: small }
+    notes:
+      - "Шёлк или атлас, глубокий вырез, мягкая драпировка с структурным плечом."
+
+  flamboyant_natural:
+    prefer:
+      cut: [relaxed, oversized_easy]
+      pending_neckline_type: [v_relaxed, open_collar, scoop_natural]
+      pending_fabric_rigidity: [medium, soft]
+      pending_fabric_finish: [matte, brushed, natural_texture]
+      details: [rolled_sleeves, oversized_pockets, blunt_hem]
+      length: [long_tunic, mid_hip]
+    stop:
+      - rule: tight_fitted
+        reason: "Обтягивающая блуза ломает расслабленную линию FN"
+        match: { fit: fitted }
+      - rule: dainty_ruffles
+        reason: "Мелкие рюши и кружева теряются на крупном масштабе"
+        match: { detail_scale: small }
+      - rule: stiff_starched
+        reason: "Жёсткая накрахмаленная рубашка чужда natural-естественности"
+        match: { fabric_rigidity: extreme_rigid }
+    notes:
+      - "Мужская рубашка-оверсайз, льняные туники — фирменные находки."
+
+  soft_natural:
+    prefer:
+      cut: [semi_fitted, relaxed]
+      pending_neckline_type: [v_soft, scoop, soft_collar, wrap]
+      pending_fabric_rigidity: [soft, semi_soft]
+      pending_fabric_finish: [matte, soft_natural, lightly_brushed]
+      details: [soft_drape, wrap_tie, gentle_pleats]
+    stop:
+      - rule: stiff_starched
+        reason: "Жёсткая накрахмаленная блуза ломает мягкие линии SN"
+        match: { fabric_rigidity: extreme_rigid }
+      - rule: sharp_angular_collar
+        reason: "Острый геометричный воротник чужд soft_curved линиям"
+        match: { collar_shape: angular_sharp }
+      - rule: oversized_boxy
+        reason: "Бесформенный boxy крой скрывает мягкую талию"
+        match: { fit: oversized_boxy }
+    notes:
+      - "Wrap-блуза из мягкого хлопка — формула SN."
+
+  natural:
+    prefer:
+      cut: [relaxed, semi_fitted]
+      pending_neckline_type: [v_natural, scoop, open_collar, button_down_relaxed]
+      pending_fabric_rigidity: [soft, medium]
+      pending_fabric_finish: [matte, natural_texture]
+      details: [rolled_sleeves, blunt_hem, simple_buttons]
+      pending_fabric: [linen, cotton, chambray]
+    stop:
+      - rule: ornate_decorative
+        reason: "Декоративные мелкие детали чужды утилитарной природе"
+        match: { detail_scale: small, has_ornament: true }
+      - rule: tight_fitted
+        reason: "Обтягивающая блуза ломает расслабленную линию"
+        match: { fit: fitted }
+      - rule: silky_dressy
+        reason: "Шелковистая нарядная блуза не вписывается в casual-естественность"
+        match: { fabric_finish: lustrous }
+    notes:
+      - "Лён, хлопок, простой крой — естественная база для рубашки natural."
+
+  dramatic_classic:
+    prefer:
+      cut: [tailored, clean_skimming]
+      pending_neckline_type: [v_clean, structured_collar, button_down_crisp]
+      pending_fabric_rigidity: [medium, rigid]
+      pending_fabric_finish: [matte_smooth, crisp_cotton, fine_silk]
+      details: [clean_pleats, French_cuffs, minimal_buttons]
+    stop:
+      - rule: ruffled_decorative
+        reason: "Рюши и декор ломают строгость DC"
+        match: { sub_type: ruffled }
+      - rule: oversized_loose
+        reason: "Свободный крой убирает дисциплину силуэта"
+        match: { fit: oversized }
+      - rule: peasant_unstructured
+        reason: "Крестьянская блуза с напуском чужда чистой структуре"
+        match: { sub_type: peasant }
+    notes:
+      - "Безупречно скроенная рубашка с чистым воротником — основа DC."
+
+  soft_classic:
+    prefer:
+      cut: [semi_fitted, tailored_moderate]
+      pending_neckline_type: [v_soft, refined_collar, bow_neck_subtle]
+      pending_fabric_rigidity: [medium, semi_soft]
+      pending_fabric_finish: [matte_smooth, soft_silk, fine_cotton]
+      details: [refined_buttons, soft_pleats, gentle_drape]
+    stop:
+      - rule: sharp_aggressive
+        reason: "Острые угловатые линии ломают мягкую гармонию SC"
+        match: { cut_lines: angular }
+      - rule: oversized_boxy
+        reason: "Boxy крой скрывает мягкую талию"
+        match: { fit: oversized }
+      - rule: ornate_excessive
+        reason: "Чрезмерная декоративность ломает сдержанность"
+        match: { detail_scale: small, has_ornament: true }
+    notes:
+      - "Мягкий шёлк, аккуратный воротник, лёгкая драпировка — формула SC."
+
+  classic:
+    prefer:
+      cut: [tailored_moderate, semi_fitted]
+      pending_neckline_type: [v_moderate, classic_collar, button_down_clean]
+      pending_fabric_rigidity: [medium]
+      pending_fabric_finish: [matte_smooth, fine_cotton, fine_silk]
+      details: [clean_buttons, minimal_pleats]
+      symmetry: required
+    stop:
+      - rule: extreme_sharp_or_soft
+        reason: "Крайности — острое или слишком мягкое — вне зоны Classic"
+        match: { cut_lines: [sharp_extreme, soft_extreme] }
+      - rule: cropped_aggressive
+        reason: "Crop вне умеренной классической пропорции"
+        match: { length: cropped }
+      - rule: ornate_showy
+        reason: "Декоративные показные детали ломают сдержанность"
+        match: { detail_scale: small, has_ornament: true }
+    notes:
+      - "Белая рубашка стандартного кроя — фирменная база Classic."
+
+  soft_gamine:
+    prefer:
+      cut: [fitted, semi_fitted]
+      pending_neckline_type: [v_compact, peter_pan_small, ruffle_small_neat]
+      pending_fabric_rigidity: [medium, rigid]
+      pending_fabric_finish: [matte, crisp_cotton, fine_silk]
+      details: [small_buttons, small_pleats, refined_collar]
+      pending_detail_scale: small
+    stop:
+      - rule: long_oversized
+        reason: "Длинный oversize крадёт компактность SG"
+        match: { length: long, fit: oversized }
+      - rule: stiff_aggressive
+        reason: "Жёсткий аггресивный крой убирает женственность"
+        match: { cut_lines: sharp_extreme }
+      - rule: large_scale_decor
+        reason: "Крупные детали перегружают компактные пропорции"
+        match: { detail_scale: large }
+    notes:
+      - "Маленькие воротнички, чёткие пуговицы, fitted крой — формула SG."
+
+  gamine:
+    prefer:
+      cut: [fitted, semi_fitted]
+      pending_neckline_type: [v, straight, peter_pan_geometric]
+      pending_fabric_rigidity: [medium, rigid]
+      pending_fabric_finish: [matte, crisp]
+      details: [small_geometric_buttons, sharp_collar_small]
+      pending_detail_scale: small
+    stop:
+      - rule: long_flowing
+        reason: "Длинная плавная блуза крадёт компактность"
+        match: { length: long }
+      - rule: oversized_loose
+        reason: "Оверсайз убирает контраст пропорций"
+        match: { fit: oversized }
+      - rule: ruffled_busy
+        reason: "Рюши и оборки чужды чёткой геометрии"
+        match: { sub_type: ruffled }
+    notes:
+      - "Геометричный воротник, мелкие пуговицы, чёткие линии."
+
+  romantic:
+    prefer:
+      cut: [fitted, hugging]
+      pending_neckline_type: [v_curved, sweetheart, soft_scoop, cowl_soft]
+      pending_fabric_rigidity: [soft, semi_soft]
+      pending_fabric_finish: [silk, satin, soft_jersey, chiffon]
+      details: [soft_ruffles, gentle_drape, lace_subtle]
+    stop:
+      - rule: boxy_masculine
+        reason: "Прямой boxy крой скрывает кривые Romantic"
+        match: { fit: oversized }
+      - rule: utility_safari
+        reason: "Утилитарные сафари-формы убирают женственность"
+        match: { sub_type: utility }
+      - rule: sharp_angular_collar
+        reason: "Острый геометричный воротник чужд округлым линиям"
+        match: { collar_shape: angular_sharp }
+    notes:
+      - "Шёлк, лёгкие рюши, V-вырез с мягкой драпировкой — формула Romantic."
+
+  theatrical_romantic:
+    prefer:
+      cut: [fitted, hugging]
+      pending_neckline_type: [v_deep_curved, sweetheart_defined, off_shoulder_compact]
+      pending_fabric_rigidity: [medium, semi_soft]
+      pending_fabric_finish: [satin, silk, structured_crepe]
+      details: [defined_drape, fitted_pleats, sculpted_collar]
+    stop:
+      - rule: boxy_oversized
+        reason: "Оверсайз скрывает компактные кривые TR"
+        match: { fit: oversized }
+      - rule: utility_unfitted
+        reason: "Утилитарные неприлегающие блузы ломают песочные часы"
+        match: { fit: straight }
+      - rule: dropped_shoulder
+        reason: "Спущенное плечо размывает структуру TR"
+        match: { sleeve_type: dropped_shoulder }
+    notes:
+      - "Атласная блуза с V-вырезом и подчёркнутым плечом — формула pin-up TR."

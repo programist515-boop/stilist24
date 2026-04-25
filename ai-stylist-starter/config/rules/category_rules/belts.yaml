@@ -26,15 +26,255 @@ rules:
       - "Крупные тяжёлые детали-пряжки, широкие пояса-ремни с баской."
       - "Важна геометричность линий, утяжелённость деталей, асимметрия."
 
-  dramatic: {prefer: {}, stop: []}
-  soft_dramatic: {prefer: {}, stop: []}
-  flamboyant_natural: {prefer: {}, stop: []}
-  soft_natural: {prefer: {}, stop: []}
-  natural: {prefer: {}, stop: []}
-  dramatic_classic: {prefer: {}, stop: []}
-  soft_classic: {prefer: {}, stop: []}
-  classic: {prefer: {}, stop: []}
-  soft_gamine: {prefer: {}, stop: []}
-  gamine: {prefer: {}, stop: []}
-  romantic: {prefer: {}, stop: []}
-  theatrical_romantic: {prefer: {}, stop: []}
+  dramatic:
+    prefer:
+      width: [medium, wide]                   # широкие или средние
+      rigidity: rigid
+      buckle_shape: [clean_geometric, sleek_metal]
+      texture: [polished, matte_smooth]
+      materials: [smooth_leather, patent]
+      sub_types: [wide_corset_belt_clean, sleek_waist_belt]
+    stop:
+      - rule: thin_delicate
+        reason: "Узкий тонкий ремешок теряется на длинной вертикали Dramatic"
+        match: { width: thin }
+      - rule: ornate_decorated
+        reason: "Декоративные пряжки с орнаментом ломают чистоту линии"
+        match: { detail_scale: small, has_ornament: true }
+      - rule: soft_braided
+        reason: "Плетёные мягкие ремни не держат структуру"
+        match: { fabric_rigidity: soft }
+    notes:
+      - "Ремень — продолжение чёткой линии силуэта, минималистичная пряжка."
+      - "Чёрная кожа или металл — фирменные материалы."
+
+  soft_dramatic:
+    prefer:
+      width: [medium, wide]
+      rigidity: [rigid, semi_rigid]
+      buckle_shape: [statement_metal, sculptural_clean]
+      materials: [smooth_leather, patent, snake_print]
+      texture: [polished, glossy]
+      sub_types: [wide_waist_belt, corset_style_smooth]
+    stop:
+      - rule: too_thin_basic
+        reason: "Узкий тонкий ремешок не передаёт lush-статус SD"
+        match: { width: thin }
+      - rule: utility_military
+        reason: "Утилитарные военные ремни рубят чувственность SD"
+        match: { sub_type: utility }
+      - rule: ornate_fussy
+        reason: "Мелкая декоративность ломает крупный масштаб подтипа"
+        match: { detail_scale: small }
+    notes:
+      - "Подчёркивает талию и lush-силуэт. Пряжка — одна крупная статусная деталь."
+
+  flamboyant_natural:
+    prefer:
+      width: [wide, extra_wide]                # широкие, как у ковбойского пояса
+      rigidity: [semi_rigid, soft]
+      buckle_shape: [oversized_blunt, simple_metal_clean]
+      materials: [thick_leather, suede, woven_natural]
+      texture: [matte, distressed, brushed]
+      sub_types: [obi_wrap, wide_hip_belt, oversized_buckle_belt]
+    stop:
+      - rule: thin_delicate
+        reason: "Тонкий ремешок теряется на крупном масштабе FN"
+        match: { width: thin }
+      - rule: stiff_patent_glossy
+        reason: "Жёсткий лакированный ремень чужд расслабленной природе"
+        match: { texture: patent }
+      - rule: ornate_dainty
+        reason: "Мелкие декоры противоречат крупному масштабу подтипа"
+        match: { detail_scale: small }
+    notes:
+      - "Ремень носить на бёдрах, не подчёркивая узкую талию."
+
+  soft_natural:
+    prefer:
+      width: [medium, wide]
+      rigidity: [soft, semi_rigid]
+      buckle_shape: [simple_curved, clean_metal_round]
+      materials: [soft_leather, suede, woven_natural]
+      texture: [matte, brushed, soft_natural]
+      sub_types: [wrap_tie_belt, wide_soft_waist_belt, hip_slung]
+    stop:
+      - rule: stiff_rigid_extreme
+        reason: "Очень жёсткий структурный ремень ломает мягкие линии SN"
+        match: { fabric_rigidity: extreme_rigid }
+      - rule: sharp_aggressive_buckle
+        reason: "Острая агрессивная пряжка чужда мягкой природе"
+        match: { buckle_shape: angular_sharp }
+      - rule: military_utility
+        reason: "Утилитарные тактические ремни выглядят грубо для SN"
+        match: { sub_type: utility }
+    notes:
+      - "Лёгкий wrap-belt из мягкой кожи — фирменный приём."
+
+  natural:
+    prefer:
+      width: [medium, wide]
+      rigidity: [soft, semi_rigid]
+      buckle_shape: [simple, blunt_clean]
+      materials: [leather, canvas, woven_natural, suede]
+      texture: [matte, distressed]
+      sub_types: [casual_jeans_belt, wide_hip_belt]
+    stop:
+      - rule: ornate_fussy
+        reason: "Мелкая декоративная отделка чужда утилитарной природе"
+        match: { detail_scale: small, has_ornament: true }
+      - rule: patent_glossy_dressy
+        reason: "Лакированный нарядный ремень не вписывается в casual-естественность"
+        match: { texture: patent }
+      - rule: thin_dainty
+        reason: "Узкий нежный ремешок не работает на расслабленный силуэт"
+        match: { width: thin }
+    notes:
+      - "Натуральные текстуры — кожа, замша, плетёный хлопок."
+
+  dramatic_classic:
+    prefer:
+      width: [medium]
+      rigidity: rigid
+      buckle_shape: [clean_metal_minimal, simple_geometric]
+      materials: [smooth_leather, patent_subtle]
+      texture: [polished, matte_smooth]
+      sub_types: [tailored_belt, classic_waist_belt]
+    stop:
+      - rule: ornate_decorative
+        reason: "Декоративные пряжки ломают строгость DC"
+        match: { detail_scale: small, has_ornament: true }
+      - rule: soft_braided
+        reason: "Плетёные мягкие ремни чужды чистой структуре"
+        match: { fabric_rigidity: soft }
+      - rule: extreme_width
+        reason: "Очень широкий или очень узкий ремень — крайности вне зоны DC"
+        match: { width: [extra_wide, thin] }
+    notes:
+      - "Минималистичная пряжка, гладкая кожа, средняя ширина — баланс DC."
+
+  soft_classic:
+    prefer:
+      width: [medium, narrow_medium]
+      rigidity: [semi_rigid, rigid]
+      buckle_shape: [refined_clean, simple_curved]
+      materials: [smooth_leather, soft_leather]
+      texture: [polished, matte_smooth]
+      sub_types: [refined_waist_belt, classic_thin_belt]
+    stop:
+      - rule: bulky_heavy
+        reason: "Громоздкая тяжёлая пряжка ломает утончённость SC"
+        match: { detail_scale: large }
+      - rule: sharp_aggressive
+        reason: "Острые угловатые пряжки чужды мягким линиям"
+        match: { buckle_shape: angular_sharp }
+      - rule: utility_military
+        reason: "Утилитарные ремни не вписываются в полированный crisp подтипа"
+        match: { sub_type: utility }
+    notes:
+      - "Мягкая кожа, средне-узкая ширина, изящная пряжка."
+
+  classic:
+    prefer:
+      width: medium
+      rigidity: rigid
+      buckle_shape: [simple_clean, classic_metal]
+      materials: [smooth_leather]
+      texture: [polished, matte_smooth]
+      sub_types: [classic_waist_belt, tailored_belt]
+    stop:
+      - rule: extreme_width
+        reason: "Очень широкий или очень узкий — крайности вне середины Classic"
+        match: { width: [extra_wide, thin] }
+      - rule: ornate_showy
+        reason: "Декоративные показные пряжки ломают сдержанность"
+        match: { detail_scale: small, has_ornament: true }
+      - rule: military_utility
+        reason: "Утилитарные тактические ремни чужды балансу подтипа"
+        match: { sub_type: utility }
+    notes:
+      - "Чёрная или коричневая гладкая кожа, простая металлическая пряжка."
+
+  soft_gamine:
+    prefer:
+      width: [thin, medium]
+      rigidity: rigid
+      buckle_shape: [small_clean, refined_geometric, small_curved]
+      materials: [patent, smooth_leather]
+      texture: [glossy, polished]
+      sub_types: [thin_waist_belt, refined_compact_belt]
+    stop:
+      - rule: bulky_heavy
+        reason: "Громоздкая тяжёлая пряжка перегружает компактный SG"
+        match: { detail_scale: large }
+      - rule: extra_wide
+        reason: "Очень широкий ремень крадёт миниатюрность"
+        match: { width: extra_wide }
+      - rule: military_utility
+        reason: "Утилитарные ремни не вписываются в утончённость SG"
+        match: { sub_type: utility }
+    notes:
+      - "Тонкие ремешки на талию подчёркивают компактные пропорции."
+
+  gamine:
+    prefer:
+      width: [thin, medium]
+      rigidity: rigid
+      buckle_shape: [geometric_small, clean_metal_compact]
+      materials: [patent, smooth_leather]
+      texture: [glossy, polished, matte_smooth]
+      sub_types: [thin_waist_belt, geometric_buckle_belt]
+    stop:
+      - rule: extreme_width
+        reason: "Очень широкий или очень узкий — крайности крадут компактность"
+        match: { width: [extra_wide, very_thin] }
+      - rule: ornate_fussy
+        reason: "Декоративные мелкие детали добавляют шум"
+        match: { detail_scale: small, has_ornament: true }
+      - rule: oversized_decor
+        reason: "Громоздкие пряжки перегружают компактные пропорции"
+        match: { detail_scale: large }
+    notes:
+      - "Чёткие маленькие пряжки геометрической формы — визитная карточка."
+
+  romantic:
+    prefer:
+      width: [thin, medium]
+      rigidity: [soft, semi_rigid]
+      buckle_shape: [curved, decorative_feminine, pearl_inlay]
+      materials: [soft_leather, satin, suede]
+      texture: [matte_soft, satin]
+      sub_types: [decorative_waist_belt, sash_tie, soft_ribbon_belt]
+    stop:
+      - rule: rigid_stiff
+        reason: "Жёсткий структурный ремень ломает округлость Romantic"
+        match: { fabric_rigidity: extreme_rigid }
+      - rule: sharp_angular_buckle
+        reason: "Острая угловатая пряжка чужда кривым линиям"
+        match: { buckle_shape: angular_sharp }
+      - rule: military_utility
+        reason: "Утилитарные ремни рубят женственность"
+        match: { sub_type: utility }
+    notes:
+      - "Тонкий пояс на талию подчёркивает hourglass."
+
+  theatrical_romantic:
+    prefer:
+      width: [medium, narrow_medium]
+      rigidity: rigid
+      buckle_shape: [defined_feminine, polished_curved, gem_accent]
+      materials: [smooth_leather, patent, satin]
+      texture: [polished, glossy]
+      sub_types: [corset_belt_compact, statement_waist_belt]
+    stop:
+      - rule: military_utility
+        reason: "Утилитарные ремни ломают театральную женственность"
+        match: { sub_type: utility }
+      - rule: oversized_bulky
+        reason: "Слишком крупный ремень крадёт компактность TR"
+        match: { detail_scale: large, width: extra_wide }
+      - rule: plain_unadorned_thin
+        reason: "Очень узкий незаметный ремешок не работает на драму"
+        match: { width: very_thin, has_ornament: false }
+    notes:
+      - "Корсетные ремни с чёткой пряжкой — формула pin-up TR."

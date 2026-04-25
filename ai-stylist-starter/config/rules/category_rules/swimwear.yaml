@@ -11,7 +11,6 @@ rules:
     stop:
       - rule: romantic_theme
         reason: "Романтическая тематика (рюши, бантики) противоположна типажу"
-        # match не заполнен: тематика — высокоуровневая характеристика, нет атрибута
       - rule: natural_theme
         reason: "Натуральные пасторальные мотивы и мягкие драпировки неподходящи"
         match: { pattern_character: floral_soft }
@@ -21,15 +20,245 @@ rules:
     notes:
       - "Чёткие геометрические линии, контрастные диагонали — визитная карточка."
 
-  dramatic: {prefer: {}, stop: []}
-  soft_dramatic: {prefer: {}, stop: []}
-  flamboyant_natural: {prefer: {}, stop: []}
-  soft_natural: {prefer: {}, stop: []}
-  natural: {prefer: {}, stop: []}
-  dramatic_classic: {prefer: {}, stop: []}
-  soft_classic: {prefer: {}, stop: []}
-  classic: {prefer: {}, stop: []}
-  soft_gamine: {prefer: {}, stop: []}
-  gamine: {prefer: {}, stop: []}
-  romantic: {prefer: {}, stop: []}
-  theatrical_romantic: {prefer: {}, stop: []}
+  dramatic:
+    prefer:
+      shape: [sleek_clean, sculptural_minimal]
+      sub_types: [one_piece_sleek, monokini, structured_bikini]
+      cut_character: clean_lines_long
+      waist_rise: [high, medium]
+      color_pattern: [solid_deep, monochromatic, subtle_stripe]
+    stop:
+      - rule: ruffled_busy
+        reason: "Рюши и оборки ломают чистоту длинной линии"
+        match: { sub_type: ruffled }
+      - rule: floral_dainty
+        reason: "Цветочные мелкие принты чужды строгости Dramatic"
+        match: { pattern_character: floral_soft }
+      - rule: cute_bikini_decor
+        reason: "Декоративные мелочи на бикини убирают command-силуэт"
+        match: { detail_scale: small, has_ornament: true }
+    notes:
+      - "Чёрный sleek one-piece с глубоким V-вырезом — формула Dramatic."
+
+  soft_dramatic:
+    prefer:
+      shape: [lush_sculptural, hourglass_dramatic, draped_one_piece]
+      sub_types: [one_piece_lush, draped_bikini, plunge_swimsuit]
+      cut_character: [draped_lustrous, deep_v_lush]
+      waist_rise: [medium, high]
+      color_pattern: [solid_lustrous, animal_print_glam, jewel_tones]
+    stop:
+      - rule: dainty_small
+        reason: "Мелкие изящные детали чужды крупному масштабу SD"
+        match: { detail_scale: small }
+      - rule: utility_sport
+        reason: "Утилитарные спортивные формы убирают lush-статус"
+        match: { sub_type: sport }
+      - rule: boyish_unfitted
+        reason: "Прямые boyish формы скрывают кривые SD"
+        match: { fit: straight }
+    notes:
+      - "Lush plunge one-piece с драпировкой — формула SD."
+
+  flamboyant_natural:
+    prefer:
+      shape: [easy_relaxed, blunt_simple]
+      sub_types: [bikini_relaxed, one_piece_simple, tankini]
+      cut_character: [clean_blunt, simple_lines]
+      waist_rise: [medium, high]
+      color_pattern: [solid_natural, large_abstract, ethnic_print]
+    stop:
+      - rule: dainty_ruffles
+        reason: "Мелкие рюши и бантики теряются на крупном масштабе"
+        match: { detail_scale: small }
+      - rule: glossy_dressy_extreme
+        reason: "Очень глянцевые нарядные ткани чужды natural-эстетике"
+        match: { finish: extreme_glossy }
+      - rule: hourglass_cinched
+        reason: "Зажатая талия ломает расслабленную линию FN"
+        match: { fit: cinched_extreme }
+    notes:
+      - "Простой bikini в натуральных тонах или большом абстрактном принте."
+
+  soft_natural:
+    prefer:
+      shape: [soft_curved, gentle_drape]
+      sub_types: [bikini_soft, one_piece_relaxed, tankini_curved]
+      cut_character: [soft_drape, gentle_curves]
+      waist_rise: [medium, high]
+      color_pattern: [solid_soft, soft_floral, subtle_print]
+    stop:
+      - rule: stiff_structured
+        reason: "Жёсткие структурные формы ломают мягкость SN"
+        match: { fabric_rigidity: extreme_rigid }
+      - rule: sharp_geometric
+        reason: "Острые геометричные принты чужды soft_curved"
+        match: { pattern_character: sharp_geometric }
+      - rule: utility_sport
+        reason: "Утилитарные спортивные формы убирают мягкость"
+        match: { sub_type: sport }
+    notes:
+      - "Bikini с мягкой драпировкой в нейтральных тонах — формула SN."
+
+  natural:
+    prefer:
+      shape: [simple_relaxed, blunt_clean]
+      sub_types: [bikini_simple, one_piece_simple, sport_bikini]
+      cut_character: [clean_simple, casual_lines]
+      waist_rise: [medium, high]
+      color_pattern: [solid_neutral, simple_print]
+    stop:
+      - rule: ornate_decorative
+        reason: "Декоративные мелкие детали чужды утилитарной природе"
+        match: { detail_scale: small, has_ornament: true }
+      - rule: glossy_dressy
+        reason: "Глянцевые нарядные не вписываются в casual"
+        match: { finish: lustrous }
+      - rule: ruffled_tiered
+        reason: "Оборки и ярусы ломают расслабленный силуэт"
+        match: { sub_type: tiered }
+    notes:
+      - "Простой bikini в нейтральном цвете или sport-стиль — естественная база."
+
+  dramatic_classic:
+    prefer:
+      shape: [clean_sculptural, refined_geometric]
+      sub_types: [one_piece_clean, refined_bikini, structured_swimsuit]
+      cut_character: [clean_lines_refined, polished_simple]
+      waist_rise: [high, medium]
+      color_pattern: [solid_clean, refined_stripe, classic_polka_dot]
+    stop:
+      - rule: ruffled_decorative
+        reason: "Рюши и декор ломают строгость DC"
+        match: { sub_type: ruffled }
+      - rule: oversized_loose
+        reason: "Свободный крой убирает дисциплину"
+        match: { fit: loose }
+      - rule: ornate_busy
+        reason: "Декоративные шумные принты чужды чистой структуре"
+        match: { pattern: busy }
+    notes:
+      - "Чёрный clean one-piece или refined bikini — формула DC."
+
+  soft_classic:
+    prefer:
+      shape: [refined_curved, soft_clean, gentle_hourglass]
+      sub_types: [one_piece_refined, soft_bikini, polished_tankini]
+      cut_character: [soft_clean, refined_drape]
+      waist_rise: [medium, high]
+      color_pattern: [solid_refined, soft_print, classic_dot]
+    stop:
+      - rule: sharp_geometric_extreme
+        reason: "Острые геометричные формы ломают мягкость SC"
+        match: { shape: sharp_extreme }
+      - rule: oversized_boxy
+        reason: "Boxy крой скрывает мягкую талию"
+        match: { fit: oversized }
+      - rule: ornate_excessive
+        reason: "Чрезмерная декоративность ломает сдержанность"
+        match: { detail_scale: small, has_ornament: true }
+    notes:
+      - "Refined one-piece в classic-цвете — формула SC."
+
+  classic:
+    prefer:
+      shape: [classic_balanced, refined_simple]
+      sub_types: [one_piece_classic, classic_bikini, refined_tankini]
+      cut_character: [clean_balanced, refined_simple]
+      waist_rise: [medium, high]
+      color_pattern: [solid_classic, classic_stripe, classic_dot]
+      symmetry: required
+    stop:
+      - rule: extreme_cut
+        reason: "Очень открытые или очень закрытые — крайности вне Classic"
+        match: { coverage: [extreme_minimal, extreme_full] }
+      - rule: avant_garde
+        reason: "Авангардные смелые формы ломают сдержанность"
+        match: { style_category: avant_garde }
+      - rule: ornate_baroque
+        reason: "Декоративные барокко-детали чужды балансу Classic"
+        match: { style_category: baroque }
+    notes:
+      - "Классический one-piece в navy или black — золотая середина."
+
+  soft_gamine:
+    prefer:
+      shape: [compact_curved, fit_and_flare_swim, refined_compact]
+      sub_types: [bikini_compact, one_piece_compact, refined_swimsuit]
+      cut_character: [refined_curves, compact_drape]
+      waist_rise: [medium, high]
+      color_pattern: [polka_dot_small, color_block_compact, small_print]
+      pending_detail_scale: small
+    stop:
+      - rule: long_loose
+        reason: "Длинные свободные формы крадут компактность SG"
+        match: { length: long, fit: loose }
+      - rule: sharp_aggressive
+        reason: "Жёсткий агрессивный крой убирает женственность"
+        match: { cut_lines: sharp_extreme }
+      - rule: oversized_loose
+        reason: "Большой свободный крой перегружает компактные пропорции"
+        match: { fit: oversized }
+    notes:
+      - "Compact bikini с маленьким горошком — формула SG."
+
+  gamine:
+    prefer:
+      shape: [compact_geometric, sharp_compact, fit_and_flare_compact]
+      sub_types: [bikini_compact_geometric, one_piece_compact_color]
+      cut_character: [sharp_clean, compact_lines]
+      waist_rise: [medium, high]
+      color_pattern: [color_block, geometric_compact, polka_dot_small]
+      pending_detail_scale: small
+    stop:
+      - rule: long_flowing
+        reason: "Длинные плавные формы крадут компактность"
+        match: { length: long }
+      - rule: oversized_loose
+        reason: "Оверсайз убирает контраст пропорций"
+        match: { fit: oversized }
+      - rule: ruffled_tiered
+        reason: "Оборки и ярусы чужды чёткой геометрии"
+        match: { sub_type: tiered }
+    notes:
+      - "Compact color-block bikini — формула Gamine."
+
+  romantic:
+    prefer:
+      shape: [hourglass_curved, fit_and_flare_swim, lush_one_piece]
+      sub_types: [bikini_curved, one_piece_lush, ruffled_bikini_subtle]
+      cut_character: [soft_drape, gentle_curves, sweetheart_neckline]
+      waist_rise: [medium, high]
+      color_pattern: [floral_soft, soft_print, lustrous_solid]
+    stop:
+      - rule: boxy_masculine
+        reason: "Прямой boxy крой скрывает кривые Romantic"
+        match: { fit: oversized }
+      - rule: utility_sport
+        reason: "Утилитарные спортивные формы убирают женственность"
+        match: { sub_type: sport }
+      - rule: sharp_geometric_extreme
+        reason: "Острые геометричные принты чужды округлым линиям"
+        match: { pattern_character: sharp_geometric }
+    notes:
+      - "Lush one-piece с sweetheart-вырезом и мягким принтом — формула Romantic."
+
+  theatrical_romantic:
+    prefer:
+      shape: [hourglass_dramatic, lush_compact, sweetheart_curved]
+      sub_types: [pin_up_bikini, lush_one_piece_defined, sculpted_swimsuit]
+      cut_character: [defined_drape, sculpted_curves, deep_v_curved]
+      waist_rise: [high, medium]
+      color_pattern: [polka_dot_classic, lustrous_solid, defined_print]
+    stop:
+      - rule: oversized_boxy
+        reason: "Оверсайз скрывает компактные кривые TR"
+        match: { fit: oversized }
+      - rule: utility_sport
+        reason: "Утилитарные спортивные формы убирают театральность"
+        match: { sub_type: sport }
+      - rule: sharp_angular_extreme
+        reason: "Очень острые геометричные формы рубят кривые"
+        match: { shape: sharp_extreme }
+    notes:
+      - "Pin-up bikini с polka dots или sculpted one-piece — формула pin-up TR."
