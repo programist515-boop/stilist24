@@ -1,0 +1,66 @@
+subtype: gamine
+source: "llm_draft_2026-04-25_kibbe_methodology"
+
+stop_list:
+
+  silhouette:
+    - id: elongated_long
+      pattern: "удлинённые maxi-силуэты, длинные платья, макси-юбки"
+      reason: "Gamine про компактность, длина крадёт фирменную миниатюрность"
+    - id: oversized_unfitted
+      pattern: "оверсайз без формы, балахоны"
+      reason: "Размывает контраст пропорций — главный приём подтипа"
+    - id: flowing_smooth
+      pattern: "плавные смешанные silhouette, soft fluid drape"
+      reason: "Gamine живёт на чётких контрастах, плавность тушит энергию"
+    - id: lush_curvy_hourglass
+      pattern: "выраженные пышные lush-формы"
+      reason: "Кривые конкурируют с компактной геометрией Gamine"
+
+  details:
+    - id: oversized_loose_decor
+      pattern: "крупные мягкие декоративные детали"
+      reason: "Gamine любит мелкую чёткую графику, не крупную мягкую"
+    - id: flowing_loose_drape
+      pattern: "длинные свободные шарфы, struящиеся ленты"
+      reason: "Удлинённость в деталях ломает контраст и компактность"
+
+  fabrics:
+    - id: heavy_drape_fabric
+      pattern: "тяжёлая струящаяся ткань (heavy satin, jersey плотный)"
+      reason: "Утяжеляет силуэт и тянет вниз"
+    - id: chunky_oversized_knit
+      pattern: "крупная вязка, oversize sweater"
+      reason: "Объём поглощает компактный масштаб"
+    - id: heavy_brocade_stiff
+      pattern: "тяжёлая жёсткая парча"
+      reason: "Слишком формально для дерзкой графичной подачи"
+
+  prints:
+    - id: large_scale_floral
+      pattern: "крупные цветочные принты, watercolor-абстракция большая"
+      reason: "Большой масштаб поглощает компактную фигуру"
+    - id: ditsy_overload_busy
+      pattern: "перегруженные dityz узоры"
+      reason: "Дробит чёткую графику; нужна одна точная деталь, не хаос"
+    - id: soft_organic
+      pattern: "мягкие органические узоры (paisley, акварель)"
+      reason: "Gamine про геометрию и контраст, не про органику"
+
+  color:
+    - id: monochrome_long_vertical
+      pattern: "длинная одноцветная вертикаль"
+      reason: "Удлиняет силуэт визуально — анти-Gamine эффект"
+    - id: muddy_dusty
+      pattern: "грязные пыльные оттенки"
+      reason: "Gamine любит чистые контрастные цвета"
+    - id: pastel_only_no_contrast
+      pattern: "только пастельные без контрастов"
+      reason: "Подтип строится на ярких цветовых контрастах, моно-пастель смазывает"
+
+  categories_ref:
+    jackets: "see category_rules/jackets.yaml → gamine.stop"
+    dresses: "see category_rules/dresses.yaml → gamine.stop"
+    pants: "see category_rules/pants.yaml → gamine.stop"
+    skirts: "see category_rules/skirts.yaml → gamine.stop"
+    shoes: "see category_rules/shoes.yaml → gamine.stop"

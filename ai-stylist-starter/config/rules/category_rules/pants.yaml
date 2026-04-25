@@ -16,25 +16,208 @@ rules:
     stop:
       - rule: wide_unstructured
         reason: "Широкие неструктурированные брюки размывают силуэт"
+        match: { fit: [wide, loose], structure: unstructured }
       - rule: drapey_pleated_soft
         reason: "Драпирующиеся брюки со сборками на талии и зауженные на лодыжке — не лучший вариант"
+        match: { fabric_rigidity: soft, sub_type: pleated }
       - rule: soft_jogger
         reason: "Мягкие спортивные брюки без структуры — не FG"
+        match: { sub_type: jogger, structure: unstructured }
       - rule: ultra_distressed_jeans
         reason: "Потёртые джинсы светлых оттенков теряют контраст и чёткость"
+        # match не заполнен: нужны атрибуты distressed_level / wash_lightness — нет
     notes:
       - "Со стрелками, лампасами, контрастными деталями — смело можно."
       - "Кожаные брюки — это находка для типажа."
 
-  dramatic: {prefer: {}, stop: []}
-  soft_dramatic: {prefer: {}, stop: []}
-  flamboyant_natural: {prefer: {}, stop: []}
-  soft_natural: {prefer: {}, stop: []}
-  natural: {prefer: {}, stop: []}
-  dramatic_classic: {prefer: {}, stop: []}
-  soft_classic: {prefer: {}, stop: []}
-  classic: {prefer: {}, stop: []}
-  soft_gamine: {prefer: {}, stop: []}
-  gamine: {prefer: {}, stop: []}
-  romantic: {prefer: {}, stop: []}
-  theatrical_romantic: {prefer: {}, stop: []}
+  dramatic:
+    prefer:
+      fit: [straight_narrow, slim, tailored]
+      pending_length: [full, ankle_full]
+      pending_silhouette: straight_narrow
+      pending_structure: tailored
+      pending_cut_lines: [sharp, clean]
+      sub_types: [tailored_trousers, palazzo_long, slim_leather]
+    stop:
+      - rule: cropped_short
+        reason: "Cropped длина крадёт длинную вертикаль"
+        match: { length: cropped }
+      - rule: ruffled_busy
+        reason: "Декоративные busy детали ломают чистую линию"
+        match: { sub_type: ruffled }
+
+  soft_dramatic:
+    prefer:
+      fit: [wide_elongated, palazzo, slim_high_waist]
+      pending_length: [full, floor_grazing]
+      pending_silhouette: wide_elongated
+      pending_structure: tailored
+      pending_cut_lines: [sharp, draped]
+      pending_fabric: [silk, satin_heavy, crepe_heavy, wool_fluid]
+    stop:
+      - rule: cropped_compact
+        reason: "Cropped крадёт lush-вертикаль SD"
+        match: { length: cropped }
+      - rule: skinny_tight
+        reason: "Слишком обтягивающие skinny не работают на пышной фигуре"
+        match: { fit: skinny }
+
+  flamboyant_natural:
+    prefer:
+      fit: [wide, wide_straight, bootcut, palazzo]
+      pending_length: [full, floor_grazing]
+      pending_silhouette: wide
+      pending_structure: semi_structured
+      pending_cut_lines: relaxed
+      pending_fabric: [denim, linen, cotton_twill, suede]
+    stop:
+      - rule: tight_skinny
+        reason: "Skinny деформирует расслабленную атлетичную линию FN"
+        match: { fit: skinny }
+      - rule: dainty_cropped
+        reason: "Короткие deликатные брюки теряются на масштабе"
+        match: { length: cropped }
+
+  soft_natural:
+    prefer:
+      fit: [wide_flowing, semi_fitted, wide_straight]
+      pending_length: [full, just_ankle]
+      pending_silhouette: wide_flowing
+      pending_structure: semi_structured
+      pending_cut_lines: relaxed
+      pending_fabric: [linen, viscose, soft_cotton, soft_jersey]
+    stop:
+      - rule: tight_skinny
+        reason: "Skinny деформирует мягкие плавные линии SN"
+        match: { fit: skinny }
+      - rule: stiff_overtailored
+        reason: "Жёсткие over-tailored брюки несовместимы с мягкостью"
+        match: { structure: tailored_rigid }
+
+  natural:
+    prefer:
+      fit: [straight, wide_straight, relaxed]
+      pending_length: [full, ankle, just_ankle]
+      pending_silhouette: straight
+      pending_structure: semi_structured
+      pending_cut_lines: relaxed
+      pending_fabric: [denim, linen, cotton, soft_wool]
+    stop:
+      - rule: tight_skinny
+        reason: "Skinny деформирует расслабленную линию"
+        match: { fit: skinny }
+      - rule: dainty_decor
+        reason: "Декоративные мелкие детали чужды утилитарности"
+        match: { detail_scale: small }
+
+  dramatic_classic:
+    prefer:
+      fit: [straight_slim, slim_high_waist, tailored]
+      pending_length: full
+      pending_silhouette: straight_narrow
+      pending_structure: tailored
+      pending_cut_lines: clean
+      sub_types: [creased_trousers, slim_high_waist]
+    stop:
+      - rule: oversized_loose
+        reason: "Оверсайз убирает дисциплину силуэта DC"
+        match: { fit: oversized }
+      - rule: cropped_aggressive
+        reason: "Cropped ломает строгую длинную линию"
+        match: { length: cropped }
+
+  soft_classic:
+    prefer:
+      fit: [straight_moderate, semi_fitted, slim_soft]
+      pending_length: [full, just_ankle]
+      pending_silhouette: straight_moderate
+      pending_structure: semi_tailored
+      pending_cut_lines: clean
+      pending_fabric: [crepe, soft_wool, fine_twill]
+    stop:
+      - rule: oversized_unfitted
+        reason: "Оверсайз скрывает мягкую talia"
+        match: { fit: oversized }
+      - rule: skinny_tight
+        reason: "Слишком обтягивающие skinny чужды мягкой природе"
+        match: { fit: skinny }
+
+  classic:
+    prefer:
+      fit: [straight_moderate, semi_fitted]
+      pending_length: [full, ankle]
+      pending_silhouette: straight_moderate
+      pending_structure: tailored_moderate
+      pending_cut_lines: clean
+    stop:
+      - rule: cropped_aggressive
+        reason: "Cropped вне умеренной классической пропорции"
+        match: { length: cropped }
+      - rule: oversized_loose
+        reason: "Оверсайз чужд сбалансированной форме"
+        match: { fit: oversized }
+
+  soft_gamine:
+    prefer:
+      fit: [cigarette, slim_cropped, skinny_curved]
+      pending_length: [ankle, just_above_ankle]
+      pending_silhouette: slim_cropped
+      pending_structure: tailored
+      pending_cut_lines: [crisp, curved]
+      sub_types: [cigarette_pants, skinny_jeans_high]
+    stop:
+      - rule: long_wide
+        reason: "Длинные wide брюки крадут компактность SG"
+        match: { length: full, silhouette: wide }
+      - rule: oversized_boxy
+        reason: "Boxy скрывает мягкие кривые"
+        match: { fit: oversized }
+
+  gamine:
+    prefer:
+      fit: [cigarette, slim_cropped]
+      pending_length: ankle
+      pending_silhouette: slim_cropped
+      pending_structure: tailored
+      pending_cut_lines: crisp
+      sub_types: [cigarette_pants, cropped_jeans, slim_ankle]
+    stop:
+      - rule: long_wide_palazzo
+        reason: "Wide palazzo крадут компактность Gamine"
+        match: { length: full, silhouette: wide }
+      - rule: flowing_drape
+        reason: "Плавные draped формы ломают чёткие контрасты"
+        match: { cut_lines: soft_flowing }
+
+  romantic:
+    prefer:
+      fit: [bootcut, slim_curved, wide_flowing]
+      pending_length: [full, floor_grazing]
+      pending_silhouette: curved_through_leg
+      pending_structure: semi_structured
+      pending_cut_lines: [flowing, curved]
+      pending_fabric: [silk, satin, soft_jersey, viscose]
+    stop:
+      - rule: stiff_boxy_straight
+        reason: "Жёсткие прямые брюки скрывают кривые Romantic"
+        match: { fit: straight, structure: tailored_rigid }
+      - rule: utility_safari
+        reason: "Утилитарные брюки убирают женственность"
+        match: { sub_type: cargo }
+
+  theatrical_romantic:
+    prefer:
+      fit: [skinny_high_waist, slim_curved, hourglass_pants]
+      pending_length: [ankle, just_above_ankle]
+      pending_silhouette: skinny_curved
+      pending_structure: tailored
+      pending_cut_lines: [curved, crisp]
+      pending_waist: high_fitted
+      pending_fabric: [stretch_satin, silk, structured_crepe, denim_high_stretch]
+    stop:
+      - rule: oversized_wide
+        reason: "Wide oversize скрывает компактные кривые TR"
+        match: { fit: oversized }
+      - rule: utility_safari
+        reason: "Утилитарные карго убирают театральность"
+        match: { sub_type: cargo }

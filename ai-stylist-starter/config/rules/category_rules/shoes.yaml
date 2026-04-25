@@ -14,25 +14,189 @@ rules:
     stop:
       - rule: classic_round_toe_pumps
         reason: "Классические лодочки с круглым носом — слишком нейтрально"
+        match: { sub_type: pumps, toe_shape: round }
       - rule: thin_straps_delicate
         reason: "Утончённые туфли с обилием тонких ремешков — романтичная эстетика"
+        match: { sub_type: strappy_sandals, weight: light }
       - rule: ballerinas_plain
         reason: "Простые балетки — слишком 'девочка'"
+        match: { sub_type: ballerinas }
       - rule: wedge_platform_smooth
         reason: "Плавная танкетка теряет угловатость"
+        match: { heel_type: wedge }
     notes:
       - "Если надели джинсы — ботинки короткие, джинсы закатать чтобы щиколотки открыты."
       - "Можно колготки/носки диких ярких цветов, НЕ классические чёрные/бежевые в тон обуви."
 
-  dramatic: {prefer: {}, stop: []}
-  soft_dramatic: {prefer: {}, stop: []}
-  flamboyant_natural: {prefer: {}, stop: []}
-  soft_natural: {prefer: {}, stop: []}
-  natural: {prefer: {}, stop: []}
-  dramatic_classic: {prefer: {}, stop: []}
-  soft_classic: {prefer: {}, stop: []}
-  classic: {prefer: {}, stop: []}
-  soft_gamine: {prefer: {}, stop: []}
-  gamine: {prefer: {}, stop: []}
-  romantic: {prefer: {}, stop: []}
-  theatrical_romantic: {prefer: {}, stop: []}
+  dramatic:
+    prefer:
+      sub_types: [pointed_pumps, ankle_boots_sharp, knee_high_boots, stiletto]
+      pending_toe_shape: pointed
+      pending_heel_type: stiletto
+      pending_detail_scale: minimal
+    stop:
+      - rule: round_chunky
+        reason: "Округлый массивный носок ломает длинную линию ноги"
+        match: { toe_shape: round, detail_scale: large }
+      - rule: cute_dainty_decor
+        reason: "Cute dainty декор инфантилен для командной подачи"
+        match: { detail_scale: small }
+
+  soft_dramatic:
+    prefer:
+      sub_types: [stiletto, pointed_pumps, knee_high_boots, slim_curved_heels]
+      pending_toe_shape: pointed
+      pending_heel_type: stiletto
+      pending_fabric: [satin, leather_lush, suede_soft]
+    stop:
+      - rule: chunky_flat
+        reason: "Грубые плоские формы убирают чувственность SD"
+        match: { heel_type: flat, detail_scale: large }
+      - rule: cute_mary_jane
+        reason: "Mary Jane инфантильна для зрелой драматичной подачи"
+        match: { sub_type: mary_janes }
+
+  flamboyant_natural:
+    prefer:
+      sub_types: [chunky_sneakers, ankle_boots, western_boots, knee_boots, loafers_chunky]
+      pending_detail_scale: [medium, large]
+      pending_heel_type: [flat, low_block]
+      pending_fabric: [leather_natural, suede, denim]
+    stop:
+      - rule: dainty_stiletto
+        reason: "Тонкая шпилька несовместима с расслабленной FN-подачей"
+        match: { heel_type: stiletto }
+      - rule: tiny_dainty
+        reason: "Мелкие dityz детали теряются на масштабе"
+        match: { detail_scale: small }
+
+  soft_natural:
+    prefer:
+      sub_types: [low_block_heels, espadrilles, loafers, ankle_boots_soft, sandals]
+      pending_detail_scale: medium
+      pending_heel_type: [low_block, slim_curved]
+      pending_fabric: [soft_leather, suede, fabric]
+    stop:
+      - rule: stiff_pointed_high
+        reason: "Высокие острые шпильки убирают мягкую естественность SN"
+        match: { heel_type: stiletto, toe_shape: pointed_sharp }
+      - rule: chunky_industrial
+        reason: "Грубая индустриальная фурнитура ломает мягкость"
+        match: { detail_scale: large, structure: industrial }
+
+  natural:
+    prefer:
+      sub_types: [loafers, ankle_boots, chunky_sneakers, sandals, oxfords]
+      pending_detail_scale: medium
+      pending_heel_type: [flat, low_block]
+      pending_fabric: [leather_natural, suede, denim]
+    stop:
+      - rule: stiletto_high
+        reason: "Тонкая шпилька несовместима с расслабленной природой"
+        match: { heel_type: stiletto }
+      - rule: dainty_decor
+        reason: "Decоративные мелкие детали чужды утилитарности"
+        match: { detail_scale: small }
+
+  dramatic_classic:
+    prefer:
+      sub_types: [pumps, pointed_flats, ankle_boots_slim, slingbacks]
+      pending_toe_shape: pointed
+      pending_heel_type: [stiletto, slim_block]
+      pending_detail_scale: minimal
+    stop:
+      - rule: chunky_loose
+        reason: "Грубые формы ломают дисциплину DC"
+        match: { detail_scale: large }
+      - rule: cute_dainty
+        reason: "Cute dainty детали инфантильны"
+        match: { sub_type: mary_janes }
+
+  soft_classic:
+    prefer:
+      sub_types: [pumps, ballet_flats, kitten_heels, slingbacks, mid_heels]
+      pending_toe_shape: [pointed_soft, almond, round]
+      pending_heel_type: [slim_block, kitten]
+      pending_detail_scale: medium
+    stop:
+      - rule: chunky_aggressive
+        reason: "Грубые аггресивные формы ломают мягкую гармонию"
+        match: { detail_scale: large }
+      - rule: stiletto_extreme
+        reason: "Очень высокая острая шпилька вне умеренной классики"
+        match: { heel_type: stiletto_extreme }
+
+  classic:
+    prefer:
+      sub_types: [pumps, mid_heels, loafers, pointed_flats]
+      pending_toe_shape: [pointed_soft, almond]
+      pending_heel_type: [slim_block, kitten, mid]
+      pending_detail_scale: medium
+    stop:
+      - rule: extreme_chunky
+        reason: "Крайне chunky формы вне сбалансированной классики"
+        match: { detail_scale: oversized }
+      - rule: extreme_minimal
+        reason: "Слишком экстремально минималистичные тоже выпадают"
+        match: { detail_scale: tiny }
+
+  soft_gamine:
+    prefer:
+      sub_types: [mary_janes, kitten_heels, ballet_flats, mid_heels, pumps]
+      pending_toe_shape: [round, almond, pointed_soft]
+      pending_heel_type: [kitten, slim_block]
+      pending_detail_scale: small
+    stop:
+      - rule: knee_high_long
+        reason: "Высокие сапоги-ботфорты крадут компактность SG"
+        match: { sub_type: knee_high_boots }
+      - rule: chunky_oversized
+        reason: "Крупные грубые формы убирают женственность"
+        match: { detail_scale: large }
+
+  gamine:
+    prefer:
+      sub_types: [loafers, oxfords, mary_janes, ballet_flats, ankle_boots_slim, mod_boots]
+      pending_toe_shape: [round, almond]
+      pending_heel_type: [flat, kitten, low_block]
+      pending_detail_scale: small
+    stop:
+      - rule: stiletto_high
+        reason: "Высокая шпилька удлиняет — крадёт компактность Gamine"
+        match: { heel_type: stiletto }
+      - rule: long_knee_boots
+        reason: "Длинные ботфорты создают вертикаль"
+        match: { sub_type: knee_high_boots }
+      - rule: chunky_oversized
+        reason: "Грубые формы поглощают петитный масштаб"
+        match: { detail_scale: oversized }
+
+  romantic:
+    prefer:
+      sub_types: [heels_rounded_toe, kitten_heels, ballet_flats_curved, slim_curved_pumps]
+      pending_toe_shape: [round, almond, pointed_soft]
+      pending_heel_type: [slim_block, kitten, slim_curved]
+      pending_detail_scale: medium
+      pending_fabric: [soft_leather, satin, suede_soft]
+    stop:
+      - rule: chunky_industrial
+        reason: "Грубые индустриальные формы убирают женственность"
+        match: { detail_scale: large, structure: industrial }
+      - rule: utility_combat
+        reason: "Военные/утилитарные сапоги несовместимы с округлой природой"
+        match: { sub_type: combat_boots }
+
+  theatrical_romantic:
+    prefer:
+      sub_types: [pointed_heels, slingback_heels, stiletto, pumps_curved, mary_janes_heel]
+      pending_toe_shape: [pointed_soft, almond]
+      pending_heel_type: [stiletto, slim_curved]
+      pending_detail_scale: [small, medium]
+      pending_fabric: [satin, leather_lush, velvet]
+    stop:
+      - rule: chunky_flat
+        reason: "Грубые плоские формы убирают театральность TR"
+        match: { heel_type: flat, detail_scale: large }
+      - rule: utility_combat
+        reason: "Военные/утилитарные сапоги несовместимы с lush-кривыми"
+        match: { sub_type: combat_boots }

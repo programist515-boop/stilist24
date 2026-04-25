@@ -1,0 +1,70 @@
+subtype: dramatic
+source: "llm_draft_2026-04-25_kibbe_methodology"
+
+stop_list:
+
+  silhouette:
+    - id: cropped_cute
+      pattern: "укороченные cute-силуэты, оборки, A-line короткие"
+      reason: "Dramatic — длинная вертикаль, любые crop-формы ломают линию"
+    - id: hourglass_curved
+      pattern: "выраженные округлые песочные часы, корсетные формы"
+      reason: "Кривые конкурируют с фирменной длиной и угловатостью"
+    - id: oversized_boxy
+      pattern: "оверсайз без структуры, бесформенные кубы"
+      reason: "Без чёткого края Dramatic читается как 'крупная' вместо 'высокой'"
+    - id: ruffled_layered
+      pattern: "многослойность с рюшами и воланами"
+      reason: "Декоративные слои размывают чёткость линии"
+
+  details:
+    - id: ornate_decorations
+      pattern: "богатый декор, банты, рюши, фурнитура с завитками"
+      reason: "Dramatic про чистоту — каждая деталь должна работать на острый край"
+    - id: peter_pan_collar
+      pattern: "воротник Питер Пэн, маленькие cute-воротнички"
+      reason: "Делают взрослого Dramatic визуально 'ребёнком в чужом образе'"
+    - id: dainty_jewelry
+      pattern: "мелкие нежные украшения"
+      reason: "Теряются на длинной линии, нужны крупные геометричные акценты"
+
+  fabrics:
+    - id: soft_loose_knit
+      pattern: "тонкий мягкий трикотаж без формы"
+      reason: "Не держит вертикаль, плечи провисают"
+    - id: ditsy_eyelet_cotton
+      pattern: "хлопок с шитьём ришелье, прозрачный батист с цветочками"
+      reason: "Деревенская мягкость противоречит командной природе"
+    - id: chunky_textured_wool
+      pattern: "крупная вязка, грубая тёплая шерсть"
+      reason: "Объём добавляет ширину, убирает остроту"
+
+  prints:
+    - id: ditsy_floral
+      pattern: "мелкий dityz цветочный принт, мелкая клетка-гингам"
+      reason: "Мелкие cute-узоры конфликтуют с масштабом подтипа"
+    - id: watercolor_soft
+      pattern: "акварельные размытые принты, soft pastel washes"
+      reason: "Размытость убирает чёткость, центральная для Dramatic"
+    - id: cute_polka_dot
+      pattern: "мелкий весёлый горох"
+      reason: "Слишком игривый для командной подачи"
+
+  color:
+    - id: pastel_pale
+      pattern: "пастельные бледные цвета"
+      reason: "Бледность убирает магнетизм длинной фигуры"
+    - id: dusty_warm_neutrals
+      pattern: "пыльные тёплые нейтральные (бежевый, какао светлый)"
+      reason: "Размывают силу подтипа, дают 'не свой' эффект"
+    - id: candy_brights
+      pattern: "конфетные яркие, инфантильные сочетания"
+      reason: "Цвета должны быть глубокими и насыщенными, не игривыми"
+
+  categories_ref:
+    jackets: "see category_rules/jackets.yaml → dramatic.stop"
+    dresses: "see category_rules/dresses.yaml → dramatic.stop"
+    pants: "see category_rules/pants.yaml → dramatic.stop"
+    skirts: "see category_rules/skirts.yaml → dramatic.stop"
+    shoes: "see category_rules/shoes.yaml → dramatic.stop"
+    outerwear: "see category_rules/outerwear.yaml → dramatic.*.stop"

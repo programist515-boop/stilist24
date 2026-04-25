@@ -24,6 +24,7 @@ from dataclasses import dataclass, field
 from typing import Any
 
 from app.services.outfits.scoring.base import ScorerResult
+from app.services.outfits.scoring.category_rules import CategoryRulesScorer
 from app.services.outfits.scoring.color_combination import ColorCombinationScorer
 from app.services.outfits.scoring.color_harmony import ColorHarmonyScorer
 from app.services.outfits.scoring.occasion import OccasionScorer
@@ -31,6 +32,8 @@ from app.services.outfits.scoring.palette_fit import PaletteFitScorer
 from app.services.outfits.scoring.preference import PreferenceScorer
 from app.services.outfits.scoring.reuse import ReuseScorer
 from app.services.outfits.scoring.silhouette import SilhouetteScorer
+from app.services.outfits.scoring.silhouette_rules import SilhouetteRulesScorer
+from app.services.outfits.scoring.style_affinity import StyleAffinityScorer
 from app.services.outfits.scoring.weather import WeatherScorer
 
 
@@ -76,6 +79,9 @@ _DEFAULT_SCORERS: dict[str, type] = {
     "color_harmony": ColorHarmonyScorer,
     "color_combination": ColorCombinationScorer,
     "silhouette": SilhouetteScorer,
+    "silhouette_rules": SilhouetteRulesScorer,
+    "category_rules": CategoryRulesScorer,
+    "style_affinity": StyleAffinityScorer,
     "preference": PreferenceScorer,
     "palette_fit": PaletteFitScorer,
     "occasion": OccasionScorer,

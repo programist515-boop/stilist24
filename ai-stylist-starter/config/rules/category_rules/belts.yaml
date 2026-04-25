@@ -12,8 +12,10 @@ rules:
     stop:
       - rule: thin_delicate
         reason: "Слишком узкие ремешки не украсят FG"
+        match: { width: thin }
       - rule: soft_fabric_braided
         reason: "Мягкие тканевые/плетёные ремни теряют структуру"
+        match: { fabric_rigidity: soft }
     rule_conditions:
       - id: waistline_required
         description: "Обозначение талии важно для драматического стиля, но только если фигура позволяет"

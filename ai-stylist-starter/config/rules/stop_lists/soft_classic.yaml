@@ -1,0 +1,72 @@
+subtype: soft_classic
+source: "llm_draft_2026-04-25_kibbe_methodology"
+
+stop_list:
+
+  silhouette:
+    - id: sharp_angular
+      pattern: "острые угловатые силуэты, командная архитектура"
+      reason: "SC требует сбалансированной мягкости, острый край ломает гармонию"
+    - id: oversized_unfitted
+      pattern: "оверсайз без формы, балахоны"
+      reason: "Стирает мягко выраженную талию подтипа"
+    - id: aggressive_dramatic
+      pattern: "выраженно драматичные удлинённые формы"
+      reason: "Драма перегружает сбалансированную природу SC"
+    - id: cropped_busy
+      pattern: "укороченные busy формы с рюшами"
+      reason: "Дробит гармоничную линию, добавляет лишний шум"
+
+  details:
+    - id: hard_geometric_decor
+      pattern: "жёсткие геометрические аппликации, металлические углы"
+      reason: "Острые акценты конфликтуют с мягкой женственностью"
+    - id: chunky_oversized_jewelry
+      pattern: "крупные массивные украшения"
+      reason: "Перегружают деликатный сбалансированный образ"
+    - id: heavy_industrial_hardware
+      pattern: "грубая фурнитура, массивные молнии"
+      reason: "Несовместимо с утончённой подачей"
+
+  fabrics:
+    - id: stiff_canvas_burlap
+      pattern: "жёсткий брезент, мешковина"
+      reason: "Жёсткость деформирует мягкие линии"
+    - id: heavy_brocade
+      pattern: "тяжёлая жёсткая парча"
+      reason: "Слишком формально-жёстко для гармоничной подачи"
+    - id: chunky_textured_wool
+      pattern: "крупная вязка, грубая твидовая шерсть"
+      reason: "Объём ломает деликатные пропорции"
+    - id: scratchy_rough
+      pattern: "колючая грубая фактура"
+      reason: "Ткань должна льнуть мягко"
+
+  prints:
+    - id: aggressive_animal
+      pattern: "крупный leopard, zebra драматичный"
+      reason: "Драма принта спорит с гармонией силуэта"
+    - id: sharp_geometric
+      pattern: "острая геометрия, mondrian, stark abstract"
+      reason: "Углы конкурируют с мягкой плавностью"
+    - id: cute_kitsch
+      pattern: "kitsch принты (котики, банты, эмодзи)"
+      reason: "Слишком инфантильно для зрелой утончённости"
+
+  color:
+    - id: harsh_neon
+      pattern: "неоновые кричащие цвета"
+      reason: "Слишком резко для гармоничной палитры SC"
+    - id: stark_black_white
+      pattern: "резкий чёрно-белый монохром"
+      reason: "Контраст слишком высокий, нужен мягкий тональный переход"
+    - id: muddy_dirty
+      pattern: "грязные пыльные неактивные оттенки"
+      reason: "Тушат благородство классического образа"
+
+  categories_ref:
+    jackets: "see category_rules/jackets.yaml → soft_classic.stop"
+    dresses: "see category_rules/dresses.yaml → soft_classic.stop"
+    pants: "see category_rules/pants.yaml → soft_classic.stop"
+    skirts: "see category_rules/skirts.yaml → soft_classic.stop"
+    shoes: "see category_rules/shoes.yaml → soft_classic.stop"

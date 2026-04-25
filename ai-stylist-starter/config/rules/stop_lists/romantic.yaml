@@ -1,0 +1,68 @@
+subtype: romantic
+source: "llm_draft_2026-04-25_kibbe_methodology"
+
+stop_list:
+
+  silhouette:
+    - id: sharp_angular
+      pattern: "острые угловатые силуэты, командные жакеты"
+      reason: "Romantic про мягкие округлые линии, острый край ломает чувственность"
+    - id: oversized_boxy
+      pattern: "оверсайз boxy, прямые мужские силуэты"
+      reason: "Скрывают пышные кривые, фирменные для подтипа"
+    - id: utility_safari_masculine
+      pattern: "утилитарные сафари-формы, masculine silhouette"
+      reason: "Мужская/утилитарная подача убирает женственность"
+    - id: cropped_choppy
+      pattern: "укороченные cropped формы, аггрессивный crop"
+      reason: "Дробит длинную lush-кривую"
+
+  details:
+    - id: industrial_hardware
+      pattern: "грубая индустриальная фурнитура"
+      reason: "Жёсткие детали конфликтуют с округлой природой"
+    - id: stiff_geometric_collar
+      pattern: "жёсткие геометрические воротники"
+      reason: "Острые углы спорят с мягким лицом"
+    - id: ditsy_minimal
+      pattern: "слишком минималистичные мелкие детали"
+      reason: "Romantic нуждается в богатстве деталей, аскетизм скучен"
+
+  fabrics:
+    - id: stiff_canvas_burlap
+      pattern: "жёсткий брезент, мешковина, грубый деним"
+      reason: "Romantic ткани — мягкие струящиеся (шёлк, бархат, кружево)"
+    - id: rough_heavy_suede
+      pattern: "грубая тяжёлая замша"
+      reason: "Утилитарная фактура несовместима с чувственностью"
+    - id: heavy_industrial_leather
+      pattern: "грубая индустриальная кожа"
+      reason: "Жёсткость убирает мягкое движение по фигуре"
+
+  prints:
+    - id: aggressive_stripe
+      pattern: "агрессивные полосы, military-camo, stark stripe"
+      reason: "Жёсткие узоры противоречат округлой подаче"
+    - id: angular_geometric
+      pattern: "острая геометрия (mondrian, stark abstract)"
+      reason: "Углы ломают плавность"
+    - id: tribal_aggressive
+      pattern: "tribal крупный агрессивный, ethnic жёсткий"
+      reason: "Слишком грубо для женственной подачи"
+
+  color:
+    - id: harsh_neon
+      pattern: "неоновые кричащие, индустриальные цвета"
+      reason: "Romantic любит мягкие тёплые насыщенные тона"
+    - id: stark_black_white_only
+      pattern: "только резкий чёрно-белый монохром без оттенков"
+    - id: muddy_dirty_dust
+      pattern: "грязные пыльные неактивные оттенки"
+      reason: "Тушат чувственность, нужна богатая палитра"
+
+  categories_ref:
+    jackets: "see category_rules/jackets.yaml → romantic.stop"
+    dresses: "see category_rules/dresses.yaml → romantic.stop"
+    pants: "see category_rules/pants.yaml → romantic.stop"
+    skirts: "see category_rules/skirts.yaml → romantic.stop"
+    shoes: "see category_rules/shoes.yaml → romantic.stop"

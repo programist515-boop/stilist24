@@ -1,0 +1,72 @@
+subtype: soft_natural
+source: "llm_draft_2026-04-25_kibbe_methodology"
+
+stop_list:
+
+  silhouette:
+    - id: stiff_sheath_corseted
+      pattern: "жёсткий sheath, корсет с твёрдой структурой"
+      reason: "SN требует мягкого облегания, жёсткость деформирует кривые"
+    - id: oversized_boxy
+      pattern: "оверсайз boxy, прямые мужские силуэты"
+      reason: "Скрывают мягкую выраженную талию подтипа"
+    - id: sharp_geometric
+      pattern: "острые геометрические силуэты, угловатые"
+      reason: "Конфликтуют с природной плавностью линий"
+    - id: heavy_drapery_no_waist
+      pattern: "тяжёлая драпировка без обозначения талии"
+      reason: "SN нуждается в мягко выраженной талии — иначе образ 'плывёт'"
+
+  details:
+    - id: hard_geometric_collar
+      pattern: "жёсткие геометрические воротники"
+      reason: "Острые углы спорят с округлым лицом и плечами"
+    - id: tiny_dainty_hardware
+      pattern: "мелкая ювелирная фурнитура (микро-пуговки, тонкие цепочки)"
+      reason: "Теряются на естественной фактуре, нужны умеренные средние"
+    - id: stiff_overtailored
+      pattern: "жёсткий over-tailored крой с подплечниками"
+      reason: "Деформирует мягкие плечи и читается чуждо"
+
+  fabrics:
+    - id: stiff_leather_canvas
+      pattern: "жёсткая кожа, грубый брезент"
+      reason: "SN ткани — мягкие натуральные с движением (вискоза, лён)"
+    - id: heavy_brocade
+      pattern: "тяжёлая парча, формальный плотный шёлк"
+      reason: "Слишком формально для расслабленной природы"
+    - id: lacquered_finish
+      pattern: "лакированные блестящие финиши"
+      reason: "Жёсткий блеск конфликтует с мягкими натуральными"
+    - id: scratchy_wool
+      pattern: "колючая грубая шерсть"
+      reason: "Нужна мягкость на коже"
+
+  prints:
+    - id: sharp_geometric
+      pattern: "острый геометрический принт, mondrian, угловатая абстракция"
+      reason: "Углы конкурируют с органичными линиями SN"
+    - id: tiny_micro
+      pattern: "мелкий dityz и микро-узоры"
+      reason: "Теряются, нужны средние мягкие принты (paisley, акварель)"
+    - id: aggressive_animal
+      pattern: "агрессивный leopard крупный, zebra контрастный"
+      reason: "Слишком драматично, SN — про мягкие органические узоры"
+
+  color:
+    - id: cold_brights
+      pattern: "холодные кричащие яркие (электрик, фуксия)"
+      reason: "SN живёт на тёплой натуральной палитре (карамель, оливка)"
+    - id: stark_black_white
+      pattern: "резкий чёрно-белый монохром"
+      reason: "Слишком жёсткий контраст для мягкого подтипа"
+    - id: dusty_grey
+      pattern: "пыльный холодный серый"
+      reason: "Тушит тёплый цветотип, делает образ блёклым"
+
+  categories_ref:
+    jackets: "see category_rules/jackets.yaml → soft_natural.stop"
+    dresses: "see category_rules/dresses.yaml → soft_natural.stop"
+    pants: "see category_rules/pants.yaml → soft_natural.stop"
+    skirts: "see category_rules/skirts.yaml → soft_natural.stop"
+    shoes: "see category_rules/shoes.yaml → soft_natural.stop"

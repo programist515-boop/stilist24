@@ -1,8 +1,13 @@
 # Матрица аффинити: какие стили идут какому подтипу.
 # Используется в outfit_engine для бонус/штраф скоринга + в UI-селекторе стилей.
 # Значения: excellent | good | neutral | avoid
+#
+# Источник методологии: классическая система Дэвида Кибби (1987).
+# 12 подтипов наполнены 2026-04-25 (LLM-черновик + методология FG как образец).
 
 style_subtype_affinity:
+
+  # ======================== GAMINE FAMILY ========================
 
   flamboyant_gamine:
     smart_casual: good
@@ -14,37 +19,133 @@ style_subtype_affinity:
     dramatic: excellent
     twenties: excellent
 
-  # Остальные подтипы — placeholder, наполнить из соответствующих гайдов
+  gamine:
+    smart_casual: good
+    casual: excellent       # mod-эстетика 60-х, контраст в петите
+    military: good
+    dandy: excellent        # графичные линии, чёткие воротники
+    preppy: excellent       # короткие юбки, лоферы — родная стилистика
+    romantic_adapted: avoid # размывает контраст и компактность
+    dramatic: good
+    twenties: excellent     # короткие силуэты, геометрия
+
+  soft_gamine:
+    smart_casual: excellent # женственная компактность
+    casual: good
+    military: avoid         # слишком грубо для yin-доминирующего gamine
+    dandy: good
+    preppy: excellent       # cropped формы + мелкие детали
+    romantic_adapted: good  # мягкость работает в петите
+    dramatic: avoid         # длинная драма ломает миниатюрность
+    twenties: good
+
+  # ======================== DRAMATIC FAMILY ========================
+
   dramatic:
-    smart_casual: neutral
-    casual: neutral
-    military: neutral
+    smart_casual: good
+    casual: avoid           # расслабленность размывает командную силу
+    military: excellent     # острые формы + структура
+    dandy: excellent        # длинные жакеты, узкие линии
+    preppy: avoid           # короткие cute-формы чужды
+    romantic_adapted: avoid # мягкость убирает остроту
+    dramatic: excellent     # фирменный стиль
+    twenties: good
+
+  soft_dramatic:
+    smart_casual: good
+    casual: avoid           # lush-формы требуют достоинства
+    military: good          # острый край работает, но мягкие ткани лучше
+    dandy: good
+    preppy: avoid           # маленькие пропорции против lush-силуэта
+    romantic_adapted: excellent # мягкие округлости + длина
+    dramatic: excellent     # драма + чувственность
+    twenties: good          # silhouette с драмой подходит
+
+  # ======================== NATURAL FAMILY ========================
+
+  flamboyant_natural:
+    smart_casual: good
+    casual: excellent       # фирменная зона комфорта
+    military: excellent     # утилитарность + крупные пропорции
+    dandy: good             # длинные линии работают
+    preppy: avoid           # cute-формы и зажатость не идут
+    romantic_adapted: avoid # мелкие женственные детали смотрятся «не своими»
+    dramatic: good          # длина работает, но без острого края
+    twenties: avoid         # компактные cute формы чужды масштабу
+
+  soft_natural:
+    smart_casual: excellent # женственная расслабленность
+    casual: excellent
+    military: good          # допустимо в мягкой подаче
     dandy: neutral
-    preppy: neutral
-    romantic_adapted: neutral
-    dramatic: neutral
+    preppy: good
+    romantic_adapted: excellent # мягкость + талия — родное
+    dramatic: avoid         # острая драма ломает плавность
     twenties: neutral
 
-  soft_dramatic: &empty
-    smart_casual: neutral
-    casual: neutral
-    military: neutral
-    dandy: neutral
-    preppy: neutral
-    romantic_adapted: neutral
-    dramatic: neutral
-    twenties: neutral
+  natural:
+    smart_casual: good
+    casual: excellent       # центр зоны комфорта
+    military: excellent     # утилитарность + натуральные ткани
+    dandy: good
+    preppy: avoid           # cute-формы не сочетаются с расслабленностью
+    romantic_adapted: avoid # излишняя женственность чужда
+    dramatic: avoid         # высокая драма ломает естественность
+    twenties: avoid         # геометрия и зажатость не подходят
 
-  flamboyant_natural: *empty
-  soft_natural: *empty
-  natural: *empty
-  dramatic_classic: *empty
-  soft_classic: *empty
-  classic: *empty
-  soft_gamine: *empty
-  gamine: *empty
-  romantic: *empty
-  theatrical_romantic: *empty
+  # ======================== CLASSIC FAMILY ========================
+
+  dramatic_classic:
+    smart_casual: excellent # офисная элегантность с остротой
+    casual: avoid           # расслабленность не даёт держать дисциплину кроя
+    military: good          # острый край работает в строгой подаче
+    dandy: excellent        # длинные жакеты + чистые линии
+    preppy: good
+    romantic_adapted: avoid # мягкие воланы ломают остроту
+    dramatic: good          # допустимо в умеренной форме
+    twenties: good
+
+  soft_classic:
+    smart_casual: excellent # фирменная зона
+    casual: good
+    military: avoid         # острая утилитарность чужда мягкой природе
+    dandy: good
+    preppy: excellent       # cute-pearl детали работают
+    romantic_adapted: excellent # мягкие линии, классическая женственность
+    dramatic: avoid         # острая драма убирает гармонию
+    twenties: good
+
+  classic:
+    smart_casual: excellent # центр зоны комфорта
+    casual: good
+    military: neutral
+    dandy: good
+    preppy: excellent       # сбалансированная классика 50–60-х
+    romantic_adapted: good
+    dramatic: avoid         # крайности противоречат золотой середине
+    twenties: good
+
+  # ======================== ROMANTIC FAMILY ========================
+
+  romantic:
+    smart_casual: good
+    casual: avoid           # расслабленность скрывает кривые
+    military: avoid         # острые формы конфликтуют с округлостью
+    dandy: avoid            # boxy крой убирает женственность
+    preppy: good
+    romantic_adapted: excellent # фирменный стиль
+    dramatic: avoid         # прямые линии ломают силуэт
+    twenties: avoid         # геометрия ломает кривые
+
+  theatrical_romantic:
+    smart_casual: good
+    casual: avoid           # lush-кривые требуют подачи
+    military: good          # острый край работает с lush-телом
+    dandy: avoid            # masc-крой убирает женственность
+    preppy: good
+    romantic_adapted: excellent
+    dramatic: excellent     # драма + кривые — фирменное сочетание
+    twenties: good          # pin-up эстетика 20-х
 
 # Веса в скоринге
 score_modifiers:

@@ -1,0 +1,72 @@
+subtype: natural
+source: "llm_draft_2026-04-25_kibbe_methodology"
+
+stop_list:
+
+  silhouette:
+    - id: tight_sheath
+      pattern: "облегающий sheath, корсетный fit"
+      reason: "Natural требует свободы, тесная посадка деформирует естественную линию"
+    - id: dainty_hourglass
+      pattern: "выраженные деликатные песочные часы"
+      reason: "Natural не про яркие кривые — про прямые расслабленные линии"
+    - id: precious_fitted
+      pattern: "filigree fitted с зажатой талией и мелкими деталями"
+      reason: "Сжатость и precious детали чужды расслабленной природе"
+    - id: ruffled_layered
+      pattern: "многослойные оборки и сборки"
+      reason: "Декоративная мягкость противоречит честной утилитарности"
+
+  details:
+    - id: tiny_dainty
+      pattern: "мелкие нежные декоративные детали"
+      reason: "Теряются на масштабе, нужны крупные честные"
+    - id: ornate_fancy
+      pattern: "богатый декор, вензеля, рюши, банты"
+      reason: "Фирменная утилитарность подтипа отвергает украшательство"
+    - id: stiff_overtailored
+      pattern: "жёсткий over-tailored crisp blazer"
+      reason: "Дисциплина чужда расслабленной форме Natural"
+
+  fabrics:
+    - id: fine_silk_chiffon
+      pattern: "тонкий шёлк, шифон"
+      reason: "Слишком хрупко для расслабленной фактуры"
+    - id: shimmery_satin
+      pattern: "блестящий атлас"
+      reason: "Глянец конкурирует с натуральными матовыми"
+    - id: lace_delicate
+      pattern: "тонкое нежное кружево"
+      reason: "Не вписывается в честную натуральную палитру"
+    - id: stiff_brocade
+      pattern: "жёсткая парча"
+      reason: "Формальная жёсткость не подходит расслабленному образу"
+
+  prints:
+    - id: ditsy_floral
+      pattern: "мелкие dityz цветочные принты"
+      reason: "Слишком precious, нужны средние спокойные узоры"
+    - id: precious_geometric
+      pattern: "выверенная мелкая геометрия"
+      reason: "Natural любит крупные простые натуральные принты"
+    - id: cute_polka
+      pattern: "мелкий весёлый горох"
+      reason: "Игривость не вписывается в зрелую натуральную честность"
+
+  color:
+    - id: cool_jewels
+      pattern: "холодные ювелирные (изумруд яркий, сапфир)"
+      reason: "Natural живёт на тёплой земляной палитре"
+    - id: pastel_baby
+      pattern: "пастельные детские оттенки"
+      reason: "Лёгкость детских пастелей не подходит честной зрелости"
+    - id: harsh_neon
+      pattern: "неоновые кричащие"
+      reason: "Натуральные оттенки: хаки, бежевый, серо-коричневый — фундамент"
+
+  categories_ref:
+    jackets: "see category_rules/jackets.yaml → natural.stop"
+    dresses: "see category_rules/dresses.yaml → natural.stop"
+    pants: "see category_rules/pants.yaml → natural.stop"
+    skirts: "see category_rules/skirts.yaml → natural.stop"
+    shoes: "see category_rules/shoes.yaml → natural.stop"

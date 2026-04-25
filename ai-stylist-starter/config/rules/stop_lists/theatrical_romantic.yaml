@@ -1,0 +1,72 @@
+subtype: theatrical_romantic
+source: "llm_draft_2026-04-25_kibbe_methodology"
+
+stop_list:
+
+  silhouette:
+    - id: oversized_boxy
+      pattern: "оверсайз boxy, прямые мужские силуэты"
+      reason: "TR кривые требуют облегания, оверсайз скрывает фирменную lush-фигуру"
+    - id: straight_column_rigid
+      pattern: "прямая жёсткая колонна без формы"
+      reason: "Прямой crop ломает песочные часы TR"
+    - id: utility_safari
+      pattern: "утилитарные сафари-формы"
+      reason: "Мужская подача убирает театральную чувственность"
+    - id: cropped_busy_choppy
+      pattern: "укороченные busy формы с дроблёным декором"
+      reason: "Дробит lush-кривую, конфликтует с подачей подтипа"
+
+  details:
+    - id: industrial_hardware
+      pattern: "грубая индустриальная фурнитура"
+      reason: "Жёсткие детали несовместимы с чувственностью TR"
+    - id: stiff_geometric_collar
+      pattern: "жёсткие геометрические воротники"
+      reason: "Острые углы спорят с округлым лицом"
+    - id: minimal_no_drama
+      pattern: "слишком минималистичные образы без драмы"
+      reason: "TR требует одной точной мощной детали, аскетизм скучен"
+
+  fabrics:
+    - id: rough_heavy_suede
+      pattern: "грубая тяжёлая замша, рустикальная фактура"
+      reason: "TR ткани — роскошные с блеском или богатой фактурой"
+    - id: stiff_canvas_burlap
+      pattern: "жёсткий брезент, мешковина"
+      reason: "Утилитарная грубость убирает театральность"
+    - id: heavy_industrial_leather
+      pattern: "грубая индустриальная кожа без стрейча"
+      reason: "Должна обнимать кривую, не быть деревянной"
+    - id: chunky_textured_wool
+      pattern: "крупная грубая вязка"
+      reason: "Объём поглощает компактные кривые"
+
+  prints:
+    - id: aggressive_stripe
+      pattern: "агрессивные полосы, stark stripe"
+      reason: "Жёсткие линии конкурируют с органичной округлостью"
+    - id: angular_geometric
+      pattern: "острая геометрия (mondrian)"
+      reason: "Углы ломают силуэт TR"
+    - id: tribal_aggressive
+      pattern: "крупный tribal жёсткий"
+      reason: "Грубо для театральной чувственной подачи"
+
+  color:
+    - id: harsh_industrial
+      pattern: "холодные индустриальные оттенки (хром, серый бетон)"
+      reason: "TR любит насыщенные глубокие чувственные цвета"
+    - id: muddy_dust
+      pattern: "грязные пыльные неактивные тона"
+      reason: "Убирают магнетизм lush-кривых"
+    - id: pastel_baby
+      pattern: "пастельные детские оттенки"
+      reason: "TR — взрослая зрелая чувственность, не игривая нежность"
+
+  categories_ref:
+    jackets: "see category_rules/jackets.yaml → theatrical_romantic.stop"
+    dresses: "see category_rules/dresses.yaml → theatrical_romantic.stop"
+    pants: "see category_rules/pants.yaml → theatrical_romantic.stop"
+    skirts: "see category_rules/skirts.yaml → theatrical_romantic.stop"
+    shoes: "see category_rules/shoes.yaml → theatrical_romantic.stop"

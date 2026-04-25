@@ -13,12 +13,16 @@ rules:
     stop:
       - rule: chunky_cable_beige
         reason: "Бежевый с крупной вязкой — эффект 'бабушка связала' или юного гастарбайтера"
+        # match не заполнен: нужны атрибуты knit_density + color_family — нет
       - rule: round_closed_neck_symmetric
         reason: "Ординарный круглый закрытый вырез без акцентов слишком скучен"
+        match: { neckline_type: round, pattern_symmetry: symmetric }
       - rule: oversized_loose
         reason: "Бесформенный свитер без структуры размывает FG"
+        match: { fit: oversized, structure: unstructured }
       - rule: soft_drape_knit
         reason: "Мягкий струящийся трикотаж не держит форму"
+        match: { fabric_rigidity: soft }
     notes:
       - "Свитера с забавными геометрическими узорами в оригинальном стиле — хит."
       - "Яркий джемпер из ангорки — тоже вариант."

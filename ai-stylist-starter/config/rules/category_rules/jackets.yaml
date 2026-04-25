@@ -18,14 +18,19 @@ rules:
     stop:
       - rule: long_unstructured
         reason: "Длинные бесформенные жакеты убивают разбитый силуэт"
+        match: { length: long, structure: unstructured }
       - rule: peplum
         reason: "Баска создаёт мягкую плавную линию — противоположно угловатости"
+        match: { sub_type: peplum }
       - rule: raglan_sleeve
         reason: "Реглан скашивает плечи, теряется драматик"
+        match: { sleeve_type: raglan }
       - rule: dropped_shoulder
         reason: "Спущенное плечо размывает форму"
+        match: { sleeve_type: dropped_shoulder }
       - rule: plain_blazer_symmetric
         reason: "Стандартный симметричный блейзер слишком классический, не хватает дерзости"
+        # match не заполнен: «plain» зависит от ткани, predicate откладывается
     notes:
       - "Жакет — основа гардероба. Иметь варианты от дневного кэжуала до вечернего."
       - "Поверх белой классической рубашки — не классический жакет, а яркий кардиган. Иначе взрослит."
@@ -35,17 +40,193 @@ rules:
       length: [long, mid]
       fit: [tailored]
       pending_structure: structured
-    stop: []
+      pending_shoulder_emphasis: structured_slim
+      pending_cut_lines: angular
+      pending_sleeve_type: set_in
+    stop:
+      - rule: cropped_cute
+        reason: "Cropped формы ломают длинную вертикаль Dramatic"
+        match: { length: [cropped, short] }
+      - rule: peplum
+        reason: "Баска создаёт hourglass — конфликтует с прямой линией"
+        match: { sub_type: peplum }
+      - rule: raglan_dropped
+        reason: "Реглан/спущенное плечо размывают командную линию плеча"
+        match: { sleeve_type: [raglan, dropped_shoulder] }
 
-  # placeholder для остальных
-  soft_dramatic: {prefer: {}, stop: []}
-  flamboyant_natural: {prefer: {}, stop: []}
-  soft_natural: {prefer: {}, stop: []}
-  natural: {prefer: {}, stop: []}
-  dramatic_classic: {prefer: {}, stop: []}
-  soft_classic: {prefer: {}, stop: []}
-  classic: {prefer: {}, stop: []}
-  soft_gamine: {prefer: {}, stop: []}
-  gamine: {prefer: {}, stop: []}
-  romantic: {prefer: {}, stop: []}
-  theatrical_romantic: {prefer: {}, stop: []}
+  soft_dramatic:
+    prefer:
+      length: [long, mid]
+      fit: [tailored, semi_fitted]
+      pending_structure: structured
+      pending_shoulder_emphasis: required
+      pending_fabric_finish: [satin, silky]
+      pending_cut_lines: [sharp, draped]
+    stop:
+      - rule: cropped_compact
+        reason: "Cropped ломает lush-вертикаль SD"
+        match: { length: cropped }
+      - rule: boyish_unfitted
+        reason: "Прямой boyish крой скрывает чувственные кривые"
+        match: { fit: oversized }
+
+  flamboyant_natural:
+    prefer:
+      length: [long, mid]
+      fit: [relaxed, semi_fitted]
+      pending_structure: semi_structured
+      pending_shoulder_emphasis: [neutral, dropped]
+      pending_cut_lines: relaxed
+      closure: [single_breasted, open]
+    stop:
+      - rule: tight_sheath_fitted
+        reason: "Жёсткий fitted блейзер деформирует расслабленную линию FN"
+        match: { fit: fitted }
+      - rule: dainty_short
+        reason: "Короткие deликатные жакеты теряются на крупном масштабе"
+        match: { length: cropped }
+
+  soft_natural:
+    prefer:
+      length: [mid, long]
+      fit: [semi_fitted, relaxed]
+      pending_structure: semi_structured
+      pending_shoulder_emphasis: natural
+      pending_cut_lines: relaxed_curved
+      pending_fabric: [linen, soft_cotton]
+    stop:
+      - rule: stiff_overtailored
+        reason: "Жёсткий over-tailored блейзер деформирует мягкие плечи SN"
+        match: { structure: tailored_rigid }
+      - rule: cropped_busy
+        reason: "Cropped busy формы ломают плавность линий"
+        match: { length: cropped }
+
+  natural:
+    prefer:
+      length: [mid, long]
+      fit: [relaxed, semi_fitted]
+      pending_structure: semi_structured
+      pending_shoulder_emphasis: neutral
+      pending_cut_lines: relaxed
+      pending_fabric: [linen, denim, cotton, wool_natural]
+    stop:
+      - rule: tight_overtailored
+        reason: "Жёсткий fitted блейзер деформирует расслабленную линию"
+        match: { fit: fitted }
+      - rule: dainty_decor
+        reason: "Декоративные мелкие детали чужды утилитарной природе"
+        match: { detail_scale: small }
+
+  dramatic_classic:
+    prefer:
+      length: [mid, long]
+      fit: [tailored]
+      pending_structure: tailored
+      pending_shoulder_emphasis: structured_slim
+      pending_cut_lines: clean
+      pending_sleeve_type: set_in
+    stop:
+      - rule: oversized_loose
+        reason: "Оверсайз убирает дисциплину силуэта DC"
+        match: { fit: oversized }
+      - rule: ruffled_decor
+        reason: "Декоративная мягкость противоречит строгости"
+        match: { sub_type: peplum }
+
+  soft_classic:
+    prefer:
+      length: [mid, just_below_hip]
+      fit: [semi_fitted, tailored_moderate]
+      pending_structure: semi_tailored
+      pending_shoulder_emphasis: natural_set_in
+      pending_cut_lines: [clean, soft_curved]
+      pending_fabric: [crepe, soft_wool, fine_knit]
+    stop:
+      - rule: sharp_aggressive
+        reason: "Острые угловатые линии ломают мягкую гармонию SC"
+        match: { cut_lines: angular }
+      - rule: oversized_boxy
+        reason: "Boxy крой скрывает мягкую талию"
+        match: { fit: oversized }
+
+  classic:
+    prefer:
+      length: [mid, just_below_hip]
+      fit: [semi_fitted, tailored_moderate]
+      pending_structure: tailored_moderate
+      pending_shoulder_emphasis: natural_set_in
+      pending_cut_lines: clean
+    stop:
+      - rule: cropped_aggressive
+        reason: "Crop вне умеренной классической пропорции"
+        match: { length: cropped }
+      - rule: oversized_loose
+        reason: "Оверсайз чужд сбалансированной классике"
+        match: { fit: oversized }
+
+  soft_gamine:
+    prefer:
+      length: [cropped, short, mid]
+      fit: [fitted, semi_fitted]
+      pending_structure: tailored
+      pending_shoulder_emphasis: [neutral, defined_soft]
+      pending_cut_lines: [crisp, curved]
+      pending_detail_scale: small
+    stop:
+      - rule: long_oversized
+        reason: "Длинный oversize крадёт компактность SG"
+        match: { length: long, fit: oversized }
+      - rule: stiff_aggressive
+        reason: "Жёсткий аггресивный крой убирает женственность"
+        match: { cut_lines: sharp_extreme }
+
+  gamine:
+    prefer:
+      length: [cropped, short]
+      fit: [fitted, semi_fitted]
+      pending_structure: tailored
+      pending_shoulder_emphasis: [neutral, structured]
+      pending_cut_lines: [crisp, geometric]
+      pending_detail_scale: small
+    stop:
+      - rule: long_flowing
+        reason: "Длинный плавный жакет крадёт компактность"
+        match: { length: long }
+      - rule: oversized_loose
+        reason: "Оверсайз убирает контраст пропорций"
+        match: { fit: oversized }
+
+  romantic:
+    prefer:
+      length: [short, mid]
+      fit: [fitted, semi_fitted]
+      pending_structure: semi_structured
+      pending_shoulder_emphasis: avoided
+      pending_cut_lines: curved
+      pending_waist: defined
+      pending_fabric: [silk, satin, soft_jersey, velvet]
+    stop:
+      - rule: boxy_masculine
+        reason: "Прямой boxy крой скрывает кривые Romantic"
+        match: { fit: oversized }
+      - rule: utility_safari
+        reason: "Утилитарные сафари-формы убирают женственность"
+        match: { sub_type: utility }
+
+  theatrical_romantic:
+    prefer:
+      length: [short, mid]
+      fit: [fitted, hugging]
+      pending_structure: tailored
+      pending_shoulder_emphasis: defined
+      pending_cut_lines: [curved, crisp]
+      pending_waist: nipped
+      pending_fabric: [satin, silk, velvet, structured_crepe]
+    stop:
+      - rule: boxy_oversized
+        reason: "Оверсайз скрывает компактные кривые TR"
+        match: { fit: oversized }
+      - rule: straight_unfitted
+        reason: "Прямая неприлегающая форма ломает песочные часы"
+        match: { fit: straight }

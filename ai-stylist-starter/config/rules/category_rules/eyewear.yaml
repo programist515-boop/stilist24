@@ -9,10 +9,13 @@ rules:
     stop:
       - rule: round_soft_frames
         reason: "Круглые мягкие оправы — противоположность угловатости"
+        match: { shape: round }
       - rule: rimless_delicate
         reason: "Тонкие безободковые — не создают контраст"
+        match: { sub_type: rimless }
       - rule: aviator_classic
         reason: "Классические авиаторы нейтральны, не добавляют дерзости"
+        match: { sub_type: aviator }
     notes:
       - "Угловатая форма + контрастная оправа — визитная карточка."
       - "Смелые, современные или авангардные формы — всё подходит."

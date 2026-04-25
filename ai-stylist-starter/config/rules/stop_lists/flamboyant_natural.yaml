@@ -1,0 +1,72 @@
+subtype: flamboyant_natural
+source: "llm_draft_2026-04-25_kibbe_methodology"
+
+stop_list:
+
+  silhouette:
+    - id: tight_sheath
+      pattern: "облегающий sheath, sausage-fit, корсетные формы"
+      reason: "FN масштаб требует свободы, тесный крой деформирует расслабленную линию"
+    - id: dainty_fitted
+      pattern: "миниатюрный fitted с зажатой талией"
+      reason: "Зажатость противоречит атлетичной свободе подтипа"
+    - id: delicate_hourglass
+      pattern: "выраженные деликатные песочные часы"
+      reason: "FN не про кривые — про прямые свободные линии"
+    - id: cute_cropped
+      pattern: "укороченные cute формы"
+      reason: "Маленькие пропорции на крупной FN читаются как 'не влезает в одежду'"
+
+  details:
+    - id: tiny_decorative
+      pattern: "мелкие нежные декоративные детали"
+      reason: "Теряются на масштабе фигуры, нужна крупная честная деталь"
+    - id: ruffled_layered
+      pattern: "оборки, рюши, многослойные сборки"
+      reason: "Декоративная мягкость противоречит утилитарной природе"
+    - id: stiff_overtailored
+      pattern: "жёсткий over-tailored crisp blazer"
+      reason: "FN не про дисциплинированную структуру — про расслабленную форму"
+
+  fabrics:
+    - id: fine_silk_chiffon
+      pattern: "тонкий шёлк, шифон, дorgy hangs"
+      reason: "Слишком хрупкая фактура для крупной атлетичной FN"
+    - id: shimmery_satin
+      pattern: "блестящий атлас, сатин с люстром"
+      reason: "Глянец конкурирует с честными натуральными фактурами FN"
+    - id: lace_delicate
+      pattern: "тонкое нежное кружево"
+      reason: "Деликатная фактура размывает масштаб"
+    - id: stiff_brocade
+      pattern: "жёсткая парча, твёрдый формальный шёлк"
+      reason: "Жёсткость убирает естественную свободу"
+
+  prints:
+    - id: ditsy_floral_micro
+      pattern: "микро-цветочный dityz"
+      reason: "Мелкость теряется на масштабе"
+    - id: cute_polka_micro
+      pattern: "мелкий весёлый горох"
+      reason: "Слишком игривый для широкой свободной FN"
+    - id: precious_geometric
+      pattern: "мелкая выверенная геометрия (Mondrian-mini)"
+      reason: "FN живёт на крупных естественных принтах: leopard, paisley крупный"
+
+  color:
+    - id: cool_jewel_tones
+      pattern: "холодные ювелирные тона (изумруд яркий, сапфир)"
+      reason: "Конкурируют с земляной палитрой FN"
+    - id: pastel_baby
+      pattern: "пастельные детские оттенки"
+      reason: "Несовместимы с атлетичной зрелостью подтипа"
+    - id: harsh_neon
+      pattern: "неоновые кричащие цвета"
+      reason: "FN про насыщенные земляные цвета: хаки, ржавый, индиго"
+
+  categories_ref:
+    jackets: "see category_rules/jackets.yaml → flamboyant_natural.stop"
+    dresses: "see category_rules/dresses.yaml → flamboyant_natural.stop"
+    pants: "see category_rules/pants.yaml → flamboyant_natural.stop"
+    skirts: "see category_rules/skirts.yaml → flamboyant_natural.stop"
+    shoes: "see category_rules/shoes.yaml → flamboyant_natural.stop"

@@ -16,27 +16,243 @@ rules:
     stop:
       - rule: ruffled
         reason: "Оборки создают мягкую плавную линию"
+        match: { sub_type: ruffled }
       - rule: flowing_drape_whole
         reason: "Струящееся платье без структуры размывает силуэт"
+        match: { fabric_rigidity: soft, structure: unstructured }
       - rule: lace_full
         reason: "Кружевное платье целиком делает образ 'милым', не хватает дерзости"
+        match: { fabric_finish: lace }
       - rule: puff_sleeve_soft
         reason: "Мягкие рукава-буфы работают только если они пышные и держат форму"
+        match: { sleeve_type: puff_soft }
     notes:
       - "Платье-футляр — самый популярный фасон для FG."
       - "Если плечи есть — пусть будут острыми. Мягкий оверсайз-покрой плечей не подходит."
       - "2 главных правила: высокий контраст + акцент на плечи."
       - "Для прямой фигуры без талии предпочтительнее короткое прямое платье вместо футляра."
 
-  dramatic: {prefer: {}, stop: []}
-  soft_dramatic: {prefer: {}, stop: []}
-  flamboyant_natural: {prefer: {}, stop: []}
-  soft_natural: {prefer: {}, stop: []}
-  natural: {prefer: {}, stop: []}
-  dramatic_classic: {prefer: {}, stop: []}
-  soft_classic: {prefer: {}, stop: []}
-  classic: {prefer: {}, stop: []}
-  soft_gamine: {prefer: {}, stop: []}
-  gamine: {prefer: {}, stop: []}
-  romantic: {prefer: {}, stop: []}
-  theatrical_romantic: {prefer: {}, stop: []}
+  dramatic:
+    prefer:
+      fit: [sheath, column, slim]
+      pending_length: [midi, maxi]
+      pending_structure: tailored
+      pending_fabric_rigidity: [medium, rigid]
+      pending_cut_lines: [sharp, clean]
+      sub_types: [sheath, column, slim_maxi]
+      pending_neckline: [v_deep, straight, asymmetric]
+    stop:
+      - rule: cropped_short_cute
+        reason: "Короткие cute платья ломают длинную вертикаль"
+        match: { length: mini }
+      - rule: ruffled_fussy
+        reason: "Воланы и рюши размывают командную линию"
+        match: { sub_type: ruffled }
+      - rule: babydoll_loose
+        reason: "Babydoll и свободные платья без формы — анти-Dramatic"
+        match: { fit: loose, structure: unstructured }
+
+  soft_dramatic:
+    prefer:
+      fit: [sheath, draped_column, hourglass_elongated]
+      pending_length: [midi, maxi]
+      pending_structure: semi_tailored
+      pending_fabric: [silk, satin, jersey_heavy, velvet]
+      pending_cut_lines: [sharp, draped]
+      pending_waist: defined
+      pending_neckline: [v_deep, sweetheart, halter]
+    stop:
+      - rule: cropped_short
+        reason: "Cropped крадёт lush-вертикаль SD"
+        match: { length: mini }
+      - rule: boyish_flat
+        reason: "Прямые boyish платья скрывают чувственные кривые"
+        match: { fit: straight, structure: unstructured }
+
+  flamboyant_natural:
+    prefer:
+      fit: [shift, relaxed_straight, wrap_relaxed]
+      pending_length: [midi, mid_calf, maxi]
+      pending_structure: semi_structured
+      pending_fabric: [linen, denim, cotton_twill, suede]
+      pending_cut_lines: relaxed
+      sub_types: [shirt_dress, utility_dress, kaftan]
+    stop:
+      - rule: tight_sheath_fitted
+        reason: "Жёсткий fitted sheath деформирует расслабленную линию FN"
+        match: { fit: fitted, structure: tailored_rigid }
+      - rule: dainty_floral_short
+        reason: "Короткие dityz цветочные платья теряются на масштабе"
+        match: { length: mini }
+      - rule: ruffled_excessive
+        reason: "Многослойные оборки противоречат утилитарной природе"
+        match: { sub_type: ruffled }
+
+  soft_natural:
+    prefer:
+      fit: [wrap, semi_fitted, soft_a_line]
+      pending_length: [midi, just_below_knee]
+      pending_structure: semi_structured
+      pending_fabric: [viscose, soft_jersey, linen_soft, cotton_jersey]
+      pending_cut_lines: relaxed_curved
+      pending_waist: defined_soft
+      sub_types: [wrap_dress, shirt_dress_soft]
+    stop:
+      - rule: stiff_sheath
+        reason: "Жёсткий sheath деформирует мягкие плавные линии SN"
+        match: { fit: fitted, structure: tailored_rigid }
+      - rule: oversized_boxy
+        reason: "Boxy платья скрывают мягкую талию"
+        match: { fit: oversized }
+
+  natural:
+    prefer:
+      fit: [shift, relaxed_straight, shirt_dress]
+      pending_length: [midi, knee, maxi]
+      pending_structure: semi_structured
+      pending_fabric: [linen, cotton, denim, soft_jersey]
+      pending_cut_lines: relaxed
+      sub_types: [shirt_dress, utility_dress, t_shirt_dress]
+    stop:
+      - rule: fitted_sheath_strict
+        reason: "Жёсткий sheath деформирует расслабленную линию"
+        match: { fit: fitted }
+      - rule: ruffled_dainty
+        reason: "Мелкие декоративные оборки чужды утилитарной природе"
+        match: { sub_type: ruffled }
+
+  dramatic_classic:
+    prefer:
+      fit: [sheath, slim_sheath, semi_fitted]
+      pending_length: [knee, just_below_knee, midi]
+      pending_structure: tailored
+      pending_fabric: [crepe, silk_matte, wool_fine]
+      pending_cut_lines: clean
+      pending_neckline: [boat_narrow, v_moderate, square]
+      pending_waist: defined_clean
+    stop:
+      - rule: cropped_short
+        reason: "Cropped ломает дисциплинированную линию DC"
+        match: { length: mini }
+      - rule: oversized_loose
+        reason: "Оверсайз убирает чёткость кроя"
+        match: { fit: oversized }
+      - rule: ruffled_busy
+        reason: "Оборки/воланы противоречат строгости"
+        match: { sub_type: ruffled }
+
+  soft_classic:
+    prefer:
+      fit: [sheath_soft, semi_fitted, a_line_moderate]
+      pending_length: [knee, just_below_knee, midi]
+      pending_structure: semi_tailored
+      pending_fabric: [crepe, soft_wool, silk]
+      pending_cut_lines: [clean, soft_curved]
+      pending_waist: defined_soft
+      pending_neckline: [v_soft, scoop, round]
+    stop:
+      - rule: sharp_aggressive
+        reason: "Острые формы ломают мягкую гармонию SC"
+        match: { cut_lines: angular }
+      - rule: oversized_unfitted
+        reason: "Оверсайз скрывает мягкую талию"
+        match: { fit: oversized }
+
+  classic:
+    prefer:
+      fit: [sheath_moderate, semi_fitted, a_line_moderate]
+      pending_length: [knee, just_below_knee]
+      pending_structure: semi_tailored
+      pending_cut_lines: clean
+      pending_waist: defined_moderate
+      pending_neckline: [crew, v_moderate, scoop]
+    stop:
+      - rule: sharp_extreme
+        reason: "Крайние острые формы вне сбалансированной классики"
+        match: { cut_lines: sharp_extreme }
+      - rule: cropped_aggressive
+        reason: "Crop вне умеренной classical-пропорции"
+        match: { length: mini }
+      - rule: oversized_loose
+        reason: "Оверсайз чужд сбалансированной форме"
+        match: { fit: oversized }
+
+  soft_gamine:
+    prefer:
+      fit: [fit_and_flare, fitted, semi_fitted]
+      pending_length: [above_knee, knee, just_below_knee]
+      pending_structure: tailored
+      pending_fabric: [cotton_poplin, structured_crepe, soft_satin]
+      pending_cut_lines: [crisp, curved]
+      pending_waist: defined
+      pending_neckline: [sweetheart, scoop, square_small]
+    stop:
+      - rule: maxi_long_flowing
+        reason: "Длинные платья крадут компактность SG"
+        match: { length: maxi }
+      - rule: oversized_boxy
+        reason: "Boxy скрывает мягкие кривые"
+        match: { fit: oversized }
+      - rule: stiff_sharp
+        reason: "Острый драматичный крой убирает женственность"
+        match: { cut_lines: sharp_extreme }
+
+  gamine:
+    prefer:
+      fit: [shift, fitted, fit_and_flare_short]
+      pending_length: [mini, above_knee]
+      pending_structure: tailored
+      pending_cut_lines: [crisp, geometric]
+      pending_pattern_character: [geometric, color_block, mondrian]
+      sub_types: [mini_dress, a_line_mini, shift_dress]
+    stop:
+      - rule: maxi_long
+        reason: "Длинные платья крадут компактность Gamine"
+        match: { length: maxi }
+      - rule: lush_curvy
+        reason: "Lush-кривые формы конкурируют с компактной геометрией"
+        match: { fit: hugging }
+      - rule: flowing_drape
+        reason: "Плавные draped формы ломают чёткие контрасты Gamine"
+        match: { fabric_rigidity: soft, structure: unstructured }
+
+  romantic:
+    prefer:
+      fit: [wrap, hourglass, fit_and_flare, hugging]
+      pending_length: [midi, just_below_knee, maxi]
+      pending_structure: semi_structured
+      pending_fabric: [silk, satin, soft_jersey, lace, velvet]
+      pending_cut_lines: [flowing, curved]
+      pending_waist: defined_hugged
+      pending_neckline: [v_deep, surplice, sweetheart]
+      sub_types: [wrap_dress, slip_dress, gown]
+    stop:
+      - rule: boxy_straight
+        reason: "Прямой boxy крой скрывает кривые Romantic"
+        match: { fit: oversized }
+      - rule: utility_safari
+        reason: "Утилитарные сафари-платья убирают женственность"
+        match: { sub_type: utility }
+      - rule: sharp_angular
+        reason: "Острые угловатые формы конфликтуют с округлой природой"
+        match: { cut_lines: sharp_angular }
+
+  theatrical_romantic:
+    prefer:
+      fit: [hourglass, fit_and_flare, mermaid_soft, hugging]
+      pending_length: [knee, just_below_knee, midi, maxi]
+      pending_structure: semi_tailored
+      pending_fabric: [silk, satin, velvet, structured_crepe]
+      pending_cut_lines: [curved, crisp]
+      pending_waist: nipped
+      pending_neckline: [sweetheart, v_deep, halter, off_shoulder]
+    stop:
+      - rule: oversized_boxy
+        reason: "Оверсайз скрывает компактные кривые TR"
+        match: { fit: oversized }
+      - rule: utility_safari
+        reason: "Утилитарные формы убирают театральность"
+        match: { sub_type: utility }
+      - rule: straight_unfitted
+        reason: "Прямые неприлегающие формы ломают песочные часы TR"
+        match: { fit: straight, structure: unstructured }

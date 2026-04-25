@@ -14,8 +14,10 @@ rules:
     stop:
       - rule: wide_brim_soft
         reason: "Широкополые мягкие шляпы — слишком романтика"
+        match: { sub_type: wide_brim_hat, fabric_rigidity: soft }
       - rule: symmetric_beanie_neutral
         reason: "Симметричная бежевая шапка с косами — 'бабушкин' эффект"
+        # match не заполнен: «с косами» — атрибут вязки, его нет
     notes:
       - "Лютые морозы — враг номер один FG. Зима не лучшее время для стиля."
       - "Берет и кепка 'Гаврош' — идеальные варианты."

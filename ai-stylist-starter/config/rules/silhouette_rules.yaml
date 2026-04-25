@@ -2,10 +2,16 @@
 # Применяется в outfit_engine после сборки кандидата-образа.
 #
 # Ссылки на атрибуты вещей с префиксом pending_ означают атрибуты из Фазы 0
-# (см. plans/2026-04-21-каталог-фич-из-отчёта-типажа.md). Пока не появятся —
-# правила валидны как данные, но не применяются сервисом.
+# (см. plans/2026-04-21-каталог-фич-из-отчёта-типажа.md). Атрибуты Фазы 0
+# уже в WardrobeItem (миграция 0009), но в YAML префикс сохранён для совместимости.
+#
+# Источник методологии: классическая система Дэвида Кибби (1987).
+# Контент 12 подтипов сгенерирован 2026-04-25 LLM-черновиком + community-верификация.
+# Целевые поля для service: prefer, avoid (с булевыми флагами), composition_rules.
 
 silhouette_rules:
+
+  # ======================== GAMINE FAMILY ========================
 
   # ---------- flamboyant_gamine ----------
   flamboyant_gamine:
@@ -42,71 +48,367 @@ silhouette_rules:
         description: "Мягкий верх + мягкий низ без структурных элементов"
         score_penalty: 0.14
 
+  # ---------- gamine ----------
+  gamine:
+    prefer:
+      contrast_top_bottom: required
+      silhouette_shape: broken
+      line_character: angular
+      cut: [semi_fitted, fitted]
+      mix_opposing_shapes: bonus
+      edge_clarity: sharp
+      shoulder_emphasis: neutral
+    avoid:
+      silhouette_shape: [flowing, elongated_long]
+      line_character: [curved, draped_loose]
+      vertical_monocolor: true
+      oversized_both_top_bottom: true
+      raglan_or_dropped_shoulder: true
+    composition_rules:
+      - id: narrow_base_plus_wide_opposite
+        description: "Контраст пропорций: укороченный верх + укороченный низ создают компактную геометрию"
+        example: "Cropped жакет + cigarette pants"
+        score_boost: 0.10
+      - id: broken_by_color
+        description: "Разрыв вертикали по талии цветом — обязателен, мешает удлинять"
+        score_boost: 0.08
+      - id: drape_with_angular_counterpart
+        description: "Если есть мягкая деталь — компенсируется чёткой геометрией рядом"
+        score_boost: 0.05
+      - id: unbroken_vertical
+        description: "Длинная одноцветная вертикаль крадёт у миниатюрности её энергию"
+        score_penalty: 0.12
+      - id: soft_top_and_soft_bottom
+        description: "Полностью мягкий силуэт смазывает контрастность подтипа"
+        score_penalty: 0.12
+
+  # ---------- soft_gamine ----------
+  soft_gamine:
+    prefer:
+      contrast_top_bottom: required
+      silhouette_shape: hourglass_compact
+      line_character: [curved, crisp]    # мягкие линии в чётком крое
+      cut: [fitted, semi_fitted]
+      shoulder_emphasis: neutral
+      waist_emphasis: required           # талия выражена и подчёркнута
+    avoid:
+      silhouette_shape: [elongated_long, oversized]
+      line_character: sharp_angular_extreme
+      vertical_monocolor: true
+      oversized_both_top_bottom: true
+      raglan_or_dropped_shoulder: true
+    composition_rules:
+      - id: narrow_base_plus_wide_opposite
+        description: "Узкая талия + объёмный край (рукав-фонарик, юбка-солнце) — формула SG"
+        example: "Платье fit-and-flare с пышной короткой юбкой"
+        score_boost: 0.10
+      - id: broken_by_color
+        description: "Разрыв вертикали через подчёркнутую талию цветом или ремнём"
+        score_boost: 0.07
+      - id: drape_with_angular_counterpart
+        description: "Драпировка только мелкая, как деталь — не общая фактура"
+        score_boost: 0.04
+      - id: unbroken_vertical
+        description: "Длинная вертикаль выглядит на петите громоздко"
+        score_penalty: 0.12
+      - id: soft_top_and_soft_bottom
+        description: "Без чёткой структуры силуэт теряется"
+        score_penalty: 0.10
+
+  # ======================== DRAMATIC FAMILY ========================
+
   # ---------- dramatic ----------
   dramatic:
     prefer:
-      silhouette_shape: [long_vertical, sleek]
+      silhouette_shape: [long_vertical, sleek, column]
       line_character: [sharp, clean, elongated]
       cut: [tailored, clean_skimming]
       edge_clarity: sharp
       shoulder_emphasis: neutral
+      vertical_monocolor: bonus           # длинная одноцветная вертикаль работает на типаж
     avoid:
-      line_character: [fussy, rounded, ornate]
-      silhouette_shape: [broken_cropped, cute]
-    composition_rules: []  # TODO наполнить при появлении гайдов по D
+      line_character: [fussy, rounded, ornate, ruffled]
+      silhouette_shape: [broken_cropped, cute, hourglass_compact]
+      oversized_both_top_bottom: true
+      draped_without_structure: true
+    composition_rules:
+      - id: unbroken_vertical
+        description: "Одна длинная вертикаль одного цвета — главный приём Dramatic"
+        example: "Чёрный свитер с горлом + чёрные брюки + чёрные ботфорты"
+        score_boost: 0.12
+      - id: drape_with_angular_counterpart
+        description: "Драпировка только если работает на длину силуэта (греческая колонна, бионик)"
+        score_boost: 0.04
+      - id: narrow_base_plus_wide_opposite
+        description: "Контраст объёмов читается как «не свой» — Dramatic про чистоту линии"
+        score_penalty: 0.08
+      - id: soft_top_and_soft_bottom
+        description: "Мягкий силуэт без острого края теряет фирменную остроту"
+        score_penalty: 0.12
 
-  # ---------- остальные подтипы: placeholder ----------
+  # ---------- soft_dramatic ----------
   soft_dramatic:
-    prefer: {}
-    avoid: {}
-    composition_rules: []
+    prefer:
+      silhouette_shape: [long_lush, draped_column, hourglass_elongated]
+      line_character: [sharp, draped]      # сочетание острого и струящегося
+      cut: [tailored, draped_fitted]
+      edge_clarity: sharp_with_drape
+      shoulder_emphasis: required          # плечи выражены, как у Dramatic
+      waist_emphasis: bonus
+    avoid:
+      line_character: [choppy, cropped_busy]
+      silhouette_shape: [broken_cropped, boyish_flat]
+      oversized_both_top_bottom: true
+      raglan_or_dropped_shoulder: true
+    composition_rules:
+      - id: drape_with_angular_counterpart
+        description: "Струящаяся ткань на чётко скроенном силуэте — формула SD"
+        example: "Шёлковое платье с глубоким V-вырезом + жёсткими плечами"
+        score_boost: 0.10
+      - id: unbroken_vertical
+        description: "Длинная вертикаль работает, особенно если подчёркнута пышной грудью или бёдрами"
+        score_boost: 0.08
+      - id: narrow_base_plus_wide_opposite
+        description: "Объёмный верх + узкий низ — потеря пропорций lush-силуэта"
+        score_penalty: 0.06
+      - id: soft_top_and_soft_bottom
+        description: "Без острых краёв образ читается как бесформенный, фигура «плывёт»"
+        score_penalty: 0.10
 
+  # ======================== NATURAL FAMILY ========================
+
+  # ---------- flamboyant_natural ----------
   flamboyant_natural:
-    prefer: {}
-    avoid: {}
-    composition_rules: []
+    prefer:
+      silhouette_shape: [long_relaxed, wide_easy, layered]
+      line_character: [relaxed, blunt, straight]
+      cut: [relaxed, semi_fitted]
+      edge_clarity: blunt                  # затушёванные края
+      shoulder_emphasis: neutral
+      mix_opposing_shapes: avoid           # не комбинировать узкое+широкое
+    avoid:
+      silhouette_shape: [hourglass_compact, sheath_strict]
+      line_character: [sharp_angular_extreme, fussy_dainty]
+      oversized_both_top_bottom: false     # допустимо, FN любит большой объём
+      draped_without_structure: false      # допустимо, мягкость — норма
+      raglan_or_dropped_shoulder: false    # допустимо
+      waist_emphasis_high: true            # узкая выраженная талия чужда FN
+    composition_rules:
+      - id: unbroken_vertical
+        description: "Длинная вертикаль одного тона работает на рост FN — плюс"
+        score_boost: 0.10
+      - id: narrow_base_plus_wide_opposite
+        description: "Зажатая талия + объёмный край ломает естественную линию FN"
+        score_penalty: 0.08
+      - id: drape_with_angular_counterpart
+        description: "Слишком много жёсткой структуры противоречит расслабленной природе"
+        score_penalty: 0.05
+      - id: soft_top_and_soft_bottom
+        description: "Свободный мягкий силуэт верха и низа — естественный для FN"
+        score_boost: 0.06
 
+  # ---------- soft_natural ----------
   soft_natural:
-    prefer: {}
-    avoid: {}
-    composition_rules: []
+    prefer:
+      silhouette_shape: [soft_hourglass, relaxed_with_waist, easy_drape]
+      line_character: [relaxed, soft_curved]
+      cut: [semi_fitted, relaxed]
+      edge_clarity: blunt_with_soft_curve
+      shoulder_emphasis: neutral
+      waist_emphasis: bonus                # талия видна, но не зажата
+    avoid:
+      silhouette_shape: [sheath_strict, oversized_boxy]
+      line_character: [sharp_angular_extreme, geometric]
+      oversized_both_top_bottom: true
+      raglan_or_dropped_shoulder: false    # допустимо, мягкое плечо нормально
+    composition_rules:
+      - id: drape_with_angular_counterpart
+        description: "Лёгкая мягкая драпировка с подчёркнутой талией — формула SN"
+        example: "Wrap-платье с мягким поясом из натуральной ткани"
+        score_boost: 0.10
+      - id: narrow_base_plus_wide_opposite
+        description: "Сильный контраст объёмов читается как несоответствие подтипу"
+        score_penalty: 0.06
+      - id: unbroken_vertical
+        description: "Длинная вертикаль допустима, если ткань мягкая и линии текут"
+        score_boost: 0.05
+      - id: soft_top_and_soft_bottom
+        description: "Мягкий верх + мягкий низ — норма для SN, не штраф"
+        score_boost: 0.04
 
+  # ---------- natural ----------
   natural:
-    prefer: {}
-    avoid: {}
-    composition_rules: []
+    prefer:
+      silhouette_shape: [relaxed_straight, easy, layered]
+      line_character: [relaxed, blunt, straight]
+      cut: [relaxed, semi_fitted]
+      edge_clarity: blunt
+      shoulder_emphasis: neutral
+      mix_opposing_shapes: avoid
+    avoid:
+      silhouette_shape: [sheath_strict, hourglass_compact]
+      line_character: [sharp_angular_extreme, fussy_dainty, ornate]
+      oversized_both_top_bottom: false     # допустимо в умеренной форме
+      draped_without_structure: false      # допустимо, ткани мягкие
+    composition_rules:
+      - id: unbroken_vertical
+        description: "Длинная нейтральная вертикаль работает на свободу образа"
+        score_boost: 0.06
+      - id: drape_with_angular_counterpart
+        description: "Лишняя жёсткость убирает естественную лёгкость"
+        score_penalty: 0.05
+      - id: narrow_base_plus_wide_opposite
+        description: "Контраст объёмов чужд расслабленной природе подтипа"
+        score_penalty: 0.06
+      - id: soft_top_and_soft_bottom
+        description: "Мягкий верх + мягкий низ — естественная база"
+        score_boost: 0.04
 
+  # ======================== CLASSIC FAMILY ========================
+
+  # ---------- dramatic_classic ----------
   dramatic_classic:
-    prefer: {}
-    avoid: {}
-    composition_rules: []
+    prefer:
+      silhouette_shape: [tailored_clean, sheath_moderate, column_clean]
+      line_character: [clean, crisp]
+      cut: [tailored, clean_skimming]
+      edge_clarity: sharp
+      shoulder_emphasis: structured_slim
+    avoid:
+      silhouette_shape: [oversized, ruffled_excessive, broken_cropped]
+      line_character: [ruffled, ornate, busy]
+      oversized_both_top_bottom: true
+      raglan_or_dropped_shoulder: true
+      draped_without_structure: true
+    composition_rules:
+      - id: unbroken_vertical
+        description: "Чистая монохромная вертикаль — фирменная строгость DC"
+        example: "Юбка-карандаш + блузка с заправкой одного тона"
+        score_boost: 0.10
+      - id: drape_with_angular_counterpart
+        description: "Драпировка чужда подтипу: всё работает через чистый крой"
+        score_penalty: 0.06
+      - id: narrow_base_plus_wide_opposite
+        description: "Контраст объёмов ломает дисциплину силуэта"
+        score_penalty: 0.08
+      - id: soft_top_and_soft_bottom
+        description: "Мягкость без острых краёв убирает фирменную чёткость"
+        score_penalty: 0.10
 
+  # ---------- soft_classic ----------
   soft_classic:
-    prefer: {}
-    avoid: {}
-    composition_rules: []
+    prefer:
+      silhouette_shape: [soft_hourglass_clean, sheath_soft, a_line_moderate]
+      line_character: [clean, soft_curved]
+      cut: [semi_fitted, tailored_moderate]
+      edge_clarity: clean_with_soft_curve
+      shoulder_emphasis: natural_set_in
+      waist_emphasis: bonus                # талия мягко обозначена
+    avoid:
+      silhouette_shape: [sharp_angular_extreme, oversized_boxy, broken_cropped]
+      line_character: [sharp_angular_extreme, ruffled_excessive]
+      oversized_both_top_bottom: true
+      raglan_or_dropped_shoulder: true
+    composition_rules:
+      - id: drape_with_angular_counterpart
+        description: "Мягкие линии в чистом крое — формула SC"
+        example: "Платье из крепа с мягким V-вырезом и тонким поясом"
+        score_boost: 0.08
+      - id: unbroken_vertical
+        description: "Чистая мягкая вертикаль работает на гармонию образа"
+        score_boost: 0.07
+      - id: narrow_base_plus_wide_opposite
+        description: "Резкий контраст объёмов противоречит сбалансированной природе"
+        score_penalty: 0.06
+      - id: soft_top_and_soft_bottom
+        description: "Без чёткого края силуэт теряет утончённость SC"
+        score_penalty: 0.06
 
+  # ---------- classic ----------
   classic:
-    prefer: {}
-    avoid: {}
-    composition_rules: []
+    prefer:
+      silhouette_shape: [moderate_balanced, sheath_moderate, a_line_moderate]
+      line_character: [clean, balanced]
+      cut: [tailored_moderate, semi_fitted]
+      edge_clarity: clean
+      shoulder_emphasis: natural_set_in
+      symmetry: required
+    avoid:
+      silhouette_shape: [sharp_extreme, soft_extreme, oversized, cropped_aggressive]
+      line_character: [sharp_extreme, soft_extreme, ornate]
+      oversized_both_top_bottom: true
+      raglan_or_dropped_shoulder: true
+      draped_without_structure: true
+    composition_rules:
+      - id: unbroken_vertical
+        description: "Чистая монохромная вертикаль — нейтрально-элегантная база Classic"
+        score_boost: 0.07
+      - id: narrow_base_plus_wide_opposite
+        description: "Резкий контраст объёмов нарушает золотую середину"
+        score_penalty: 0.08
+      - id: drape_with_angular_counterpart
+        description: "Драпировка с острым контрастом — оба полюса вне зоны Classic"
+        score_penalty: 0.06
+      - id: soft_top_and_soft_bottom
+        description: "Без чёткой формы силуэт читается как «небрежный», что чуждо Classic"
+        score_penalty: 0.08
 
-  soft_gamine:
-    prefer: {}
-    avoid: {}
-    composition_rules: []
+  # ======================== ROMANTIC FAMILY ========================
 
-  gamine:
-    prefer: {}
-    avoid: {}
-    composition_rules: []
-
+  # ---------- romantic ----------
   romantic:
-    prefer: {}
-    avoid: {}
-    composition_rules: []
+    prefer:
+      silhouette_shape: [hourglass_curved, fit_and_flare, soft_draped]
+      line_character: [curved, flowing, soft]
+      cut: [fitted, hugging]
+      edge_clarity: soft_curved
+      waist_emphasis: required             # талия всегда подчёркнута
+      shoulder_emphasis: avoided           # плечи мягкие, не выделены
+    avoid:
+      silhouette_shape: [sheath_strict, boxy, oversized, broken_cropped]
+      line_character: [sharp_angular, geometric_extreme, choppy]
+      oversized_both_top_bottom: true
+      raglan_or_dropped_shoulder: false    # допустимо, мягкие плечи
+    composition_rules:
+      - id: drape_with_angular_counterpart
+        description: "Острые элементы конфликтуют с округлой природой Romantic"
+        score_penalty: 0.10
+      - id: narrow_base_plus_wide_opposite
+        description: "Контраст объёмов работает: пышный верх + лёгкий низ или наоборот"
+        score_boost: 0.05
+      - id: unbroken_vertical
+        description: "Длинная прямая вертикаль скрывает кривые подтипа"
+        score_penalty: 0.08
+      - id: soft_top_and_soft_bottom
+        description: "Мягкий силуэт верха и низа с подчёркнутой талией — норма Romantic"
+        score_boost: 0.08
 
+  # ---------- theatrical_romantic ----------
   theatrical_romantic:
-    prefer: {}
-    avoid: {}
-    composition_rules: []
+    prefer:
+      silhouette_shape: [hourglass_dramatic, fit_and_flare_compact, lush_compact]
+      line_character: [curved, crisp]      # кривые с чёткими краями
+      cut: [fitted, hugging]
+      edge_clarity: crisp_with_curve
+      waist_emphasis: required
+      shoulder_emphasis: defined           # плечи присутствуют, но мягко
+    avoid:
+      silhouette_shape: [oversized_boxy, straight_column_rigid, sheath_unfitted]
+      line_character: [sharp_angular_extreme, boxy]
+      oversized_both_top_bottom: true
+      raglan_or_dropped_shoulder: true
+      draped_without_structure: true
+    composition_rules:
+      - id: drape_with_angular_counterpart
+        description: "Мягкая ткань на жёстком корсетном крое — формула TR"
+        example: "Шёлковое платье с корсетным верхом и юбкой-карандаш"
+        score_boost: 0.10
+      - id: narrow_base_plus_wide_opposite
+        description: "Узкая талия + объёмный край — pin-up силуэт TR"
+        score_boost: 0.08
+      - id: unbroken_vertical
+        description: "Прямая вертикаль читается как несоответствие lush-кривым"
+        score_penalty: 0.10
+      - id: soft_top_and_soft_bottom
+        description: "Без острого края силуэт расплывается, теряет театральность"
+        score_penalty: 0.08

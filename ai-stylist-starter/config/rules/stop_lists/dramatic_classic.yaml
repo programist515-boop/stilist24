@@ -1,0 +1,69 @@
+subtype: dramatic_classic
+source: "llm_draft_2026-04-25_kibbe_methodology"
+
+stop_list:
+
+  silhouette:
+    - id: oversized_loose
+      pattern: "оверсайз без структуры, балахоны"
+      reason: "DC требует чёткой архитектуры, оверсайз убирает дисциплину"
+    - id: ruffled_busy
+      pattern: "многослойные оборки, busy декор"
+      reason: "Декоративная мягкость противоречит строгости DC"
+    - id: cropped_cute
+      pattern: "укороченные cute силуэты"
+      reason: "Малые пропорции ломают взрослую дисциплинированную линию"
+    - id: heavy_drapery
+      pattern: "тяжёлая нерегулярная драпировка"
+      reason: "Без чистого края DC теряет фирменную точность"
+
+  details:
+    - id: ornate_busy_decor
+      pattern: "орнаменты, рюши, ленты, цветочные броши"
+      reason: "DC про чистый минимум, каждый декор крадёт у точности"
+    - id: peter_pan_collar
+      pattern: "Питер Пэн воротник, cute воротнички"
+      reason: "Инфантильный для дисциплинированной зрелой подачи"
+    - id: ditsy_buttons
+      pattern: "мелкие dityz пуговицы, дробное застёжкование"
+      reason: "Дробит чистую вертикаль, чему DC сопротивляется"
+
+  fabrics:
+    - id: chunky_textured_wool
+      pattern: "крупная вязка, грубая шерсть твидовая"
+      reason: "Объём убирает чёткость кроя"
+    - id: ditsy_eyelet_cotton
+      pattern: "хлопок ришелье, прозрачный батист с цветочками"
+      reason: "Деревенская мягкость противоречит дисциплине"
+    - id: soft_loose_knit
+      pattern: "тонкий мягкий трикотаж без формы"
+      reason: "Не держит линию плеча, ломает архитектуру"
+
+  prints:
+    - id: ditsy_floral
+      pattern: "мелкий dityz цветочный, мини-клетка-гингам"
+      reason: "Слишком cute и busy для зрелой строгости"
+    - id: watercolor_blurred
+      pattern: "акварельные размытые принты"
+      reason: "Размытость убирает чёткость линии"
+    - id: cute_animal_motif
+      pattern: "котики, бабочки, любые figurative cute"
+      reason: "Несовместимы с дисциплинированной подачей"
+
+  color:
+    - id: pastel_pale
+      pattern: "пастельные бледные оттенки"
+      reason: "Размывают силу строгого образа"
+    - id: candy_brights
+      pattern: "конфетные яркие пары"
+      reason: "DC про монохром или 2 насыщенных тона, не про яркие пары"
+    - id: muddy_dust
+      pattern: "грязные пыльные оттенки"
+      reason: "Тушат фирменную точность контура"
+
+  categories_ref:
+    jackets: "see category_rules/jackets.yaml → dramatic_classic.stop"
+    dresses: "see category_rules/dresses.yaml → dramatic_classic.stop"
+    pants: "see category_rules/pants.yaml → dramatic_classic.stop"
+    skirts: "see category_rules/skirts.yaml → dramatic_classic.stop"
+    shoes: "see category_rules/shoes.yaml → dramatic_classic.stop"

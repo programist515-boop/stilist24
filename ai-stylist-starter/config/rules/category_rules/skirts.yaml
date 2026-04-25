@@ -10,20 +10,28 @@ rules:
     stop:
       - rule: long_plain_straight
         reason: "Длинные прямые юбки без отделки монотонны"
+        match: { length: long, fit: straight }
       - rule: a_line_symmetric
         reason: "Традиционная А-образная форма слишком симметрична"
+        match: { fit: a_line, pattern_symmetry: symmetric }
       - rule: wide_shapeless
         reason: "Широкие бесформенные юбки убивают геометрию"
+        match: { fit: [wide, loose], structure: unstructured }
       - rule: circle_skirt
         reason: "Солнце-клёш — избыточный объём без угловатости"
+        match: { sub_type: circle }
       - rule: fine_pleating
         reason: "Мелкая плиссировка читается как мягкая структура"
+        match: { sub_type: pleated, detail_scale: small }
       - rule: flared_soft_falling
         reason: "Расклешённые ниспадающие юбки не держат линию"
+        match: { fit: flared, fabric_rigidity: soft }
       - rule: ruffled_tiered
         reason: "Оборки и пышные ярусы — противоположность FG"
+        match: { sub_type: tiered }
       - rule: soft_deep_pleats_from_hip
         reason: "Глубокие мягкие складки начинающиеся на бёдрах размывают силуэт"
+        # match не заполнен: «начинающиеся на бёдрах» — атрибута нет
     notes:
       - "Асимметрично расположенные детали, запахи, перехлёст в крое, нестандартный принт — идеал."
       - "Неверная длина: важно избегать 'ни туда ни сюда' — по бедру или по колено, ниже — только строгая прямая."

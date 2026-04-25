@@ -16,8 +16,10 @@ rules:
       stop:
         - rule: shapeless_oversized
           reason: "Бесформенное пальто убивает угловатость"
+          match: { fit: oversized, structure: unstructured }
         - rule: rounded_lapels
           reason: "Округлые лацканы противоречат геометрии"
+          match: { lapel_shape: rounded }
       notes:
         - "Пальто в милитари-стиле — идеально подчёркивает угловатые черты лица."
         - "Сейчас в моде длина по середину икры."
@@ -31,10 +33,13 @@ rules:
       stop:
         - rule: voluminous_fluffy_fur
           reason: "Объёмный пушистый мех размывает силуэт"
+          match: { fur_type: long_pile }
         - rule: classic_luxury_look
           reason: "Классический 'дорого-богато' не про FG"
+          # match не заполнен: «luxury look» — высокоуровневая характеристика
         - rule: hood_with_fur
           reason: "Капюшон с мехом в морозы — лучше укутаться в шарф"
+          match: { hood_type: fur_trimmed }
       notes:
         - "Даже зимой должен быть эклектичный внешний вид, с добавлением юмора."
         - "Чёрная шуба + другого цвета шарф у лица + бордовые/красные/фиолетовые (НЕ чёрные) брюки + яркая сумка через плечо + яркий берет."
@@ -48,6 +53,7 @@ rules:
       stop:
         - rule: rounded_puffer_neutral
           reason: "Округлый пуховик нейтрального цвета не даёт контраста"
+          match: { silhouette: rounded }
       notes:
         - "Если пуховик чёрный — носить с яркими цветами в аксессуарах и одежде."
 

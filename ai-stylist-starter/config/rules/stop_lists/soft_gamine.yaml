@@ -1,0 +1,69 @@
+subtype: soft_gamine
+source: "llm_draft_2026-04-25_kibbe_methodology"
+
+stop_list:
+
+  silhouette:
+    - id: elongated_long
+      pattern: "удлинённые maxi-силуэты, длинные платья в пол"
+      reason: "SG про компактность, длина крадёт миниатюрность"
+    - id: oversized_boxy
+      pattern: "оверсайз boxy, мужские прямые"
+      reason: "Стирают мягкие выраженные кривые подтипа"
+    - id: stiff_sharp_geometric
+      pattern: "острые жёсткие геометрические крой"
+      reason: "Углы конкурируют с мягкой женственностью"
+    - id: flowing_loose
+      pattern: "плавные свободные silhouette без талии"
+      reason: "SG нуждается в чёткой компактной форме с подчёркнутой талией"
+
+  details:
+    - id: oversized_chunky_decor
+      pattern: "крупные массивные украшения"
+      reason: "Перегружают петитный масштаб"
+    - id: heavy_industrial
+      pattern: "грубая индустриальная фурнитура"
+      reason: "Несовместимо с деликатной женственностью"
+    - id: aggressive_geometric_collar
+      pattern: "острые геометрические воротники"
+      reason: "Углы спорят с округлым лицом"
+
+  fabrics:
+    - id: heavy_chunky_wool
+      pattern: "крупная вязка, тяжёлая шерсть"
+      reason: "Объём поглощает миниатюрный масштаб"
+    - id: stiff_canvas_burlap
+      pattern: "жёсткий брезент, мешковина"
+      reason: "Грубость убирает женственную деликатность"
+    - id: heavy_drape_fabric
+      pattern: "тяжёлая струящаяся ткань"
+      reason: "Драпировка должна быть лёгкой, иначе крадёт компактность"
+
+  prints:
+    - id: oversized_print
+      pattern: "крупный масштабный принт, большие цветы"
+      reason: "Поглощает петитный силуэт"
+    - id: aggressive_animal
+      pattern: "крупный leopard агрессивный"
+      reason: "Драма принта спорит с женственной игривостью"
+    - id: bold_geometric
+      pattern: "крупная жёсткая геометрия"
+      reason: "Углы конкурируют с мягким контуром"
+
+  color:
+    - id: harsh_dark_only
+      pattern: "только тёмные грубые тона"
+      reason: "SG любит чистые свежие цвета, тяжёлый монохром не подходит"
+    - id: muddy_dirty
+      pattern: "грязные пыльные тона"
+      reason: "Тушат свежесть петитной женственности"
+    - id: monochrome_no_break
+      pattern: "длинная одноцветная вертикаль без разрыва на талии"
+      reason: "Не подчёркивает фирменный акцент талии"
+
+  categories_ref:
+    jackets: "see category_rules/jackets.yaml → soft_gamine.stop"
+    dresses: "see category_rules/dresses.yaml → soft_gamine.stop"
+    pants: "see category_rules/pants.yaml → soft_gamine.stop"
+    skirts: "see category_rules/skirts.yaml → soft_gamine.stop"
+    shoes: "see category_rules/shoes.yaml → soft_gamine.stop"

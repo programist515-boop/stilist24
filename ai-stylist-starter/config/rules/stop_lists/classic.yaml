@@ -1,0 +1,75 @@
+subtype: classic
+source: "llm_draft_2026-04-25_kibbe_methodology"
+
+stop_list:
+
+  silhouette:
+    - id: extreme_sharp
+      pattern: "крайне острые угловатые силуэты"
+      reason: "Classic про золотую середину, крайности любого знака чужды"
+    - id: extreme_soft
+      pattern: "крайне мягкие плавные силуэты"
+      reason: "Излишняя мягкость размывает сбалансированную форму"
+    - id: oversized_loose
+      pattern: "оверсайз, балахоны без формы"
+      reason: "Стирает умеренные пропорции, центральные для подтипа"
+    - id: cropped_aggressive
+      pattern: "агрессивно укороченные cropped формы"
+      reason: "Малые пропорции выпадают из взрослой умеренности"
+
+  details:
+    - id: ornate_excessive
+      pattern: "богатая отделка, рюши, банты, многоуровневый декор"
+      reason: "Classic про чистоту, избыточность портит линию"
+    - id: avant_garde_decor
+      pattern: "авангардные асимметричные детали"
+      reason: "Crashing край противоречит сбалансированной симметрии"
+    - id: chunky_industrial
+      pattern: "крупная грубая фурнитура"
+      reason: "Тяжёлая фактура нарушает деликатность"
+
+  fabrics:
+    - id: heavy_brocade_stiff
+      pattern: "тяжёлая жёсткая парча"
+      reason: "Слишком формально-громоздко для умеренной классики"
+    - id: chunky_textured
+      pattern: "крупная вязка, толстый твид"
+      reason: "Объём вне умеренного диапазона"
+    - id: shimmery_metallic_loud
+      pattern: "крупный металлический блеск, sequin overload"
+      reason: "Слишком кричит для золотой середины"
+    - id: stiff_burlap
+      pattern: "жёсткий брезент, мешковина"
+      reason: "Грубость противоречит благородству classical"
+
+  prints:
+    - id: busy_overload
+      pattern: "перегруженные busy принты"
+      reason: "Шум противоречит чистоте линии"
+    - id: ditsy_overload
+      pattern: "много мелких dityz узоров одновременно"
+      reason: "Дробность теряет сбалансированную крупность"
+    - id: aggressive_geometric
+      pattern: "агрессивная острая геометрия"
+      reason: "Крайность принта вне умеренной палитры"
+    - id: kitsch_figurative
+      pattern: "kitsch figurative принты (cute, funny)"
+      reason: "Инфантильность противоречит взрослой подаче"
+
+  color:
+    - id: high_contrast_brights
+      pattern: "высококонтрастные кричащие пары"
+      reason: "Высокий контраст вне сбалансированной палитры Classic"
+    - id: muddy_dirty
+      pattern: "грязные неактивные пыльные тона"
+      reason: "Снижают благородство образа"
+    - id: candy_brights
+      pattern: "конфетные инфантильные сочетания"
+      reason: "Игривость не совпадает со зрелой умеренностью"
+
+  categories_ref:
+    jackets: "see category_rules/jackets.yaml → classic.stop"
+    dresses: "see category_rules/dresses.yaml → classic.stop"
+    pants: "see category_rules/pants.yaml → classic.stop"
+    skirts: "see category_rules/skirts.yaml → classic.stop"
+    shoes: "see category_rules/shoes.yaml → classic.stop"

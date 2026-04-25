@@ -1,0 +1,69 @@
+subtype: soft_dramatic
+source: "llm_draft_2026-04-25_kibbe_methodology"
+
+stop_list:
+
+  silhouette:
+    - id: cropped_compact
+      pattern: "укороченные cropped формы, миниатюрные пропорции"
+      reason: "SD lush-фигура требует длины, cropped ломает грациозный масштаб"
+    - id: oversized_unfitted
+      pattern: "оверсайз без структуры, прямые балахоны"
+      reason: "Без подчёркнутого силуэта lush-формы выглядят бесформенно"
+    - id: boyish_flat
+      pattern: "boyish прямые силуэты, плоские конструкции"
+      reason: "Стирают выраженные кривые, центральные для подтипа"
+    - id: cropped_blazer_busy
+      pattern: "короткий жакет с busy деталями"
+      reason: "Дробит lush-вертикаль на части"
+
+  details:
+    - id: ditsy_small_decor
+      pattern: "мелкие маленькие детали (горошки, мелкие вышивки)"
+      reason: "Теряются на масштабе фигуры, нужна крупная драма"
+    - id: stiff_geometric_collar
+      pattern: "жёсткие геометрические воротники без драпировки"
+      reason: "Острые углы без смягчения противоречат lush-природе"
+    - id: peter_pan
+      pattern: "Питер Пэн воротничок и cute-детали"
+      reason: "Инфантильный для зрелой драматичной чувственности"
+
+  fabrics:
+    - id: stiff_canvas_burlap
+      pattern: "жёсткий брезент, мешковина, грубый деним без стрейча"
+      reason: "Ткань должна одновременно держать форму и струиться, не быть деревянной"
+    - id: thin_papery
+      pattern: "тонкие 'бумажные' ткани без веса"
+      reason: "Lush-фигуре нужны плотные роскошные ткани, тонкие выглядят бедно"
+    - id: chunky_textured_wool
+      pattern: "очень крупная вязка, грубая шерсть в массе"
+      reason: "Добавляет объём поверх и без того lush-форм"
+
+  prints:
+    - id: ditsy_micro
+      pattern: "мелкие dityz цветочки, микро-точки"
+      reason: "Теряются на масштабе, выглядят детски"
+    - id: stiff_geometric
+      pattern: "жёсткие геометрические монохром-блоки"
+      reason: "Без органики читаются как 'не свои' для подтипа"
+    - id: cute_cherries
+      pattern: "вишенки, банты, смайлики"
+      reason: "Слишком инфантильно для зрелой драматичной чувственности"
+
+  color:
+    - id: pastel_pale
+      pattern: "пастельные бледные цвета"
+      reason: "Размывают силу подтипа, нужны насыщенные глубокие тона"
+    - id: muddy_dust
+      pattern: "грязные пыльные оттенки (хаки светлый, грязный беж)"
+      reason: "Убирают магнетизм lush-фигуры"
+    - id: high_contrast_primary
+      pattern: "конфликтные первичные пары (красный/синий ярко)"
+      reason: "Слишком инфантильно — SD просит насыщенный монохром или один акцент"
+
+  categories_ref:
+    jackets: "see category_rules/jackets.yaml → soft_dramatic.stop"
+    dresses: "see category_rules/dresses.yaml → soft_dramatic.stop"
+    pants: "see category_rules/pants.yaml → soft_dramatic.stop"
+    skirts: "see category_rules/skirts.yaml → soft_dramatic.stop"
+    shoes: "see category_rules/shoes.yaml → soft_dramatic.stop"
