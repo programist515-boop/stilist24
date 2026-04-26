@@ -70,12 +70,18 @@ class CategoryClassifier(Protocol):
 # ``https://api.anthropic.com`` and set claude_auth_scheme="x-api-key".
 _DEFAULT_BASE_URL = "https://api.kie.ai/claude"
 _DEFAULT_MODEL = "claude-haiku-4-5"
-# kie.ai with a 56k-token image takes ~10-12s end-to-end; 20s leaves
-# headroom without making the upload feel hung. Falls back to heuristic
-# on timeout.
-_DEFAULT_TIMEOUT_S = 20.0
+# kie.ai with a 56k-token image takes ~10-12s end-to-end on the happy
+# path but occasionally drags to 20-25s (queueing in the proxy). 30s
+# matches the user-facing upload timeout (frontend uses 120s) and gives
+# enough room for one retry on TimeoutException without the user seeing
+# a hang. Outside this budget we still fall back to heuristic.
+_DEFAULT_TIMEOUT_S = 30.0
 _BREAKER_FAIL_THRESHOLD = 3
 _BREAKER_COOLDOWN_S = 300.0  # 5 minutes
+# How many retries on transient (network/timeout) errors before giving up
+# and letting the wrapper fall through to heuristic. Each retry costs one
+# more kie.ai credit, so we cap low.
+_TRANSIENT_RETRIES = 1
 
 
 _CATEGORIES_LIST = ", ".join(WARDROBE_CATEGORIES)
@@ -200,18 +206,44 @@ class ClaudeCategoryClassifier:
                 image_bytes, attrs_hint=attrs_hint, media_type=media_type
             )
 
-        try:
-            return self._call_claude(image_bytes, attrs_hint, media_type)
-        except Exception as exc:  # noqa: BLE001 — we genuinely fall back on anything
-            self._breaker.record_failure()
-            logger.warning(
-                "category_classifier: claude call failed (%s: %s), falling back to heuristic",
-                type(exc).__name__,
-                exc,
-            )
-            return self._fallback.classify(
-                image_bytes, attrs_hint=attrs_hint, media_type=media_type
-            )
+        last_exc: Exception | None = None
+        for attempt_idx in range(_TRANSIENT_RETRIES + 1):
+            try:
+                return self._call_claude(image_bytes, attrs_hint, media_type)
+            except (httpx.TimeoutException, httpx.NetworkError) as exc:
+                # Transient — kie.ai proxy queue spike or flaky network.
+                # Retry without burning the breaker so a single slow call
+                # doesn't trip 3-strike cooldown.
+                last_exc = exc
+                logger.warning(
+                    "category_classifier: transient %s on attempt %d/%d",
+                    type(exc).__name__,
+                    attempt_idx + 1,
+                    _TRANSIENT_RETRIES + 1,
+                )
+                continue
+            except Exception as exc:  # noqa: BLE001 — anything else is non-retryable
+                self._breaker.record_failure()
+                logger.warning(
+                    "category_classifier: claude call failed (%s: %s), falling back to heuristic",
+                    type(exc).__name__,
+                    exc,
+                )
+                return self._fallback.classify(
+                    image_bytes, attrs_hint=attrs_hint, media_type=media_type
+                )
+
+        # Exhausted retries on transient errors — count as one breaker
+        # strike and fall back to heuristic.
+        self._breaker.record_failure()
+        logger.warning(
+            "category_classifier: exhausted %d transient retries (last=%s), falling back",
+            _TRANSIENT_RETRIES + 1,
+            type(last_exc).__name__ if last_exc else "?",
+        )
+        return self._fallback.classify(
+            image_bytes, attrs_hint=attrs_hint, media_type=media_type
+        )
 
     def _call_claude(
         self,

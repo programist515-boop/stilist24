@@ -389,6 +389,57 @@ def test_claude_does_not_send_tools_or_tool_choice():
     assert "tool_choice" not in sent
 
 
+def test_claude_retries_once_on_timeout_then_succeeds():
+    """One transient timeout should be retried automatically before the
+    classifier gives up and falls through to heuristic. kie.ai under
+    load occasionally queues for 20+ seconds, and a retry usually hits
+    a different worker in <10 seconds."""
+    success_body = _claude_response_body("blouses", 0.92)
+
+    # First call times out, second returns valid response.
+    success_response = MagicMock(spec=httpx.Response)
+    success_response.status_code = 200
+    success_response.json.return_value = success_body
+    success_response.raise_for_status = MagicMock()
+
+    client = MagicMock(spec=httpx.Client)
+    client.post.side_effect = [
+        httpx.TimeoutException("read timeout"),
+        success_response,
+    ]
+    classifier = ClaudeCategoryClassifier(api_key="sk-test", client=client)
+
+    pred = classifier.classify(b"x")
+
+    assert pred.source == "cloud_llm"
+    assert pred.category == "blouses"
+    # First attempt + 1 retry == 2 calls.
+    assert client.post.call_count == 2
+
+
+def test_claude_two_consecutive_timeouts_fall_back_to_heuristic():
+    """Both attempts time out → give up, heuristic kicks in. The breaker
+    counts this as one failure (not two) so a temporarily slow upstream
+    doesn't trip the 3-strike cooldown after one bad request."""
+    client = MagicMock(spec=httpx.Client)
+    client.post.side_effect = httpx.TimeoutException("read timeout")
+    breaker = _CircuitBreaker(fail_threshold=3, cooldown_s=60.0)
+    classifier = ClaudeCategoryClassifier(
+        api_key="sk-test",
+        client=client,
+        breaker=breaker,
+        fallback=HeuristicCategoryClassifier(),
+    )
+
+    pred = classifier.classify(b"x", attrs_hint={"occasion": "work"})
+
+    assert pred.source == "heuristic"
+    # 1 attempt + 1 retry — the breaker should count it as a single
+    # failure, not two, so legitimate retries don't accelerate the trip.
+    assert client.post.call_count == 2
+    assert not breaker.is_open()
+
+
 def test_claude_network_error_falls_back_to_heuristic():
     client = MagicMock(spec=httpx.Client)
     client.post.side_effect = httpx.TimeoutException("network timeout")
