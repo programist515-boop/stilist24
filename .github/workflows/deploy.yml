@@ -104,16 +104,15 @@ jobs:
             S3_BUCKET=ai-stylist
             FASHN_API_KEY=${FASHN_API_KEY}
             FASHN_BASE_URL=https://api.fashn.ai
-            # CV-классификатор категории при загрузке вещи. Флаг OFF —
-            # поведение как раньше (category из формы или None). Когда
-            # acceptance-прогон зелёный, переключаем USE_CV_CATEGORY_CLASSIFIER
-            # на true и CATEGORY_CLASSIFIER_PROVIDER на "claude" (этот
-            # commit + CLAUDE_API_KEY уже добавленный в GitHub Secrets).
-            # Default endpoint — kie.ai (Anthropic-compatible proxy с Bearer
-            # auth). Для прямого Anthropic — base_url=https://api.anthropic.com,
-            # auth_scheme=x-api-key.
-            USE_CV_CATEGORY_CLASSIFIER=false
-            CATEGORY_CLASSIFIER_PROVIDER=heuristic
+            # CV-классификатор категории при загрузке вещи. Включён —
+            # ходим в kie.ai (Anthropic-compatible proxy) → Claude Haiku.
+            # При confidence < threshold category сохраняется как None
+            # (фронт показывает «уточни категорию» вместо тихого "top").
+            # Rollback одним env-toggle: USE_CV_CATEGORY_CLASSIFIER=false.
+            # Для прямого Anthropic — CLAUDE_BASE_URL=https://api.anthropic.com,
+            # CLAUDE_AUTH_SCHEME=x-api-key.
+            USE_CV_CATEGORY_CLASSIFIER=true
+            CATEGORY_CLASSIFIER_PROVIDER=claude
             CATEGORY_CONFIDENCE_THRESHOLD=0.6
             CLAUDE_API_KEY=${CLAUDE_API_KEY}
             CLAUDE_BASE_URL=https://api.kie.ai/claude
