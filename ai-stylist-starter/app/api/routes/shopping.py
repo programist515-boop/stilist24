@@ -84,7 +84,9 @@ async def evaluate_purchase(
     result = PurchaseEvaluator(wardrobe, user_context).evaluate(candidate)
 
     from app.services.explainer import explain_shopping
-    explanation = explain_shopping(result).to_dict()
+    # ``identity_family`` исторически — это полное имя подтипа, не семейство.
+    subtype = user_context.get("identity_family") if isinstance(user_context, dict) else None
+    explanation = explain_shopping(result, subtype=subtype).to_dict()
 
     # Persist the candidate so the evaluation can be referenced later
     _persist_candidate(db, user_id, candidate)

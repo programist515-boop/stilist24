@@ -281,6 +281,11 @@ class TodayService:
             for outfit in pool
         ]
 
+        # Identity-subtype для Identity DNA в объяснениях (Фаза 8). Поле
+        # называется ``identity_family`` исторически, но содержит полное имя
+        # подтипа (например, ``flamboyant_gamine``).
+        subtype: str | None = user_context.get("identity_family")
+
         used_signatures: set[tuple] = set()
         results: list[dict] = []
 
@@ -288,7 +293,7 @@ class TodayService:
         # Each slot picks its top-ranked outfit that has not been used yet.
         chosen_by_label: dict[str, dict] = {}
         for label in ("balanced", "safe", "expressive"):
-            picked = self._pick_for_label(label, annotated, used_signatures)
+            picked = self._pick_for_label(label, annotated, used_signatures, subtype)
             if picked is None:
                 continue
             chosen_by_label[label] = picked
@@ -397,6 +402,7 @@ class TodayService:
         label: str,
         annotated: list[dict],
         used_signatures: set[tuple],
+        subtype: str | None = None,
     ) -> dict | None:
         """Ascending sort with negated-numeric keys so "higher is better"
         becomes "lower sorts first". The string tuple tiebreak is appended
@@ -433,7 +439,7 @@ class TodayService:
             if sig in used_signatures:
                 continue
             outfit = candidate["outfit"]
-            explanation = explain_outfit(outfit).to_dict()
+            explanation = explain_outfit(outfit, subtype=subtype).to_dict()
             return {
                 "outfit": outfit,
                 "reasons": explanation.get("reasons", [])[:MAX_REASONS],

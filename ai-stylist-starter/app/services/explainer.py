@@ -18,6 +18,9 @@ Rules (enforced in this module — downstream callers can rely on them):
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from pathlib import Path
+
+import yaml
 
 
 # ---------------------------------------------------------------------------
@@ -57,8 +60,14 @@ class Explanation:
 # Outfit explanation
 # ---------------------------------------------------------------------------
 
-def explain_outfit(outfit: dict) -> Explanation:
-    """Convert an outfit dict (from OutfitGenerator) into a user-facing Explanation."""
+def explain_outfit(outfit: dict, *, subtype: str | None = None) -> Explanation:
+    """Convert an outfit dict (from OutfitGenerator) into a user-facing Explanation.
+
+    ``subtype`` (Kibbe identity-subtype, e.g. ``flamboyant_gamine``) is optional.
+    When provided AND the outfit scores well (≥0.55), Identity DNA associations
+    are prepended to ``reasons`` so the message reads in the user's stylistic
+    voice ("В вашем стиле — оторва, креативная") instead of generic praise.
+    """
     score = outfit.get("total_score") or outfit.get("scores", {}).get("overall", 0.0)
     breakdown = outfit.get("breakdown") or {}
 
@@ -84,6 +93,13 @@ def explain_outfit(outfit: dict) -> Explanation:
             if warning and warning not in warnings:
                 warnings.append(warning)
 
+    if subtype and score >= 0.55:
+        intro = identity_intro(subtype)
+        if intro and intro["associations"]:
+            phrase = "В вашем стиле — " + ", ".join(intro["associations"][:2])
+            if phrase not in reasons:
+                reasons.insert(0, phrase)
+
     return Explanation(summary=summary, reasons=reasons[:MAX_REASONS], warnings=warnings[:MAX_WARNINGS])
 
 
@@ -98,8 +114,13 @@ _SHOPPING_DECISION_SUMMARY = {
 }
 
 
-def explain_shopping(result: dict) -> Explanation:
-    """Produce a user-facing Explanation from a PurchaseEvaluator result dict."""
+def explain_shopping(result: dict, *, subtype: str | None = None) -> Explanation:
+    """Produce a user-facing Explanation from a PurchaseEvaluator result dict.
+
+    ``subtype`` is optional. When provided AND the recommendation is to buy,
+    Identity DNA associations are prepended to ``reasons`` to anchor the
+    purchase to the user's stylistic identity.
+    """
     decision = result.get("decision", "maybe")
     subscores = result.get("subscores") or {}
 
@@ -116,6 +137,13 @@ def explain_shopping(result: dict) -> Explanation:
             reasons.append(label_hi)
         elif s < 0.35 and label_lo and label_lo not in warnings:
             warnings.append(label_lo)
+
+    if subtype and decision == "buy":
+        intro = identity_intro(subtype)
+        if intro and intro["associations"]:
+            phrase = "Поддержит ваш стиль: " + ", ".join(intro["associations"][:2])
+            if phrase not in reasons:
+                reasons.insert(0, phrase)
 
     return Explanation(
         summary=summary,
@@ -158,6 +186,73 @@ def explain_versatility(result: dict) -> Explanation:
 def gap_action_label(category: str) -> str:
     """Return a short friendly action string for a missing wardrobe category."""
     return "Попробовать добавить"
+
+
+# ---------------------------------------------------------------------------
+# Identity DNA (Phase 8): motto + associations from identity_subtype_profiles
+# ---------------------------------------------------------------------------
+
+_PROFILES_PATH = (
+    Path(__file__).resolve().parent.parent.parent
+    / "config/rules/identity_subtype_profiles.yaml"
+)
+
+_profiles_cache: dict | None = None
+
+
+def _load_profiles() -> dict:
+    """Read identity_subtype_profiles.yaml once per process."""
+    global _profiles_cache
+    if _profiles_cache is None:
+        try:
+            with _PROFILES_PATH.open("r", encoding="utf-8") as f:
+                raw = yaml.safe_load(f) or {}
+        except FileNotFoundError:
+            raw = {}
+        _profiles_cache = raw.get("identity_subtype_profiles") or {}
+    return _profiles_cache
+
+
+def get_identity_profile(subtype: str | None) -> dict | None:
+    """Return the full Identity DNA profile dict for ``subtype``, or None."""
+    if not subtype:
+        return None
+    profiles = _load_profiles()
+    profile = profiles.get(subtype)
+    if not isinstance(profile, dict):
+        return None
+    return profile
+
+
+def identity_intro(subtype: str | None) -> dict | None:
+    """Return a compact Identity DNA intro for UI / explanations.
+
+    Shape:
+        {
+            "display_name": "Гамин-Драматик",
+            "motto": "Правила были созданы, чтобы их нарушать!",
+            "associations": ["оторва", "креативная", "вызывающая"],
+        }
+
+    Returns ``None`` for an unknown or empty subtype, or when the profile
+    has no associations and no motto. ``associations`` is capped at 3 to
+    keep UI/text snippets short.
+    """
+    profile = get_identity_profile(subtype)
+    if profile is None:
+        return None
+    motto = profile.get("motto") or ""
+    associations_raw = profile.get("associations") or []
+    associations = [
+        str(a) for a in associations_raw if isinstance(a, str) and a.strip()
+    ][:3]
+    if not motto and not associations:
+        return None
+    return {
+        "display_name": profile.get("display_name_ru") or subtype,
+        "motto": motto.strip(),
+        "associations": associations,
+    }
 
 
 # ---------------------------------------------------------------------------
@@ -224,4 +319,6 @@ __all__ = [
     "explain_shopping",
     "explain_versatility",
     "gap_action_label",
+    "get_identity_profile",
+    "identity_intro",
 ]
