@@ -434,3 +434,150 @@ class TestStopPredicates:
         r = service.score_item(item, "flamboyant_gamine")
         assert r.score < 0
         assert any("low_rise_cutesy" in m for m in r.matched_stop)
+
+
+# ----------------------------- nested rules (outerwear) -------------------
+
+
+class TestNestedOuterwearRules:
+    """outerwear использует nested структуру rules[subtype][sub_category].
+
+    Сервис должен определить sub_category из item.category / item.sub_category /
+    item.sub_type и применить prefer/stop вложенного блока. При неудаче —
+    fallback на _DEFAULT_SUBCATEGORY (для outerwear это 'coat').
+    """
+
+    def test_dramatic_coat_long_tailored_matches_prefer(
+        self, service: CategoryRulesService
+    ) -> None:
+        """category='coat' для Dramatic → читает rules[dramatic][coat].prefer."""
+        item = _item(
+            "a",
+            category="coat",
+            fit="tailored",
+            length="long",
+            structure="structured",
+        )
+        r = service.score_item(item, "dramatic")
+        assert r.score > 0
+        assert any("fit=tailored" in n for n in r.matched_prefer)
+        assert any("length=long" in n for n in r.matched_prefer)
+
+    def test_dramatic_coat_cropped_short_penalty(
+        self, service: CategoryRulesService
+    ) -> None:
+        """cropped пальто для Dramatic — штраф (cropped_short в stop с match)."""
+        item = _item(
+            "a",
+            category="coat",
+            length="cropped",
+        )
+        r = service.score_item(item, "dramatic")
+        assert r.score < 0
+        assert any("cropped_short" in m for m in r.matched_stop)
+
+    def test_classic_trench_via_category_alias(
+        self, service: CategoryRulesService
+    ) -> None:
+        """category='trench' резолвится в outerwear файл, sub_category='trench'."""
+        item = _item(
+            "a",
+            category="trench",
+            length="knee",
+            fit="tailored_moderate",
+        )
+        r = service.score_item(item, "classic")
+        assert r.score > 0
+        assert any("length=knee" in n for n in r.matched_prefer)
+
+    def test_outerwear_with_explicit_sub_type(
+        self, service: CategoryRulesService
+    ) -> None:
+        """sub_type='trench' внутри outerwear → читает trench-блок."""
+        item = _item(
+            "a",
+            category="outerwear",
+            attributes_json={"sub_type": "trench"},
+            sub_type="trench",
+            length="knee",
+            fit="tailored",
+        )
+        r = service.score_item(item, "dramatic_classic")
+        assert r.score > 0
+
+    def test_unknown_sub_category_falls_back_to_coat(
+        self, service: CategoryRulesService
+    ) -> None:
+        """category='outerwear' без sub_type → дефолт 'coat'."""
+        item = _item(
+            "a",
+            category="outerwear",
+            fit="tailored",
+            length="long",
+            structure="structured",
+        )
+        r = service.score_item(item, "dramatic")
+        # Дефолт coat для dramatic заполнен — должен дать положительный score
+        assert r.score > 0
+        assert r.quality != "low"
+
+    def test_biker_jacket_always_true_for_fg(
+        self, service: CategoryRulesService
+    ) -> None:
+        """biker_jacket для FG имеет prefer={always: true} — буст без штрафов."""
+        item = _item(
+            "a",
+            category="outerwear",
+            attributes_json={"sub_type": "biker_jacket"},
+            sub_type="biker_jacket",
+        )
+        r = service.score_item(item, "flamboyant_gamine")
+        assert r.score > 0
+        assert any("всегда подходит" in n for n in r.matched_prefer)
+
+    def test_fur_coat_for_soft_dramatic(
+        self, service: CategoryRulesService
+    ) -> None:
+        item = _item(
+            "a",
+            category="outerwear",
+            attributes_json={"sub_type": "fur_coat"},
+            sub_type="fur_coat",
+        )
+        r = service.score_item(item, "soft_dramatic")
+        # У SD есть fur_coat блок с prefer; даже если конкретные атрибуты
+        # не заполнены — quality будет low, но без падения с ошибкой.
+        assert isinstance(r.score, float)
+        assert r.category == "outerwear"
+
+    def test_natural_puffer_via_sub_type(
+        self, service: CategoryRulesService
+    ) -> None:
+        """puffer — есть в FN/Natural, нет у Dramatic. Для Natural работает."""
+        item = _item(
+            "a",
+            category="puffer",
+            attributes_json={"silhouette": "relaxed"},
+        )
+        r = service.score_item(item, "natural")
+        # natural.puffer.prefer существует — должен сработать nested-резолвер
+        # без падения; конкретные атрибуты могут не совпасть
+        assert isinstance(r.score, float)
+        assert r.category == "puffer"
+
+    def test_subtype_without_requested_sub_category_falls_back(
+        self, service: CategoryRulesService
+    ) -> None:
+        """item.sub_type='puffer', а у dramatic puffer-блока нет → fallback на 'coat'."""
+        item = _item(
+            "a",
+            category="outerwear",
+            attributes_json={"sub_type": "puffer"},
+            sub_type="puffer",
+            fit="tailored",
+            length="long",
+        )
+        r = service.score_item(item, "dramatic")
+        # У Dramatic нет puffer-блока — должен упасть на default 'coat'
+        # и оценить вещь по coat-правилам
+        assert r.score > 0

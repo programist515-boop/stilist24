@@ -152,6 +152,75 @@ def _resolve_category_file(category: str | None) -> str | None:
     return _CATEGORY_FILE_ALIASES.get(category.lower())
 
 
+# ----------------------------- nested rules --------------------------------
+#
+# Часть категорий (outerwear) делится на sub_category на уровне YAML:
+#
+#   rules:
+#     <subtype>:
+#       coat:        { prefer: ..., stop: ... }
+#       fur_coat:    { prefer: ..., stop: ... }
+#       biker_jacket: { prefer: {always: true}, stop: [] }
+#
+# Сервис должен выбрать нужную sub_category по item.category /
+# item.sub_category / item.sub_type, иначе использовать дефолт по файлу.
+
+# Дефолтная sub_category, если не удалось определить из атрибутов вещи.
+_DEFAULT_SUBCATEGORY: dict[str, str] = {
+    "outerwear": "coat",
+}
+
+
+def _is_nested_block(block: Any) -> bool:
+    """True если subtype-блок содержит sub_categories вместо плоских prefer/stop.
+
+    Признак nested: на верхнем уровне нет ``prefer``/``stop``, но есть хотя бы
+    одно значение-dict с ``prefer`` или ``stop``.
+    """
+    if not isinstance(block, dict) or not block:
+        return False
+    if "prefer" in block or "stop" in block:
+        return False
+    for v in block.values():
+        if isinstance(v, dict) and ("prefer" in v or "stop" in v):
+            return True
+    return False
+
+
+def _resolve_sub_category(
+    item: Any,
+    subtype_block: dict,
+    file_stem: str,
+) -> str | None:
+    """Определить sub_category вещи внутри nested-блока подтипа.
+
+    Источники, в порядке приоритета:
+    1. ``item.sub_category`` или ``item.sub_type`` (если значение совпадает
+       с одним из ключей nested-блока)
+    2. ``item.category`` (для случая, когда юзер загрузил вещь как
+       ``category=trench`` — мы знаем, что это outerwear/trench)
+    3. ``_DEFAULT_SUBCATEGORY[file_stem]`` — fallback на дефолт файла.
+    """
+    available = {k for k, v in subtype_block.items() if isinstance(v, dict)}
+    if not available:
+        return None
+
+    for attr in ("sub_category", "sub_type"):
+        v = _resolve_attr(item, attr)
+        if v and str(v).lower() in available:
+            return str(v).lower()
+
+    cat = _item_category(item)
+    if cat and cat.lower() in available:
+        return cat.lower()
+
+    default = _DEFAULT_SUBCATEGORY.get(file_stem)
+    if default and default in available:
+        return default
+
+    return None
+
+
 def _load_category_yaml(file_stem: str) -> dict:
     path = _CATEGORY_RULES_DIR / f"{file_stem}.yaml"
     try:
@@ -249,6 +318,15 @@ def _score_prefer(
 
     for yaml_key, expected in prefer.items():
         if yaml_key in _SPECIAL_PREFER_KEYS:
+            continue
+        # ``always: true`` — синтаксис для sub_category, которая всегда подходит
+        # (например, biker_jacket для FG/Gamine/SG в outerwear). Даём явный
+        # буст без штрафов.
+        if yaml_key == "always" and expected is True:
+            checked += 1
+            matched += 1
+            delta += 0.20
+            notes.append("эта подкатегория всегда подходит подтипу")
             continue
         # ``sub_types`` в YAML — список допустимых подтипов вещи;
         # атрибут вещи обычно ``sub_type`` (в колонке ``attributes_json``).
@@ -424,8 +502,25 @@ class CategoryRulesService:
         yaml_data = self._load(file_stem)
         rules_block = yaml_data.get("rules") or {}
         subtype_block = rules_block.get(user_subtype) or {}
-        prefer = subtype_block.get("prefer") or {}
-        stop = subtype_block.get("stop") or []
+
+        # Nested-структура (outerwear/coat, outerwear/trench и т.п.):
+        # spustить subtype_block на один уровень вниз по sub_category.
+        if _is_nested_block(subtype_block):
+            sub_cat = _resolve_sub_category(item, subtype_block, file_stem)
+            if sub_cat is None:
+                return CategoryRuleScore(
+                    item_id=iid,
+                    category=category,
+                    score=0.0,
+                    stop_notes=[],
+                    quality="low",
+                )
+            sub_block = subtype_block.get(sub_cat) or {}
+            prefer = sub_block.get("prefer") or {}
+            stop = sub_block.get("stop") or []
+        else:
+            prefer = subtype_block.get("prefer") or {}
+            stop = subtype_block.get("stop") or []
 
         if not prefer and not stop:
             return CategoryRuleScore(
