@@ -55,6 +55,7 @@ FALLBACK_ATTRIBUTES: dict[str, Any] = {
     "print_type": "solid",
     "_color_source": "default",
     "_print_source": "default",
+    "_processed_png_bytes": None,
 }
 
 
@@ -77,10 +78,13 @@ class GarmentRecognizer:
         """Run the v1-lite pipeline on raw image bytes.
 
         Returns a dict with keys:
-          primary_color, print_type, _color_source, _print_source.
+          primary_color, print_type, _color_source, _print_source,
+          _processed_png_bytes (PNG-bytes с прозрачным фоном, если
+          rembg отработал; иначе None — вызывающий должен сделать
+          fallback на оригинал).
         Never raises — all failures return fallback values.
         """
-        fg_image, fg_mask = self._remove_background(image_bytes)
+        fg_image, fg_mask, processed_png = self._remove_background(image_bytes)
 
         primary_color, color_source = self._extract_primary_color(fg_image, fg_mask)
         print_type, print_source = self._detect_print(fg_image, fg_mask)
@@ -90,16 +94,22 @@ class GarmentRecognizer:
             "print_type": print_type,
             "_color_source": color_source,
             "_print_source": print_source,
+            "_processed_png_bytes": processed_png,
         }
 
     # ---------------------------------------------------------- step 1: bg removal
 
     def _remove_background(
         self, image_bytes: bytes
-    ) -> tuple[Any, Any]:
-        """Remove background via rembg. Returns (rgb_array, alpha_mask).
+    ) -> tuple[Any, Any, bytes | None]:
+        """Remove background via rembg.
 
-        Falls back to (decoded_rgb, None) on any failure.
+        Returns (rgb_array, alpha_mask, processed_png_bytes).
+        ``processed_png_bytes`` — RGBA PNG с прозрачным фоном, который
+        вызывающий может сохранить в S3 как «обрезанную» версию вещи.
+
+        Falls back to (decoded_rgb, None, None) on any failure — оригинал
+        остаётся нетронут, обрезка пропускается.
         """
         try:
             from rembg import remove  # lazy import
@@ -113,13 +123,14 @@ class GarmentRecognizer:
             rgb = arr[:, :, :3]
             mask = arr[:, :, 3]  # alpha: >0 = foreground
             logger.debug("garment_recognizer: bg_removal OK shape=%s", rgb.shape)
-            return rgb, mask
+            return rgb, mask, output
         except Exception as exc:
             logger.warning(
                 "garment_recognizer: bg_removal FAILED %s: %s — using raw pixels",
                 type(exc).__name__, exc,
             )
-            return self._decode_raw(image_bytes)
+            rgb, mask = self._decode_raw(image_bytes)
+            return rgb, mask, None
 
     def _decode_raw(self, image_bytes: bytes) -> tuple[Any, Any]:
         try:
@@ -268,7 +279,9 @@ class GarmentRecognizer:
 
         # Повторно считаем fg_image + fg_mask, т.к. метрики Phase-0
         # пересекаются с v1-пайплайном и нам нужен доступ к маске.
-        fg_image, fg_mask = self._remove_background(image_bytes)
+        # _processed_png здесь не нужен — extended вызывается после
+        # recognize, который уже вернул PNG-bytes наверх.
+        fg_image, fg_mask, _ = self._remove_background(image_bytes)
 
         # Предрасчёт сигналов, которые переиспользуются несколькими эвристиками.
         signals = self._precompute_signals(fg_image, fg_mask)

@@ -34,3 +34,19 @@ export async function uploadWardrobeItem(input: {
   });
   return WardrobeItemSchema.parse(data);
 }
+
+/**
+ * Заменить категорию существующей вещи. Используется для ручного
+ * исправления, когда CV-определение оказалось неверным или пользователь
+ * хочет переместить вещь в другой слот.
+ */
+export async function updateWardrobeItemCategory(
+  itemId: string,
+  category: string
+): Promise<WardrobeItem> {
+  const data = await apiRequest(`/wardrobe/${itemId}/category`, {
+    method: "PATCH",
+    json: { category },
+  });
+  return WardrobeItemSchema.parse(data);
+}

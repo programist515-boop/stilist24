@@ -74,6 +74,41 @@ class WardrobeConfirmIn(BaseModel):
     attributes: dict[str, Any]
 
 
+_ALLOWED_CATEGORIES = (
+    "top",
+    "bottom",
+    "outerwear",
+    "shoes",
+    "dress",
+    "accessory",
+)
+
+
+class WardrobeCategoryPatchIn(BaseModel):
+    """Payload for ``PATCH /wardrobe/{item_id}/category``.
+
+    Используется для ручного исправления категории, когда CV-определение
+    оказалось неверным (или не было) и пользователь поправляет вручную.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    category: str = Field(
+        ...,
+        description=(
+            "Новая категория вещи. Допустимые: top, bottom, outerwear, "
+            "shoes, dress, accessory."
+        ),
+    )
+
+    def model_post_init(self, _context) -> None:
+        if self.category not in _ALLOWED_CATEGORIES:
+            raise ValueError(
+                f"category должен быть одним из {_ALLOWED_CATEGORIES}, "
+                f"получено '{self.category}'"
+            )
+
+
 class WardrobeConfirmOut(BaseModel):
     """Success body for ``POST /wardrobe/confirm``.
 
@@ -89,6 +124,7 @@ class WardrobeConfirmOut(BaseModel):
 
 
 __all__ = [
+    "WardrobeCategoryPatchIn",
     "WardrobeConfirmIn",
     "WardrobeConfirmOut",
     "WardrobeItemOut",

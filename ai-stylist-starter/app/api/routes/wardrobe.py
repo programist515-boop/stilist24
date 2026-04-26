@@ -36,6 +36,7 @@ from app.services.garment_recognizer import recognize_garment
 from app.services.wardrobe.attribute_normalizer import apply_manual_update, normalize as normalize_attrs
 from app.schemas.versatility import VersatilityResponse
 from app.schemas.wardrobe import (
+    WardrobeCategoryPatchIn,
     WardrobeConfirmIn,
     WardrobeConfirmOut,
     WardrobeItemOut,
@@ -106,6 +107,30 @@ async def upload_item(
 
     detected = recognize_garment(data, hint_category=category)
 
+    # Если rembg отработал — сохраняем обрезанную версию PNG отдельно и
+    # отдаём её как image_url (фронт показывает вещь без фона). Оригинал
+    # остаётся под основным ключом, чтобы при необходимости можно было
+    # перезапустить распознавание. Если rembg упал — image_url остаётся
+    # оригиналом, ничего не теряем.
+    image_key_final = asset.key
+    image_url_final = asset.url
+    nobg_bytes = detected.get("_processed_png_bytes")
+    if nobg_bytes:
+        # Детерминированный ключ: тот же item_id + суффикс. Идемпотентно
+        # при ретраях и легко чистится.
+        nobg_key = f"{asset.key.rsplit('.', 1)[0]}_nobg.png"
+        try:
+            storage.backend.put(nobg_key, nobg_bytes, content_type="image/png")
+            image_key_final = nobg_key
+            image_url_final = storage.backend.public_url(nobg_key)
+        except StorageError as exc:
+            # Не валим upload — fallback на оригинал.
+            import logging
+            logging.getLogger(__name__).warning(
+                "wardrobe/upload: nobg save failed for item %s: %s",
+                item_id, exc,
+            )
+
     # Normalize to v2 structured attributes (value + confidence + source + editable)
     raw_for_normalizer = {
         "category": category or "tops",
@@ -119,8 +144,8 @@ async def upload_item(
         user_id=user_id,
         persona_id=persona_id,
         item_id=item_id,
-        image_key=asset.key,
-        image_url=asset.url,
+        image_key=image_key_final,
+        image_url=image_url_final,
         category=category or "top",
         attributes=attributes_v2,
     )
@@ -407,5 +432,31 @@ def update_item_attributes(
     existing_attrs = item.attributes_json or {}
     updated_attrs = apply_manual_update(existing_attrs, updates)
     repo.update(item_id, attributes_json=updated_attrs)
+    item = repo.get_by_id(item_id)
+    return _serialize(item)
+
+
+@router.patch("/{item_id}/category", response_model=WardrobeItemOut)
+def update_item_category(
+    item_id: uuid.UUID,
+    payload: WardrobeCategoryPatchIn,
+    db: Session = Depends(get_db),
+    persona_id: uuid.UUID = Depends(get_current_persona_id),
+) -> dict:
+    """Заменить категорию вещи (ручное исправление CV-определения).
+
+    Используется, когда CV-распознавание поставило вещь в неверный
+    слот — например, тренч попал в «top» вместо «outerwear». Возвращает
+    полный обновлённый item, фронт может сразу подменить в кэше.
+    """
+    repo = WardrobeRepository(db)
+    item = repo.get_by_id(item_id)
+    if item is None or item.persona_id != persona_id:
+        raise ApiError(
+            code=ErrorCode.NOT_FOUND,
+            message="wardrobe item not found",
+            status_code=404,
+        )
+    repo.update(item_id, category=payload.category)
     item = repo.get_by_id(item_id)
     return _serialize(item)
