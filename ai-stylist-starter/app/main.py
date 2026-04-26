@@ -12,7 +12,6 @@ from app.api.routes import (
     auth,
     color,
     color_tryon,
-    debug_cv,
     events,
     feedback,
     gap_analysis,
@@ -88,7 +87,6 @@ app.include_router(
     prefix="/reference-looks",
     tags=["reference-looks"],
 )
-app.include_router(debug_cv.router, prefix="/debug", tags=["debug"])
 
 
 @app.get("/health")
