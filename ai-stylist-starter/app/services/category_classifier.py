@@ -40,84 +40,6 @@ from app.services.categories import WARDROBE_CATEGORIES
 logger = logging.getLogger(__name__)
 
 
-# Cross-worker ring buffer of recent classifier attempts (TEMPORARY).
-#
-# Uvicorn runs N=4 workers in prod, each a separate Python process, so
-# an in-process ``deque`` would fragment the log across them. We use a
-# JSONL file in /tmp shared by all workers in the same container, with
-# ``fcntl.flock`` for write coordination. Bounded to 20 entries.
-#
-# Remove together with debug_cv routes when the integration is stable.
-import os as _os
-from pathlib import Path as _Path
-
-try:
-    import fcntl as _fcntl  # POSIX-only (Linux/macOS); not available on Windows tests
-except ImportError:  # pragma: no cover — only matters on Windows
-    _fcntl = None
-
-_ATTEMPTS_PATH = _Path(_os.environ.get("CV_CLASSIFIER_LOG", "/tmp/cv_classifier_attempts.jsonl"))
-_ATTEMPTS_MAX = 20
-
-
-def _record_attempt(entry: dict) -> None:
-    """Append one attempt to the shared JSONL log, then trim to MAX.
-
-    Trimming is best-effort: when concurrent workers race we may
-    momentarily exceed MAX by a couple of lines — that's fine, the
-    next call rebalances.
-    """
-    line = json.dumps(entry, default=str)
-    try:
-        _ATTEMPTS_PATH.parent.mkdir(parents=True, exist_ok=True)
-        with open(_ATTEMPTS_PATH, "a+", encoding="utf-8") as f:
-            if _fcntl is not None:
-                _fcntl.flock(f.fileno(), _fcntl.LOCK_EX)
-            try:
-                f.write(line + "\n")
-                f.flush()
-                f.seek(0)
-                lines = [ln for ln in f.read().splitlines() if ln.strip()]
-                if len(lines) > _ATTEMPTS_MAX:
-                    keep = lines[-_ATTEMPTS_MAX:]
-                    f.seek(0)
-                    f.truncate()
-                    f.write("\n".join(keep) + "\n")
-            finally:
-                if _fcntl is not None:
-                    _fcntl.flock(f.fileno(), _fcntl.LOCK_UN)
-    except Exception:  # noqa: BLE001
-        logger.exception("category_classifier: failed to record attempt")
-
-
-def get_recent_attempts() -> list[dict]:
-    """Snapshot of the shared JSONL log for the diagnostic endpoint."""
-    if not _ATTEMPTS_PATH.exists():
-        return []
-    try:
-        with open(_ATTEMPTS_PATH, "r", encoding="utf-8") as f:
-            if _fcntl is not None:
-                _fcntl.flock(f.fileno(), _fcntl.LOCK_SH)
-            try:
-                lines = f.read().splitlines()
-            finally:
-                if _fcntl is not None:
-                    _fcntl.flock(f.fileno(), _fcntl.LOCK_UN)
-        out = []
-        for ln in lines:
-            ln = ln.strip()
-            if not ln:
-                continue
-            try:
-                out.append(json.loads(ln))
-            except json.JSONDecodeError:
-                continue
-        return out
-    except Exception:  # noqa: BLE001
-        logger.exception("category_classifier: failed to read attempts log")
-        return []
-
-
 CategorySource = Literal["cloud_llm", "heuristic", "fallback", "user"]
 
 
@@ -272,50 +194,30 @@ class ClaudeCategoryClassifier:
         attrs_hint: dict[str, Any] | None = None,
         media_type: str = "image/jpeg",
     ) -> CategoryPrediction:
-        attempt: dict = {
-            "ts": time.time(),
-            "image_bytes": len(image_bytes),
-            "media_type": media_type,
-            "breaker_open": self._breaker.is_open(),
-        }
         if self._breaker.is_open():
             logger.warning("category_classifier: breaker open, using heuristic")
-            pred = self._fallback.classify(
+            return self._fallback.classify(
                 image_bytes, attrs_hint=attrs_hint, media_type=media_type
             )
-            attempt["outcome"] = "breaker_open_fallback"
-            attempt["prediction"] = _pred_dict(pred)
-            _record_attempt(attempt)
-            return pred
 
         try:
-            pred = self._call_claude(image_bytes, attrs_hint, media_type, attempt)
-            attempt["outcome"] = "cloud_ok"
-            attempt["prediction"] = _pred_dict(pred)
-            _record_attempt(attempt)
-            return pred
+            return self._call_claude(image_bytes, attrs_hint, media_type)
         except Exception as exc:  # noqa: BLE001 — we genuinely fall back on anything
             self._breaker.record_failure()
-            attempt["outcome"] = "cloud_exception_then_fallback"
-            attempt["exception_type"] = type(exc).__name__
-            attempt["exception_message"] = str(exc)[:500]
             logger.warning(
-                "category_classifier: claude call failed (%s), falling back to heuristic",
+                "category_classifier: claude call failed (%s: %s), falling back to heuristic",
                 type(exc).__name__,
+                exc,
             )
-            pred = self._fallback.classify(
+            return self._fallback.classify(
                 image_bytes, attrs_hint=attrs_hint, media_type=media_type
             )
-            attempt["prediction"] = _pred_dict(pred)
-            _record_attempt(attempt)
-            return pred
 
     def _call_claude(
         self,
         image_bytes: bytes,
         attrs_hint: dict[str, Any] | None,
         media_type: str,
-        attempt: dict | None = None,
     ) -> CategoryPrediction:
         b64 = base64.standard_b64encode(image_bytes).decode("ascii")
         user_text_parts = [
@@ -352,28 +254,14 @@ class ClaudeCategoryClassifier:
         }
 
         client = self._get_client()
-        t0 = time.perf_counter()
         response = client.post(
             f"{self._base_url}/v1/messages",
             headers={"Content-Type": "application/json", **self._auth_headers()},
             json=body,
             timeout=self._timeout_s,
         )
-        if attempt is not None:
-            attempt["http_status"] = response.status_code
-            attempt["latency_s"] = round(time.perf_counter() - t0, 2)
         response.raise_for_status()
         data = response.json()
-        if attempt is not None:
-            # Record everything except input image bytes — the response
-            # is what we need to debug.
-            attempt["claude_response"] = data
-            attempt["claude_stop_reason"] = (
-                data.get("stop_reason") if isinstance(data, dict) else None
-            )
-            attempt["claude_output_tokens"] = (
-                data.get("usage", {}).get("output_tokens") if isinstance(data, dict) else None
-            )
 
         # kie.ai sometimes returns HTTP 200 with a proxy-level error
         # envelope: ``{"code": <int>, "msg": "...", "data": null}``. The
@@ -384,22 +272,15 @@ class ClaudeCategoryClassifier:
         if isinstance(data, dict) and "code" in data and data.get("data") is None:
             kie_code = data.get("code")
             kie_msg = data.get("msg", "")
-            if attempt is not None:
-                attempt["proxy_error_code"] = kie_code
-                attempt["proxy_error_msg"] = kie_msg
             if kie_code == 402:
                 raise RuntimeError(f"credits_insufficient: {kie_msg}")
             raise RuntimeError(f"proxy_error code={kie_code}: {kie_msg}")
 
         text = _extract_text_block(data)
-        if attempt is not None:
-            attempt["text_block"] = text
         if not text:
             raise ValueError("claude response had no text content")
 
         payload = _parse_json_object(text)
-        if attempt is not None:
-            attempt["parsed_json"] = payload
         if payload is None:
             raise ValueError(f"claude text was not parseable JSON: {text!r}")
 
@@ -423,15 +304,6 @@ class ClaudeCategoryClassifier:
             source="cloud_llm",
             reasoning=reasoning,
         )
-
-
-def _pred_dict(pred: CategoryPrediction) -> dict:
-    return {
-        "category": pred.category,
-        "confidence": pred.confidence,
-        "source": pred.source,
-        "reasoning": pred.reasoning,
-    }
 
 
 def _extract_text_block(response: dict | Any) -> str | None:
