@@ -61,9 +61,6 @@ export default function ColorTryOnPage() {
         isError={query.isError}
         error={query.error}
         onRetry={() => query.refetch()}
-        isEmpty={!!query.data && query.data.variants.length === 0}
-        emptyTitle="Палитра пока не определена"
-        emptyHint="Пройдите анализ цветотипа, чтобы начать примерку."
         loadingFallback={<ColorTryOnSkeleton />}
       >
         {query.data ? (
@@ -72,6 +69,7 @@ export default function ColorTryOnPage() {
               itemId={itemId}
               variants={query.data.variants}
               quality={query.data.quality}
+              reason={query.data.reason ?? null}
             />
 
             <Card>

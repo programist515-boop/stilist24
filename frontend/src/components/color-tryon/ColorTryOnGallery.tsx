@@ -11,6 +11,8 @@ interface ColorTryOnGalleryProps {
   itemId: string;
   variants: ColorTryOnVariant[];
   quality: string;
+  /** Машинно-читаемая причина пустого ответа от backend. */
+  reason?: string | null;
 }
 
 /**
@@ -21,8 +23,21 @@ export function ColorTryOnGallery({
   itemId,
   variants,
   quality,
+  reason,
 }: ColorTryOnGalleryProps) {
   if (variants.length === 0) {
+    if (reason === "pattern_unfit") {
+      return (
+        <Card>
+          <CardTitle>Перекрас сейчас невозможен</CardTitle>
+          <CardSubtitle className="mt-2">
+            На вещах с принтом или металлическим финишем HSV-перекрас
+            даёт визуальные артефакты, поэтому мы скрыли его. Алгоритм
+            научится работать с такими тканями позже.
+          </CardSubtitle>
+        </Card>
+      );
+    }
     return (
       <Card>
         <CardTitle>Нет палитры</CardTitle>

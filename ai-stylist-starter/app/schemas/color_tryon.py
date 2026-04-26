@@ -41,6 +41,12 @@ class ColorTryOnResponse(BaseModel):
     # (нет палитры / мок-рендер / fallback на ML), тем ниже качество.
     # Допустимые значения: high / medium / low.
     quality: str = "high"
+    # Машинно-читаемая причина пустого / низкокачественного результата.
+    # UI использует, чтобы показать конкретное сообщение вместо общего:
+    #   - "pattern_unfit": принт/металлик — HSV-перекрас неподходит, ML off
+    #   - "palette_missing": у пользователя нет палитры цветотипа
+    # Для quality=high всегда None.
+    reason: str | None = None
 
 
 class ColorTryOnFeedback(BaseModel):

@@ -256,7 +256,10 @@ class ColorTryOnService:
                 getattr(item, "fabric_finish", None),
             )
             return ColorTryOnResponse(
-                item_id=item_id, variants=[], quality="low"
+                item_id=item_id,
+                variants=[],
+                quality="low",
+                reason="pattern_unfit",
             )
 
         user_context = self._load_user_context(user_id)
@@ -264,7 +267,10 @@ class ColorTryOnService:
         if not palette_hex:
             # Честный quality downgrade: без палитры примерять нечего.
             return ColorTryOnResponse(
-                item_id=item_id, variants=[], quality="low"
+                item_id=item_id,
+                variants=[],
+                quality="low",
+                reason="palette_missing",
             )
 
         palette = [

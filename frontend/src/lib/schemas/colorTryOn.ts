@@ -14,6 +14,10 @@ export const ColorTryOnResponseSchema = z.object({
   item_id: z.string(),
   variants: z.array(ColorTryOnVariantSchema).default([]),
   quality: z.string().default("high"), // high / medium / low
+  // Машинно-читаемая причина пустого/низкокачественного результата:
+  // "pattern_unfit" (принт/металлик), "palette_missing" (нет палитры).
+  // Для quality="high" — null/undefined.
+  reason: z.string().nullable().optional(),
 });
 export type ColorTryOnResponse = z.infer<typeof ColorTryOnResponseSchema>;
 

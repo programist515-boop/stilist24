@@ -9,6 +9,10 @@ import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { QueryState } from "@/components/ui/QueryState";
 import { getRecommendationGuide } from "@/lib/api/recommendations";
+import {
+  fetchGapAnalysis,
+  type GapSuggestion,
+} from "@/lib/api/gapAnalysis";
 import type { RecommendationSection } from "@/lib/schemas";
 
 /**
@@ -35,10 +39,20 @@ export default function RecommendationsPage() {
     staleTime: 5 * 60_000,
   });
 
+  // Independent query — gap-analysis показывается только когда есть identity,
+  // но errors на gap-analysis не должны ломать главный гид.
+  const gap = useQuery({
+    queryKey: ["gap-analysis"],
+    queryFn: fetchGapAnalysis,
+    staleTime: 5 * 60_000,
+    enabled: Boolean(guide.data?.identity?.kibbe_family),
+  });
+
   const data = guide.data;
   const sections = data?.sections ?? [];
   const identity = data?.identity;
   const hasIdentity = Boolean(identity?.kibbe_family);
+  const gapSuggestions = gap.data?.suggestions ?? [];
 
   return (
     <>
@@ -95,6 +109,10 @@ export default function RecommendationsPage() {
                   {data.closing_note}
                 </p>
               </Card>
+            ) : null}
+
+            {gapSuggestions.length > 0 ? (
+              <GapSuggestionsBlock suggestions={gapSuggestions} />
             ) : null}
 
             {data.notes.length > 0 ? (
@@ -218,6 +236,49 @@ function SectionCard({ section }: { section: RecommendationSection }) {
         </div>
       ) : null}
     </Card>
+  );
+}
+
+/* ---------------------------------------------- gap-analysis suggestions */
+
+function GapSuggestionsBlock({
+  suggestions,
+}: {
+  suggestions: GapSuggestion[];
+}) {
+  return (
+    <section>
+      <SectionHeader
+        title="Что стоит докупить"
+        description="Подсказки на основе образов вашего подтипа и пробелов в гардеробе."
+      />
+      <Card padding="md">
+        <ul className="space-y-3">
+          {suggestions.map((s, i) => (
+            <li
+              key={`${s.category}-${s.item}-${i}`}
+              className="flex flex-col gap-1 border-b border-canvas-border pb-3 last:border-0 last:pb-0"
+            >
+              <div className="flex flex-wrap items-baseline justify-between gap-2">
+                <span className="text-sm font-medium text-ink">{s.item}</span>
+                <Badge tone="neutral" className="capitalize">
+                  {s.category}
+                </Badge>
+              </div>
+              <p className="text-xs text-ink-muted">{s.why}</p>
+              {s.from_reference_look ? (
+                <p className="text-xs text-accent">
+                  ↳ Из образа подтипа
+                  {s.slot_hint ? (
+                    <span className="text-ink-muted"> · слот «{s.slot_hint}»</span>
+                  ) : null}
+                </p>
+              ) : null}
+            </li>
+          ))}
+        </ul>
+      </Card>
+    </section>
   );
 }
 
