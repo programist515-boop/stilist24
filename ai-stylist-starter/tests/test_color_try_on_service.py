@@ -44,6 +44,8 @@ class _Item:
     user_id: uuid.UUID
     image_key: str
     image_url: str = "memory://ai-stylist/item.png"
+    pattern_scale: str | None = None
+    fabric_finish: str | None = None
 
 
 class _StubWardrobeRepo:
@@ -189,6 +191,124 @@ class TestHsvShiftColor:
 
 
 # ================================================================ кэш
+
+
+class TestHsvSuitabilityGuard:
+    """HSV-перекрас не работает на принтах и металлике — guard в build()."""
+
+    def test_patterned_item_returns_empty_low_quality(self) -> None:
+        item = _Item(
+            id=ITEM_ID,
+            user_id=USER_ID,
+            image_key=f"users/{USER_ID}/wardrobe/{ITEM_ID}.png",
+            pattern_scale="medium",  # принт → HSV-перекрас не работает
+        )
+        svc, _backend = _service(
+            item=item,
+            user_context={"palette_hex": ["#0000ff", "#ff00ff"]},
+            enable_ml=False,
+        )
+        # Источник нам не нужен — guard сработает раньше
+        response = svc.build(user_id=USER_ID, item_id=ITEM_ID)
+        assert isinstance(response, ColorTryOnResponse)
+        assert response.variants == []
+        assert response.quality == "low"
+
+    def test_metallic_item_returns_empty_low_quality(self) -> None:
+        item = _Item(
+            id=ITEM_ID,
+            user_id=USER_ID,
+            image_key=f"users/{USER_ID}/wardrobe/{ITEM_ID}.png",
+            fabric_finish="metallic",
+        )
+        svc, _backend = _service(
+            item=item,
+            user_context={"palette_hex": ["#0000ff"]},
+            enable_ml=False,
+        )
+        response = svc.build(user_id=USER_ID, item_id=ITEM_ID)
+        assert response.variants == []
+        assert response.quality == "low"
+
+    def test_metallic_case_insensitive(self) -> None:
+        item = _Item(
+            id=ITEM_ID,
+            user_id=USER_ID,
+            image_key=f"users/{USER_ID}/wardrobe/{ITEM_ID}.png",
+            fabric_finish="Metallic",  # capitalised — должно сработать
+        )
+        svc, _backend = _service(
+            item=item,
+            user_context={"palette_hex": ["#0000ff"]},
+            enable_ml=False,
+        )
+        response = svc.build(user_id=USER_ID, item_id=ITEM_ID)
+        assert response.variants == []
+
+    def test_solid_matte_passes_through(self) -> None:
+        """Однотонная матовая — guard пропускает, перекрас идёт."""
+        item = _Item(
+            id=ITEM_ID,
+            user_id=USER_ID,
+            image_key=f"users/{USER_ID}/wardrobe/{ITEM_ID}.png",
+            pattern_scale=None,
+            fabric_finish="matte",
+        )
+        svc, _backend = _service(
+            item=item,
+            user_context={"palette_hex": ["#0000ff"]},
+            enable_ml=False,
+        )
+        red_png = _make_pure_color_png((255, 0, 0))
+        _install_item_in_storage(svc.storage, item, red_png)
+        response = svc.build(user_id=USER_ID, item_id=ITEM_ID)
+        assert len(response.variants) == 1
+
+    def test_patterned_item_passes_when_ml_enabled(self) -> None:
+        """С ML-флагом on вещь пускается дальше — FASHN расскрасит принт."""
+        item = _Item(
+            id=ITEM_ID,
+            user_id=USER_ID,
+            image_key=f"users/{USER_ID}/wardrobe/{ITEM_ID}.png",
+            pattern_scale="large",
+            fabric_finish="matte",
+        )
+        svc, _backend = _service(
+            item=item,
+            user_context={"palette_hex": ["#0000ff"]},
+            enable_ml=True,
+        )
+        red_png = _make_pure_color_png((255, 0, 0))
+        _install_item_in_storage(svc.storage, item, red_png)
+        response = svc.build(user_id=USER_ID, item_id=ITEM_ID)
+        # ML-путь — stub, но HSV-перекрас всё равно идёт (хук _maybe_run_ml
+        # не блокирует основной поток). Главное — guard не сработал.
+        assert len(response.variants) == 1
+
+    def test_legacy_item_without_attrs_passes_through(self) -> None:
+        """У legacy-вещей нет атрибутов Фазы 0 — back-compat: пропускаем."""
+
+        @dataclass
+        class _LegacyItem:
+            id: uuid.UUID
+            user_id: uuid.UUID
+            image_key: str
+            # без pattern_scale / fabric_finish
+
+        item = _LegacyItem(
+            id=ITEM_ID,
+            user_id=USER_ID,
+            image_key=f"users/{USER_ID}/wardrobe/{ITEM_ID}.png",
+        )
+        svc, _backend = _service(
+            item=item,  # type: ignore[arg-type]
+            user_context={"palette_hex": ["#0000ff"]},
+            enable_ml=False,
+        )
+        red_png = _make_pure_color_png((255, 0, 0))
+        _install_item_in_storage(svc.storage, item, red_png)
+        response = svc.build(user_id=USER_ID, item_id=ITEM_ID)
+        assert len(response.variants) == 1
 
 
 class TestCacheHit:

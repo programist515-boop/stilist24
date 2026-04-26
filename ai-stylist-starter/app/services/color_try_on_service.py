@@ -25,10 +25,12 @@ ML-путь (FASHN recolor), за флагом ``ENABLE_ML_COLOR_TRYON``:
     реальные вызовы к FASHN не делаются. Задел на будущее: принты /
     металлик / фактура, которые HSV-shift не умеет.
 
-TODO (после мёржа Фазы 0 — расширение атрибутов Item):
-    Проверка «вещь пригодна для HSV-перекраса»:
-        item.pattern_scale is None and item.fabric_finish != 'metallic'
-    Пока колонок нет — перекрашиваем любую вещь.
+HSV-перекрас работает только на однотонных матовых/глянцевых тканях.
+При наличии принта (``pattern_scale != None``) или металлического финиша
+(``fabric_finish == 'metallic'``) HSV-shift даёт визуальные артефакты —
+возвращаем пустой ответ с ``quality='low'``. Если включён ML-флаг
+(``ENABLE_ML_COLOR_TRYON``), перекрас пройдёт по альтернативному пути
+(сейчас stub), поэтому не отбрасываем такие вещи.
 """
 
 from __future__ import annotations
@@ -243,10 +245,19 @@ class ColorTryOnService:
         if item is None or item.user_id != user_id:
             raise ColorTryOnNotFoundError(f"item {item_id} not found")
 
-        # TODO: после мёржа Фазы 0 добавить ранний отказ, если у вещи
-        # есть принт/металлик, и при ENABLE_ML_COLOR_TRYON=false
-        # возвращать пустой список с quality="low". Пока считаем любую
-        # вещь пригодной для HSV-перекраса.
+        # Guard: HSV-перекрас даёт артефакты на принтах и металлике.
+        # При выключенном ML-пути — честный quality downgrade.
+        if not self._is_hsv_suitable(item) and not self._ml_enabled():
+            logger.info(
+                "color_tryon: item %s skipped (pattern_scale=%s, "
+                "fabric_finish=%s) — HSV unfit, ML disabled",
+                item_id,
+                getattr(item, "pattern_scale", None),
+                getattr(item, "fabric_finish", None),
+            )
+            return ColorTryOnResponse(
+                item_id=item_id, variants=[], quality="low"
+            )
 
         user_context = self._load_user_context(user_id)
         palette_hex = _extract_palette_hex(user_context)
@@ -559,6 +570,23 @@ class ColorTryOnService:
         logger.info(
             "color_tryon: ENABLE_ML_COLOR_TRYON=true, но ML-путь пока stub"
         )
+
+    @staticmethod
+    def _is_hsv_suitable(item: Any) -> bool:
+        """Вещь пригодна для HSV-перекраса.
+
+        Условие: однотонная (``pattern_scale is None``) и не металлик
+        (``fabric_finish != 'metallic'``). Атрибуты — из Фазы 0
+        (alembic 0009). Если у объекта нет этих полей (legacy/тесты)
+        — считаем вещь пригодной (back-compat).
+        """
+        pattern_scale = getattr(item, "pattern_scale", None)
+        fabric_finish = getattr(item, "fabric_finish", None)
+        if pattern_scale is not None:
+            return False
+        if isinstance(fabric_finish, str) and fabric_finish.lower() == "metallic":
+            return False
+        return True
 
     def _ml_enabled(self) -> bool:
         if self._enable_ml_override is not None:
