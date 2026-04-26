@@ -22,8 +22,8 @@ from app.services.categories import (
 )
 from app.services.category_classifier import (
     CategoryPrediction,
-    ClaudeCategoryClassifier,
     HeuristicCategoryClassifier,
+    OpenAICategoryClassifier,
     _CircuitBreaker,
     get_category_classifier,
 )
@@ -82,23 +82,23 @@ def test_is_legacy_category():
 
 
 # ---------------------------------------------------------------------------
-# ClaudeCategoryClassifier — happy path
+# OpenAICategoryClassifier — happy path
 # ---------------------------------------------------------------------------
 
 
-def _claude_response_body(
+def _openai_response_body(
     category: str,
     confidence: float,
     reasoning: str = "",
     *,
     decoration: str = "",
 ) -> dict:
-    """Build a fake Messages API response with a JSON-in-text block.
+    """Build a fake Chat Completions API response.
 
-    Mirrors what kie.ai actually emits — a ``content`` array with a single
-    ``text`` block whose body is the JSON object. ``decoration`` lets a
-    test simulate the model wrapping the object in a code fence or stray
-    prose, so the parser stays robust.
+    Mirrors the OpenAI shape — a ``choices`` array whose first entry has
+    a ``message.content`` string carrying the JSON object. ``decoration``
+    lets a test simulate the model wrapping the object in a code fence
+    or stray prose, so the safety-net parser stays robust.
     """
     payload = {"category": category, "confidence": confidence}
     if reasoning:
@@ -106,13 +106,17 @@ def _claude_response_body(
     json_str = json.dumps(payload)
     text = decoration.replace("{}", json_str) if decoration else json_str
     return {
-        "role": "assistant",
-        "id": "msg_test",
-        "type": "message",
-        "stop_reason": "end_turn",
-        "model": "claude-haiku-4-5-20251001",
-        "usage": {"input_tokens": 100, "output_tokens": 30},
-        "content": [{"type": "text", "text": text}],
+        "id": "chatcmpl-test",
+        "object": "chat.completion",
+        "model": "gpt-5-nano",
+        "usage": {"prompt_tokens": 200, "completion_tokens": 30, "total_tokens": 230},
+        "choices": [
+            {
+                "index": 0,
+                "finish_reason": "stop",
+                "message": {"role": "assistant", "content": text},
+            }
+        ],
     }
 
 
@@ -132,9 +136,9 @@ def _mock_httpx_client(response_body: dict, status_code: int = 200) -> MagicMock
     return client
 
 
-def test_claude_high_confidence_returns_prediction():
-    body = _claude_response_body("blouses", 0.95, "white silk blouse")
-    classifier = ClaudeCategoryClassifier(
+def test_openai_high_confidence_returns_prediction():
+    body = _openai_response_body("blouses", 0.95, "white silk blouse")
+    classifier = OpenAICategoryClassifier(
         api_key="sk-test", client=_mock_httpx_client(body)
     )
 
@@ -146,76 +150,103 @@ def test_claude_high_confidence_returns_prediction():
     assert pred.reasoning == "white silk blouse"
 
 
-def test_claude_uses_bearer_auth_by_default():
-    body = _claude_response_body("blouses", 0.9)
+def test_openai_uses_bearer_auth():
+    body = _openai_response_body("blouses", 0.9)
     client = _mock_httpx_client(body)
-    classifier = ClaudeCategoryClassifier(api_key="sk-test", client=client)
-
-    classifier.classify(b"x")
-
-    args, kwargs = client.post.call_args
-    headers = kwargs["headers"]
-    assert headers["Authorization"] == "Bearer sk-test"
-    assert "x-api-key" not in headers
-
-
-def test_claude_uses_x_api_key_when_configured():
-    """Direct Anthropic API requires x-api-key + anthropic-version. The
-    auth_scheme switch must produce the right headers."""
-    body = _claude_response_body("blouses", 0.9)
-    client = _mock_httpx_client(body)
-    classifier = ClaudeCategoryClassifier(
-        api_key="sk-ant-real",
-        base_url="https://api.anthropic.com",
-        auth_scheme="x-api-key",
-        client=client,
-    )
+    classifier = OpenAICategoryClassifier(api_key="sk-test", client=client)
 
     classifier.classify(b"x")
 
     headers = client.post.call_args.kwargs["headers"]
-    assert headers["x-api-key"] == "sk-ant-real"
-    assert headers["anthropic-version"] == "2023-06-01"
-    assert "Authorization" not in headers
+    assert headers["Authorization"] == "Bearer sk-test"
+    assert "x-api-key" not in headers
 
 
-def test_claude_posts_to_correct_endpoint():
-    body = _claude_response_body("blouses", 0.9)
+def test_openai_posts_to_chat_completions_endpoint():
+    body = _openai_response_body("blouses", 0.9)
     client = _mock_httpx_client(body)
-    classifier = ClaudeCategoryClassifier(
+    classifier = OpenAICategoryClassifier(
         api_key="sk-test",
-        base_url="https://api.kie.ai/claude",
+        base_url="https://api.openai.com",
         client=client,
     )
 
     classifier.classify(b"x")
 
     url = client.post.call_args.args[0]
-    assert url == "https://api.kie.ai/claude/v1/messages"
+    assert url == "https://api.openai.com/v1/chat/completions"
 
 
-def test_claude_sends_image_block():
-    body = _claude_response_body("blouses", 0.9)
+def test_openai_sends_image_url_block_with_data_url():
+    body = _openai_response_body("blouses", 0.9)
     client = _mock_httpx_client(body)
-    classifier = ClaudeCategoryClassifier(api_key="sk-test", client=client)
+    classifier = OpenAICategoryClassifier(api_key="sk-test", client=client)
 
-    classifier.classify(b"PNGFAKEBYTES", media_type="image/png")
+    # PNG bytes get re-encoded to JPEG by _shrink_for_upload (PIL writes
+    # a real JPEG header even from a 1px synthetic input). What we check
+    # is the wire shape, not the exact bytes.
+    classifier.classify(b"fake-png-bytes", media_type="image/png")
 
     sent = client.post.call_args.kwargs["json"]
-    image_block = sent["messages"][0]["content"][0]
-    assert image_block["type"] == "image"
-    assert image_block["source"]["type"] == "base64"
-    assert image_block["source"]["media_type"] == "image/png"
-    # body bytes must be base64-encoded — not the raw bytes verbatim.
-    assert image_block["source"]["data"] != "PNGFAKEBYTES"
+    user_content = sent["messages"][1]["content"]
+    image_block = next(b for b in user_content if b["type"] == "image_url")
+    assert "image_url" in image_block
+    url = image_block["image_url"]["url"]
+    assert url.startswith("data:image/")
+    assert ";base64," in url
 
 
-def test_claude_low_confidence_still_returned():
+def test_openai_uses_image_url_with_detail_low():
+    """``detail:"low"`` is critical: it pins a fixed 85 input tokens
+    per image regardless of resolution. If anyone removes this, vision
+    cost suddenly scales with image size — guard via this test."""
+    body = _openai_response_body("blouses", 0.9)
+    client = _mock_httpx_client(body)
+    classifier = OpenAICategoryClassifier(api_key="sk-test", client=client)
+
+    classifier.classify(b"x")
+
+    sent = client.post.call_args.kwargs["json"]
+    image_block = next(
+        b for b in sent["messages"][1]["content"] if b["type"] == "image_url"
+    )
+    assert image_block["image_url"]["detail"] == "low"
+
+
+def test_openai_uses_response_format_json_object():
+    """``response_format: {type: json_object}`` is what makes the
+    classifier reliable: the API validates the output is JSON before
+    returning. Removing it puts us back in JSON-in-text fragility land."""
+    body = _openai_response_body("blouses", 0.9)
+    client = _mock_httpx_client(body)
+    classifier = OpenAICategoryClassifier(api_key="sk-test", client=client)
+
+    classifier.classify(b"x")
+
+    sent = client.post.call_args.kwargs["json"]
+    assert sent["response_format"] == {"type": "json_object"}
+
+
+def test_openai_uses_max_completion_tokens_not_max_tokens():
+    """GPT-5 family rejects the legacy ``max_tokens`` field with a 400.
+    The body must use ``max_completion_tokens``."""
+    body = _openai_response_body("blouses", 0.9)
+    client = _mock_httpx_client(body)
+    classifier = OpenAICategoryClassifier(api_key="sk-test", client=client)
+
+    classifier.classify(b"x")
+
+    sent = client.post.call_args.kwargs["json"]
+    assert "max_completion_tokens" in sent
+    assert "max_tokens" not in sent
+
+
+def test_openai_low_confidence_still_returned():
     """Low confidence is the route's decision (threshold), not the
     classifier's. The classifier reports honestly; the route writes
     category=None when below threshold."""
-    body = _claude_response_body("blouses", 0.4)
-    classifier = ClaudeCategoryClassifier(
+    body = _openai_response_body("blouses", 0.4)
+    classifier = OpenAICategoryClassifier(
         api_key="sk-test", client=_mock_httpx_client(body)
     )
 
@@ -225,9 +256,9 @@ def test_claude_low_confidence_still_returned():
     assert pred.source == "cloud_llm"
 
 
-def test_claude_clamps_confidence_to_unit_interval():
-    body = _claude_response_body("blouses", 1.5)  # buggy LLM
-    classifier = ClaudeCategoryClassifier(
+def test_openai_clamps_confidence_to_unit_interval():
+    body = _openai_response_body("blouses", 1.5)  # buggy LLM
+    classifier = OpenAICategoryClassifier(
         api_key="sk-test", client=_mock_httpx_client(body)
     )
 
@@ -236,31 +267,37 @@ def test_claude_clamps_confidence_to_unit_interval():
     assert pred.confidence == 1.0
 
 
-def test_claude_unknown_category_falls_back_to_heuristic():
+def test_openai_unknown_category_falls_back_to_heuristic():
     """If the LLM returns a category outside our enum, treat it as a
     failure and use the heuristic fallback so we never store garbage."""
-    body = _claude_response_body("alien_garment", 0.99)
-    classifier = ClaudeCategoryClassifier(
+    body = _openai_response_body("alien_garment", 0.99)
+    classifier = OpenAICategoryClassifier(
         api_key="sk-test",
         client=_mock_httpx_client(body),
         fallback=HeuristicCategoryClassifier(),
     )
 
-    pred = classifier.classify(b"fake-bytes", attrs_hint={"occasion": "work", "structure": "tailored"})
+    pred = classifier.classify(
+        b"fake-bytes", attrs_hint={"occasion": "work", "structure": "tailored"}
+    )
 
     assert pred.source == "heuristic"
     assert pred.category in WARDROBE_CATEGORIES
 
 
-def test_claude_unparseable_text_falls_back_to_heuristic():
+def test_openai_unparseable_text_falls_back_to_heuristic():
     """When the model writes prose without a JSON object — fall through
     to heuristic instead of storing the previous prediction."""
     body = {
-        "role": "assistant",
-        "content": [{"type": "text", "text": "I think this is a blouse."}],
-        "stop_reason": "end_turn",
+        "choices": [
+            {
+                "index": 0,
+                "finish_reason": "stop",
+                "message": {"role": "assistant", "content": "I think this is a blouse."},
+            }
+        ]
     }
-    classifier = ClaudeCategoryClassifier(
+    classifier = OpenAICategoryClassifier(
         api_key="sk-test",
         client=_mock_httpx_client(body),
         fallback=HeuristicCategoryClassifier(),
@@ -271,20 +308,22 @@ def test_claude_unparseable_text_falls_back_to_heuristic():
     assert pred.source == "heuristic"
 
 
-def test_claude_handles_json_in_code_fence():
-    """kie.ai often wraps the object in ```json ... ``` — must still
-    parse correctly."""
+def test_openai_handles_json_in_code_fence():
+    """Even with response_format, a misbehaving model could wrap output
+    in ```json ... ```. Safety-net parser must still extract it."""
     body = {
-        "role": "assistant",
-        "content": [
+        "choices": [
             {
-                "type": "text",
-                "text": '```json\n{"category":"jackets","confidence":0.92}\n```',
+                "index": 0,
+                "finish_reason": "stop",
+                "message": {
+                    "role": "assistant",
+                    "content": '```json\n{"category":"jackets","confidence":0.92}\n```',
+                },
             }
-        ],
-        "stop_reason": "end_turn",
+        ]
     }
-    classifier = ClaudeCategoryClassifier(
+    classifier = OpenAICategoryClassifier(
         api_key="sk-test", client=_mock_httpx_client(body)
     )
 
@@ -295,20 +334,22 @@ def test_claude_handles_json_in_code_fence():
     assert pred.source == "cloud_llm"
 
 
-def test_claude_handles_json_with_surrounding_prose():
+def test_openai_handles_json_with_surrounding_prose():
     """Model occasionally adds 'Here is the result:' before the JSON.
     We should still extract the embedded object."""
     body = {
-        "role": "assistant",
-        "content": [
+        "choices": [
             {
-                "type": "text",
-                "text": 'Here is the result: {"category":"shoes","confidence":0.88}',
+                "index": 0,
+                "finish_reason": "stop",
+                "message": {
+                    "role": "assistant",
+                    "content": 'Here is the result: {"category":"shoes","confidence":0.88}',
+                },
             }
-        ],
-        "stop_reason": "end_turn",
+        ]
     }
-    classifier = ClaudeCategoryClassifier(
+    classifier = OpenAICategoryClassifier(
         api_key="sk-test", client=_mock_httpx_client(body)
     )
 
@@ -317,36 +358,36 @@ def test_claude_handles_json_with_surrounding_prose():
     assert pred.category == "shoes"
 
 
-def test_claude_kie_proxy_402_credits_insufficient_falls_back():
-    """kie.ai returns HTTP 200 with body ``{"code": 402, "msg": "...", "data": null}``
-    when the account is out of credits. Without this branch the parser
-    treated it as "no text content" — true but confusing. We now raise
-    ``RuntimeError("credits_insufficient: ...")`` so the diagnostic ring
-    buffer shows what actually happened.
-    """
+def test_openai_empty_choices_falls_back_to_heuristic():
+    """If the API returns 200 with an empty choices array (rare but
+    possible on safety filter trips), fall through to heuristic."""
+    body: dict = {"choices": []}
+    classifier = OpenAICategoryClassifier(
+        api_key="sk-test",
+        client=_mock_httpx_client(body),
+        fallback=HeuristicCategoryClassifier(),
+    )
+
+    pred = classifier.classify(b"x", attrs_hint={"occasion": "work"})
+
+    assert pred.source == "heuristic"
+
+
+def test_openai_401_unauthorized_falls_back_to_heuristic():
+    """Bad/expired key — OpenAI returns 401 with ``{error:{...}}`` body.
+    The classifier must not crash the upload; it falls through to the
+    heuristic so the user can still complete the form (with a manual
+    category dropdown). Operators see the failure in /cv-classifier/recent."""
     body = {
-        "code": 402,
-        "msg": "Credits insufficient: Your current balance isn't enough to run this request.",
-        "data": None,
+        "error": {
+            "message": "Incorrect API key provided",
+            "type": "invalid_request_error",
+            "code": "invalid_api_key",
+        }
     }
-    classifier = ClaudeCategoryClassifier(
-        api_key="sk-test",
-        client=_mock_httpx_client(body),
-        fallback=HeuristicCategoryClassifier(),
-    )
-
-    pred = classifier.classify(b"x", attrs_hint={"occasion": "work"})
-
-    # Falls back to heuristic — same UX as any other failure mode, but
-    # the wrapper-level attempt log will record proxy_error_code=402.
-    assert pred.source == "heuristic"
-
-
-def test_claude_kie_proxy_other_error_code_falls_back():
-    body = {"code": 500, "msg": "Internal server error", "data": None}
-    classifier = ClaudeCategoryClassifier(
-        api_key="sk-test",
-        client=_mock_httpx_client(body),
+    classifier = OpenAICategoryClassifier(
+        api_key="sk-bad",
+        client=_mock_httpx_client(body, status_code=401),
         fallback=HeuristicCategoryClassifier(),
     )
 
@@ -355,17 +396,18 @@ def test_claude_kie_proxy_other_error_code_falls_back():
     assert pred.source == "heuristic"
 
 
-def test_claude_empty_content_falls_back_to_heuristic():
-    """kie.ai returns an empty content array when ``tools`` is sent —
-    treat that the same as any other malformed response."""
+def test_openai_429_rate_limit_falls_back_to_heuristic():
+    """Burst hitting per-minute caps — same UX as any other failure."""
     body = {
-        "role": "assistant",
-        "content": [],
-        "stop_reason": "end_turn",
+        "error": {
+            "message": "Rate limit reached for requests",
+            "type": "rate_limit_error",
+            "code": "rate_limit_exceeded",
+        }
     }
-    classifier = ClaudeCategoryClassifier(
+    classifier = OpenAICategoryClassifier(
         api_key="sk-test",
-        client=_mock_httpx_client(body),
+        client=_mock_httpx_client(body, status_code=429),
         fallback=HeuristicCategoryClassifier(),
     )
 
@@ -374,29 +416,11 @@ def test_claude_empty_content_falls_back_to_heuristic():
     assert pred.source == "heuristic"
 
 
-def test_claude_does_not_send_tools_or_tool_choice():
-    """kie.ai breaks on ``tools``/``tool_choice``. The classifier must
-    request plain JSON-in-text only — locking this in via a test so a
-    well-meaning future refactor doesn't reintroduce the broken path."""
-    body = _claude_response_body("blouses", 0.9)
-    client = _mock_httpx_client(body)
-    classifier = ClaudeCategoryClassifier(api_key="sk-test", client=client)
-
-    classifier.classify(b"x")
-
-    sent = client.post.call_args.kwargs["json"]
-    assert "tools" not in sent
-    assert "tool_choice" not in sent
-
-
-def test_claude_retries_once_on_timeout_then_succeeds():
+def test_openai_retries_once_on_timeout_then_succeeds():
     """One transient timeout should be retried automatically before the
-    classifier gives up and falls through to heuristic. kie.ai under
-    load occasionally queues for 20+ seconds, and a retry usually hits
-    a different worker in <10 seconds."""
-    success_body = _claude_response_body("blouses", 0.92)
+    classifier gives up and falls through to heuristic."""
+    success_body = _openai_response_body("blouses", 0.92)
 
-    # First call times out, second returns valid response.
     success_response = MagicMock(spec=httpx.Response)
     success_response.status_code = 200
     success_response.json.return_value = success_body
@@ -407,7 +431,7 @@ def test_claude_retries_once_on_timeout_then_succeeds():
         httpx.TimeoutException("read timeout"),
         success_response,
     ]
-    classifier = ClaudeCategoryClassifier(api_key="sk-test", client=client)
+    classifier = OpenAICategoryClassifier(api_key="sk-test", client=client)
 
     pred = classifier.classify(b"x")
 
@@ -417,14 +441,14 @@ def test_claude_retries_once_on_timeout_then_succeeds():
     assert client.post.call_count == 2
 
 
-def test_claude_two_consecutive_timeouts_fall_back_to_heuristic():
+def test_openai_two_consecutive_timeouts_fall_back_to_heuristic():
     """Both attempts time out → give up, heuristic kicks in. The breaker
     counts this as one failure (not two) so a temporarily slow upstream
     doesn't trip the 3-strike cooldown after one bad request."""
     client = MagicMock(spec=httpx.Client)
     client.post.side_effect = httpx.TimeoutException("read timeout")
     breaker = _CircuitBreaker(fail_threshold=3, cooldown_s=60.0)
-    classifier = ClaudeCategoryClassifier(
+    classifier = OpenAICategoryClassifier(
         api_key="sk-test",
         client=client,
         breaker=breaker,
@@ -440,29 +464,16 @@ def test_claude_two_consecutive_timeouts_fall_back_to_heuristic():
     assert not breaker.is_open()
 
 
-def test_claude_network_error_falls_back_to_heuristic():
+def test_openai_network_error_falls_back_to_heuristic():
     client = MagicMock(spec=httpx.Client)
     client.post.side_effect = httpx.TimeoutException("network timeout")
-    classifier = ClaudeCategoryClassifier(
+    classifier = OpenAICategoryClassifier(
         api_key="sk-test",
         client=client,
         fallback=HeuristicCategoryClassifier(),
     )
 
     pred = classifier.classify(b"fake-bytes", attrs_hint={"occasion": "work"})
-
-    assert pred.source == "heuristic"
-
-
-def test_claude_http_4xx_falls_back_to_heuristic():
-    body = {"error": {"type": "authentication_error", "message": "Invalid key"}}
-    classifier = ClaudeCategoryClassifier(
-        api_key="sk-test",
-        client=_mock_httpx_client(body, status_code=401),
-        fallback=HeuristicCategoryClassifier(),
-    )
-
-    pred = classifier.classify(b"x", attrs_hint={"occasion": "work"})
 
     assert pred.source == "heuristic"
 
@@ -495,14 +506,14 @@ def test_circuit_breaker_resets_on_success():
     assert not breaker.is_open()
 
 
-def test_claude_skips_api_when_breaker_open():
+def test_openai_skips_api_when_breaker_open():
     """Once the breaker trips, the classifier should skip the API
     entirely until cooldown — saves wall-clock time when the upstream
     is genuinely down."""
     client = MagicMock(spec=httpx.Client)
     client.post.side_effect = httpx.TimeoutException("flaky network")
     breaker = _CircuitBreaker(fail_threshold=3, cooldown_s=60.0)
-    classifier = ClaudeCategoryClassifier(
+    classifier = OpenAICategoryClassifier(
         api_key="sk-test",
         client=client,
         breaker=breaker,
@@ -572,10 +583,9 @@ def _settings(**overrides):
     """
     base = {
         "use_cv_category_classifier": False,
-        "claude_api_key": "",
-        "claude_base_url": "https://api.kie.ai/claude",
-        "claude_model": "claude-haiku-4-5",
-        "claude_auth_scheme": "bearer",
+        "openai_api_key": "",
+        "openai_base_url": "https://api.openai.com",
+        "openai_model": "gpt-5-nano",
         "category_classifier_provider": "heuristic",
     }
     base.update(overrides)
@@ -592,45 +602,46 @@ def test_factory_returns_heuristic_when_provider_is_heuristic():
         _settings(
             use_cv_category_classifier=True,
             category_classifier_provider="heuristic",
-            claude_api_key="sk-anything",
+            openai_api_key="sk-anything",
         )
     )
     assert isinstance(classifier, HeuristicCategoryClassifier)
 
 
-def test_factory_returns_heuristic_when_claude_key_missing():
+def test_factory_returns_heuristic_when_openai_key_missing():
     classifier = get_category_classifier(
         _settings(
             use_cv_category_classifier=True,
-            category_classifier_provider="claude",
-            claude_api_key="",
+            category_classifier_provider="openai",
+            openai_api_key="",
         )
     )
     assert isinstance(classifier, HeuristicCategoryClassifier)
 
 
-def test_factory_returns_claude_when_fully_configured():
+def test_factory_returns_openai_when_fully_configured():
+    classifier = get_category_classifier(
+        _settings(
+            use_cv_category_classifier=True,
+            category_classifier_provider="openai",
+            openai_api_key="sk-test",
+        )
+    )
+    assert isinstance(classifier, OpenAICategoryClassifier)
+
+
+def test_factory_returns_heuristic_for_unknown_provider():
+    """Old prod configs may still ship ``provider=claude`` after the
+    migration. The factory must fall back to heuristic instead of
+    crashing on import — env-flip rollback stays safe."""
     classifier = get_category_classifier(
         _settings(
             use_cv_category_classifier=True,
             category_classifier_provider="claude",
-            claude_api_key="sk-test",
+            openai_api_key="sk-test",
         )
     )
-    assert isinstance(classifier, ClaudeCategoryClassifier)
-
-
-def test_factory_accepts_legacy_anthropic_provider_name():
-    """During the migration we used "anthropic" as the provider value;
-    accept it as an alias for "claude" so old .env files don't break."""
-    classifier = get_category_classifier(
-        _settings(
-            use_cv_category_classifier=True,
-            category_classifier_provider="anthropic",
-            claude_api_key="sk-test",
-        )
-    )
-    assert isinstance(classifier, ClaudeCategoryClassifier)
+    assert isinstance(classifier, HeuristicCategoryClassifier)
 
 
 # ---------------------------------------------------------------------------

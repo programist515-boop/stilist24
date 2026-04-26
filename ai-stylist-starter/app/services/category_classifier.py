@@ -2,18 +2,15 @@
 
 Two implementations behind one Protocol:
 
-* :class:`ClaudeCategoryClassifier` — Claude Haiku via the Anthropic
-  Messages API (or any Anthropic-compatible proxy, e.g. ``kie.ai``).
-  Uses ``httpx`` directly so we control the full URL, auth header, and
-  request body — proxies that wrap Claude (kie.ai, OpenRouter, Vertex)
-  diverge on these details (Bearer vs ``x-api-key``, model name, base
-  path), so the SDK abstraction would actually get in the way. Forced
-  JSON output via ``tool_use`` + ``tool_choice``. Bounded by an
-  in-memory circuit breaker so a failing upstream doesn't cascade into
-  30s upload timeouts for every user.
+* :class:`OpenAICategoryClassifier` — GPT-5 nano vision via the OpenAI
+  Chat Completions API. Uses ``httpx`` directly so we control the URL,
+  auth header, and request body explicitly. JSON output is forced via
+  ``response_format: {"type": "json_object"}``. Bounded by an in-memory
+  circuit breaker so a failing upstream doesn't cascade into 30s upload
+  timeouts for every user.
 * :class:`HeuristicCategoryClassifier` — rule-based on the
   ``recognize_garment`` Phase-0 attributes (occasion, structure,
-  cut_lines, ...). Used when the cloud key is missing or the breaker
+  cut_lines, ...). Used when the OpenAI key is missing or the breaker
   is open. Honest 50-70% accuracy — better than the old "top" hardcode
   but not great.
 
@@ -133,56 +130,38 @@ class CategoryClassifier(Protocol):
 
 
 # ---------------------------------------------------------------------------
-# Claude Messages API (Anthropic / kie.ai / Anthropic-compatible proxies)
+# OpenAI Chat Completions API (gpt-5-nano with vision)
 # ---------------------------------------------------------------------------
 
-# Default base_url targets kie.ai (the configured proxy in this project).
-# For a direct Anthropic deploy, override via Settings.claude_base_url to
-# ``https://api.anthropic.com`` and set claude_auth_scheme="x-api-key".
-_DEFAULT_BASE_URL = "https://api.kie.ai/claude"
-_DEFAULT_MODEL = "claude-haiku-4-5"
-# kie.ai with a 56k-token image takes ~10-12s end-to-end on the happy
-# path but occasionally drags to 20-25s (queueing in the proxy). 30s
-# matches the user-facing upload timeout (frontend uses 120s) and gives
-# enough room for one retry on TimeoutException without the user seeing
-# a hang. Outside this budget we still fall back to heuristic.
+_DEFAULT_BASE_URL = "https://api.openai.com"
+_DEFAULT_MODEL = "gpt-5-nano"
+# nano typically responds in 2-4s on `detail:"low"`. 30s is a generous
+# ceiling that absorbs cold starts and one transient retry without the
+# user-facing upload (frontend timeout 120s) ever seeing a hang.
 _DEFAULT_TIMEOUT_S = 30.0
 _BREAKER_FAIL_THRESHOLD = 3
 _BREAKER_COOLDOWN_S = 300.0  # 5 minutes
-# How many retries on transient (network/timeout) errors before giving up
-# and letting the wrapper fall through to heuristic. Each retry costs one
-# more kie.ai credit, so we cap low.
+# Single retry on transient (network/timeout) errors before giving up
+# and letting the wrapper fall through to heuristic.
 _TRANSIENT_RETRIES = 1
 
-# kie.ai rejects images bigger than ~150KB with HTTP 400/500 (proxy
-# limit, not Anthropic's — direct Anthropic accepts up to 5MB). User
-# uploads from phones are routinely 1-3MB so we have to downscale
-# before encoding. We try progressively tighter (max-dim, JPEG-q)
-# steps and stop at the first one ≤ _CLASSIFIER_TARGET_BYTES — most
-# real garment photos hit the first step, only high-entropy/unusual
-# images need the lower steps.
-_CLASSIFIER_TARGET_BYTES = 95_000
-_CLASSIFIER_SHRINK_STEPS: tuple[tuple[int, int], ...] = (
-    (1024, 85),
-    (768, 80),
-    (640, 75),
-    (512, 70),
-)
+# Single-step downscale before encoding. With ``detail:"low"`` OpenAI
+# resizes to 512×512 on its side and bills a fixed 85 input tokens
+# regardless of source resolution, so anything above ~1024px is wasted
+# bandwidth. Phone uploads are 1-3MB which makes the data-URL slow to
+# transmit; 1024/85 cuts that to ~80-150KB without losing classification
+# signal.
+_CLASSIFIER_MAX_DIM = 1024
+_CLASSIFIER_JPEG_QUALITY = 85
 
 
 _CATEGORIES_LIST = ", ".join(WARDROBE_CATEGORIES)
 
 
-# JSON-in-text instead of tool_use because the kie.ai proxy returns an
-# empty content array when ``tools`` or ``tool_choice`` is set (input is
-# accepted, but output_tokens=0). Direct Anthropic supports tool_use
-# fine, but mixing two output paths in one classifier doubles the test
-# surface — JSON-in-text works on both providers, so we stick with it.
-#
-# Category definitions matter: without them Claude routinely calls a
-# t-shirt photographed flat on a white background "outerwear" because
-# the silhouette looks elongated when the garment is laid out without
-# being worn. Explicit per-category guidance + the "photographed flat"
+# Per-category definitions matter: without them the model routinely
+# calls a t-shirt photographed flat on a white background "outerwear"
+# because the silhouette looks elongated when the garment is laid out
+# without being worn. Explicit definitions + the "photographed flat"
 # hint cut the false-positive rate sharply in our prod tests.
 _SYSTEM_PROMPT = f"""You classify a photo of a single clothing item into exactly ONE of these 15 categories:
 
@@ -208,7 +187,7 @@ Important guidance for photos taken FLAT on a plain background (without a person
 - A short-sleeved cotton top photographed laid out flat on white background is BLOUSES, not outerwear.
 - A heavy coat will show thick fabric, lapels, lining, buttons; a t-shirt will show thin jersey fabric and a simple round/v-neckline.
 
-Reply with ONLY a single JSON object on one line, no markdown, no code fence, no commentary:
+Reply with a single JSON object — no markdown, no commentary:
 {{"category": "<one of the 15 above>", "confidence": <0..1>, "reasoning": "<1 short sentence with the visual evidence>"}}
 """
 
@@ -260,15 +239,12 @@ class _CircuitBreaker:
                 self._opened_at = time.monotonic()
 
 
-class ClaudeCategoryClassifier:
-    """Claude vision classifier over the Anthropic Messages API.
+class OpenAICategoryClassifier:
+    """OpenAI vision classifier over the Chat Completions API.
 
-    Works with both kie.ai (default) and the direct Anthropic API by
-    swapping ``base_url`` and ``auth_scheme``:
-      * kie.ai      → base_url ``https://api.kie.ai/claude``,
-                      auth_scheme="bearer"
-      * Anthropic   → base_url ``https://api.anthropic.com``,
-                      auth_scheme="x-api-key"
+    Defaults target ``api.openai.com`` directly. ``base_url`` exists so
+    a future Azure/proxy migration doesn't need code edits — just change
+    the URL.
     """
 
     def __init__(
@@ -277,7 +253,6 @@ class ClaudeCategoryClassifier:
         api_key: str,
         base_url: str = _DEFAULT_BASE_URL,
         model: str = _DEFAULT_MODEL,
-        auth_scheme: Literal["bearer", "x-api-key"] = "bearer",
         timeout_s: float = _DEFAULT_TIMEOUT_S,
         client: httpx.Client | None = None,
         breaker: _CircuitBreaker | None = None,
@@ -286,7 +261,6 @@ class ClaudeCategoryClassifier:
         self._api_key = api_key
         self._base_url = base_url.rstrip("/")
         self._model = model
-        self._auth_scheme = auth_scheme
         self._timeout_s = timeout_s
         self._client = client  # injected for tests; lazy-built otherwise
         self._breaker = breaker or _CircuitBreaker()
@@ -297,12 +271,6 @@ class ClaudeCategoryClassifier:
             return self._client
         self._client = httpx.Client(timeout=self._timeout_s)
         return self._client
-
-    def _auth_headers(self) -> dict[str, str]:
-        if self._auth_scheme == "x-api-key":
-            # Direct Anthropic API requires the version header alongside x-api-key.
-            return {"x-api-key": self._api_key, "anthropic-version": "2023-06-01"}
-        return {"Authorization": f"Bearer {self._api_key}"}
 
     def classify(
         self,
@@ -333,15 +301,15 @@ class ClaudeCategoryClassifier:
         for attempt_idx in range(_TRANSIENT_RETRIES + 1):
             log_entry["attempts"] = attempt_idx + 1
             try:
-                pred = self._call_claude(image_bytes, attrs_hint, media_type, log_entry)
+                pred = self._call_openai(image_bytes, attrs_hint, media_type, log_entry)
                 log_entry["outcome"] = "cloud_ok"
                 log_entry["prediction"] = _pred_dict(pred)
                 _record_attempt(log_entry)
                 return pred
             except (httpx.TimeoutException, httpx.NetworkError) as exc:
-                # Transient — kie.ai proxy queue spike or flaky network.
-                # Retry without burning the breaker so a single slow call
-                # doesn't trip 3-strike cooldown.
+                # Transient — proxy queue spike or flaky network. Retry
+                # without burning the breaker so a single slow call
+                # doesn't trip the 3-strike cooldown.
                 last_exc = exc
                 logger.warning(
                     "category_classifier: transient %s on attempt %d/%d",
@@ -353,7 +321,7 @@ class ClaudeCategoryClassifier:
             except Exception as exc:  # noqa: BLE001 — anything else is non-retryable
                 self._breaker.record_failure()
                 logger.warning(
-                    "category_classifier: claude call failed (%s: %s), falling back to heuristic",
+                    "category_classifier: openai call failed (%s: %s), falling back to heuristic",
                     type(exc).__name__,
                     exc,
                 )
@@ -385,18 +353,20 @@ class ClaudeCategoryClassifier:
         _record_attempt(log_entry)
         return pred
 
-    def _call_claude(
+    def _call_openai(
         self,
         image_bytes: bytes,
         attrs_hint: dict[str, Any] | None,
         media_type: str,
         log_entry: dict[str, Any] | None = None,
     ) -> CategoryPrediction:
-        encoded_bytes, encoded_media_type = _shrink_for_proxy(image_bytes, media_type)
+        encoded_bytes, encoded_media_type = _shrink_for_upload(image_bytes, media_type)
         if log_entry is not None:
             log_entry["encoded_bytes"] = len(encoded_bytes)
             log_entry["encoded_media_type"] = encoded_media_type
         b64 = base64.standard_b64encode(encoded_bytes).decode("ascii")
+        data_url = f"data:{encoded_media_type};base64,{b64}"
+
         user_text_parts = [
             "Classify the garment in this photo into one of the 15 supported categories."
         ]
@@ -406,35 +376,34 @@ class ClaudeCategoryClassifier:
 
         body = {
             "model": self._model,
-            "max_tokens": 200,
-            "system": _SYSTEM_PROMPT,
-            "stream": False,
+            "max_completion_tokens": 200,
+            "response_format": {"type": "json_object"},
             "messages": [
+                {"role": "system", "content": _SYSTEM_PROMPT},
                 {
                     "role": "user",
                     "content": [
                         {
-                            "type": "image",
-                            "source": {
-                                "type": "base64",
-                                "media_type": encoded_media_type,
-                                "data": b64,
-                            },
-                        },
-                        {
                             "type": "text",
                             "text": "\n".join(user_text_parts) + "\n\nReply with the JSON object only.",
                         },
+                        {
+                            "type": "image_url",
+                            "image_url": {"url": data_url, "detail": "low"},
+                        },
                     ],
-                }
+                },
             ],
         }
 
         client = self._get_client()
         t0 = time.perf_counter()
         response = client.post(
-            f"{self._base_url}/v1/messages",
-            headers={"Content-Type": "application/json", **self._auth_headers()},
+            f"{self._base_url}/v1/chat/completions",
+            headers={
+                "Content-Type": "application/json",
+                "Authorization": f"Bearer {self._api_key}",
+            },
             json=body,
             timeout=self._timeout_s,
         )
@@ -444,45 +413,35 @@ class ClaudeCategoryClassifier:
         response.raise_for_status()
         data = response.json()
         if log_entry is not None and isinstance(data, dict):
-            log_entry["claude_stop_reason"] = data.get("stop_reason")
-            log_entry["claude_output_tokens"] = (data.get("usage") or {}).get("output_tokens")
-            log_entry["credits_consumed"] = data.get("credits_consumed")
+            choices = data.get("choices") or []
+            if choices and isinstance(choices[0], dict):
+                log_entry["finish_reason"] = choices[0].get("finish_reason")
+            usage = data.get("usage") or {}
+            log_entry["completion_tokens"] = usage.get("completion_tokens")
+            log_entry["prompt_tokens"] = usage.get("prompt_tokens")
 
-        # kie.ai sometimes returns HTTP 200 with a proxy-level error
-        # envelope: ``{"code": <int>, "msg": "...", "data": null}``. The
-        # most common one is 402 ("Credits insufficient") — surfacing
-        # that distinctly is much more useful than the generic "no text
-        # content" we used to raise. Direct Anthropic never sets ``code``,
-        # so this branch is harmless there.
-        if isinstance(data, dict) and "code" in data and data.get("data") is None:
-            kie_code = data.get("code")
-            kie_msg = data.get("msg", "")
-            if log_entry is not None:
-                log_entry["proxy_error_code"] = kie_code
-                log_entry["proxy_error_msg"] = kie_msg
-            if kie_code == 402:
-                raise RuntimeError(f"credits_insufficient: {kie_msg}")
-            raise RuntimeError(f"proxy_error code={kie_code}: {kie_msg}")
-
-        text = _extract_text_block(data)
+        text = _extract_openai_text(data)
         if log_entry is not None:
             log_entry["text_block"] = text
         if not text:
-            raise ValueError("claude response had no text content")
+            raise ValueError("openai response had no text content")
 
+        # response_format=json_object guarantees a parseable JSON when
+        # the model behaves, but we keep ``_parse_json_object`` as a
+        # safety net for the rare case the model returns prose anyway.
         payload = _parse_json_object(text)
         if log_entry is not None:
             log_entry["parsed_json"] = payload
         if payload is None:
-            raise ValueError(f"claude text was not parseable JSON: {text!r}")
+            raise ValueError(f"openai text was not parseable JSON: {text!r}")
 
         category = payload.get("category")
         if not isinstance(category, str) or category not in WARDROBE_CATEGORIES:
-            raise ValueError(f"claude returned unknown category: {category!r}")
+            raise ValueError(f"openai returned unknown category: {category!r}")
 
         confidence = payload.get("confidence")
         if not isinstance(confidence, (int, float)):
-            raise ValueError(f"claude confidence missing or not numeric: {confidence!r}")
+            raise ValueError(f"openai confidence missing or not numeric: {confidence!r}")
         confidence = float(confidence)
 
         reasoning = payload.get("reasoning")
@@ -498,31 +457,27 @@ class ClaudeCategoryClassifier:
         )
 
 
-def _shrink_for_proxy(image_bytes: bytes, media_type: str) -> tuple[bytes, str]:
-    """Downscale large images so the kie.ai proxy doesn't reject them.
+def _shrink_for_upload(image_bytes: bytes, media_type: str) -> tuple[bytes, str]:
+    """Downscale to ~1024px max-dim before encoding.
 
-    Iteratively tries (max_dim, jpeg_quality) pairs from
-    ``_CLASSIFIER_SHRINK_STEPS`` until the encoded payload is at most
-    ``_CLASSIFIER_TARGET_BYTES``. If even the smallest step exceeds the
-    target (rare — only happens with high-entropy synthetic images),
-    we still send the smallest re-encoded version: better than the
-    original 1-3MB iPhone shot which always 400's.
+    With ``detail:"low"`` OpenAI scales to 512×512 on its side and bills
+    a fixed 85 input tokens regardless of source resolution, so anything
+    above ~1024px is just bandwidth waste. We re-encode as JPEG (smaller
+    than PNG for photos) at quality 85, which gives ~80-150KB on typical
+    garment photos.
 
-    Returns ``(encoded_bytes, "image/jpeg")``. If Pillow can't open the
-    bytes, the original is returned and the caller gets whatever error
-    the upstream throws (then heuristic fallback kicks in).
+    If Pillow can't open the bytes, the original is returned and the
+    caller gets whatever error the upstream throws (then heuristic
+    fallback kicks in).
     """
-    if len(image_bytes) <= _CLASSIFIER_TARGET_BYTES:
-        return image_bytes, media_type
     try:
         from PIL import Image
     except ImportError:  # pragma: no cover — Pillow is in pyproject deps
         return image_bytes, media_type
 
-    smallest: bytes | None = None
     try:
         with Image.open(io.BytesIO(image_bytes)) as im:
-            im.load()  # decode once; subsequent thumbnails operate on a copy
+            im.load()
             # JPEG can't store alpha; convert RGBA/P → RGB on a white
             # background so transparent PNGs from rembg still encode.
             if im.mode in ("RGBA", "LA", "P"):
@@ -537,20 +492,16 @@ def _shrink_for_proxy(image_bytes: bytes, media_type: str) -> tuple[bytes, str]:
             else:
                 base = im.copy()
 
-            for max_dim, quality in _CLASSIFIER_SHRINK_STEPS:
-                step = base.copy()
-                step.thumbnail((max_dim, max_dim), Image.Resampling.LANCZOS)
-                buf = io.BytesIO()
-                step.save(buf, format="JPEG", quality=quality, optimize=True)
-                encoded = buf.getvalue()
-                smallest = encoded
-                if len(encoded) <= _CLASSIFIER_TARGET_BYTES:
-                    return encoded, "image/jpeg"
-            # Exhausted all steps — return the smallest variant we got.
-            return smallest or image_bytes, "image/jpeg" if smallest else media_type
+            base.thumbnail(
+                (_CLASSIFIER_MAX_DIM, _CLASSIFIER_MAX_DIM),
+                Image.Resampling.LANCZOS,
+            )
+            buf = io.BytesIO()
+            base.save(buf, format="JPEG", quality=_CLASSIFIER_JPEG_QUALITY, optimize=True)
+            return buf.getvalue(), "image/jpeg"
     except Exception:  # noqa: BLE001
         logger.exception("category_classifier: shrink failed, sending original")
-        return smallest or image_bytes, "image/jpeg" if smallest else media_type
+        return image_bytes, media_type
 
 
 def _pred_dict(pred: CategoryPrediction) -> dict:
@@ -562,24 +513,36 @@ def _pred_dict(pred: CategoryPrediction) -> dict:
     }
 
 
-def _extract_text_block(response: dict | Any) -> str | None:
-    """Concatenate all text blocks in a Messages API response.
+def _extract_openai_text(response: dict | Any) -> str | None:
+    """Extract the assistant text from a Chat Completions response.
 
-    Claude usually returns a single text block, but a model may emit
-    several (e.g. ``thinking`` + ``text``) — joining them gives the
-    JSON parser the best chance.
+    Standard shape is ``{"choices":[{"message":{"content":"..."}}]}``.
+    Older/edge responses may emit content as a list of blocks; we
+    concatenate their ``text`` fields as a safety net.
     """
-    content = response.get("content") if isinstance(response, dict) else getattr(response, "content", None)
-    if not content:
+    if not isinstance(response, dict):
         return None
-    parts: list[str] = []
-    for block in content:
-        block_type = block.get("type") if isinstance(block, dict) else getattr(block, "type", None)
-        if block_type == "text":
-            text = block.get("text") if isinstance(block, dict) else getattr(block, "text", None)
-            if isinstance(text, str):
-                parts.append(text)
-    return "\n".join(parts) if parts else None
+    choices = response.get("choices")
+    if not isinstance(choices, list) or not choices:
+        return None
+    first = choices[0]
+    if not isinstance(first, dict):
+        return None
+    message = first.get("message")
+    if not isinstance(message, dict):
+        return None
+    content = message.get("content")
+    if isinstance(content, str):
+        return content if content.strip() else None
+    if isinstance(content, list):
+        parts: list[str] = []
+        for block in content:
+            if isinstance(block, dict):
+                text = block.get("text")
+                if isinstance(text, str):
+                    parts.append(text)
+        return "\n".join(parts) if parts else None
+    return None
 
 
 def _parse_json_object(text: str) -> dict | None:
@@ -593,21 +556,17 @@ def _parse_json_object(text: str) -> dict | None:
     Returns ``None`` when nothing parseable is found — the caller treats
     that as a failure and falls back to the heuristic.
     """
-    # Strip markdown code fences first — they confuse json.loads even
-    # when the inner payload is valid.
     cleaned = text.strip()
     fence = re.match(r"^```(?:json)?\s*(.*?)\s*```$", cleaned, re.DOTALL | re.IGNORECASE)
     if fence:
         cleaned = fence.group(1).strip()
 
-    # Direct parse — fastest path when the model behaves.
     try:
         result = json.loads(cleaned)
         return result if isinstance(result, dict) else None
     except (json.JSONDecodeError, ValueError):
         pass
 
-    # Fall back to scanning for any ``{...}`` slice that parses.
     for match in _JSON_OBJECT_RE.finditer(cleaned):
         try:
             result = json.loads(match.group(0))
@@ -695,18 +654,17 @@ def get_category_classifier(settings: Settings) -> CategoryClassifier:
     """Build a classifier matching the current Settings.
 
     Returns the heuristic classifier if the feature flag is off, the
-    provider is set to ``"heuristic"``, or the Claude key is missing.
+    provider is set to ``"heuristic"``, or the OpenAI key is missing.
     """
     if not settings.use_cv_category_classifier:
         return HeuristicCategoryClassifier()
 
     provider = settings.category_classifier_provider
-    if provider in {"claude", "anthropic"} and settings.claude_api_key:
-        return ClaudeCategoryClassifier(
-            api_key=settings.claude_api_key,
-            base_url=settings.claude_base_url,
-            model=settings.claude_model,
-            auth_scheme=settings.claude_auth_scheme,  # type: ignore[arg-type]
+    if provider == "openai" and settings.openai_api_key:
+        return OpenAICategoryClassifier(
+            api_key=settings.openai_api_key,
+            base_url=settings.openai_base_url,
+            model=settings.openai_model,
         )
 
     return HeuristicCategoryClassifier()
@@ -716,7 +674,7 @@ __all__ = [
     "CategoryClassifier",
     "CategoryPrediction",
     "CategorySource",
-    "ClaudeCategoryClassifier",
+    "OpenAICategoryClassifier",
     "HeuristicCategoryClassifier",
     "get_category_classifier",
 ]

@@ -3,7 +3,7 @@
 Two read-only endpoints (no auth — values are non-sensitive):
 
 * ``GET /api/cv-classifier/config`` — reflects the active settings
-  (env values that Pydantic Settings actually loaded). The Claude API
+  (env values that Pydantic Settings actually loaded). The OpenAI API
   key is reduced to ``set: bool`` and ``length: int`` — never echoed.
 * ``GET /api/cv-classifier/recent`` — last ~100 classifier attempts as
   JSONL stored in /tmp (shared across uvicorn workers via ``fcntl.flock``).
@@ -11,7 +11,7 @@ Two read-only endpoints (no auth — values are non-sensitive):
 Kept permanently because the alternative is what we did all afternoon:
 debug endpoints get added on every prod report, removed in a "cleanup"
 PR, then re-added on the next report. Observability isn't debt — for a
-feature gated by a paid third-party proxy it's part of the feature.
+feature gated by a paid third-party API it's part of the feature.
 """
 
 from __future__ import annotations
@@ -33,11 +33,10 @@ def cv_classifier_config() -> dict:
         "use_cv_category_classifier": settings.use_cv_category_classifier,
         "category_classifier_provider": settings.category_classifier_provider,
         "category_confidence_threshold": settings.category_confidence_threshold,
-        "claude_base_url": settings.claude_base_url,
-        "claude_model": settings.claude_model,
-        "claude_auth_scheme": settings.claude_auth_scheme,
-        "claude_api_key_set": bool(settings.claude_api_key),
-        "claude_api_key_length": len(settings.claude_api_key),
+        "openai_base_url": settings.openai_base_url,
+        "openai_model": settings.openai_model,
+        "openai_api_key_set": bool(settings.openai_api_key),
+        "openai_api_key_length": len(settings.openai_api_key),
         "active_classifier_type": type(get_category_classifier(settings)).__name__,
     }
 
@@ -48,7 +47,7 @@ def cv_classifier_recent(limit: int = 20) -> dict:
 
     Each entry has timestamp, image bytes count, full prediction
     (category/confidence/source/reasoning), and on cloud failures the
-    raw kie.ai response + parsed JSON for diagnosis.
+    raw OpenAI response + parsed JSON for diagnosis.
     """
     attempts = get_recent_attempts()
     return {
