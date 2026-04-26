@@ -29,6 +29,7 @@ import logging
 import re
 import threading
 import time
+from collections import deque
 from dataclasses import dataclass
 from typing import Any, Literal, Protocol
 
@@ -38,6 +39,26 @@ from app.core.config import Settings
 from app.services.categories import WARDROBE_CATEGORIES
 
 logger = logging.getLogger(__name__)
+
+
+# In-memory ring buffer of recent classifier attempts (TEMPORARY).
+# Used by /debug/cv-classifier/recent to inspect what kie.ai is actually
+# returning when the wardrobe upload route stores ``category=None`` in
+# prod. Bounded — won't grow unbounded if the buffer is forgotten.
+# Remove together with debug_cv routes when the integration is stable.
+_RECENT_ATTEMPTS_LOCK = threading.Lock()
+_RECENT_ATTEMPTS: deque[dict] = deque(maxlen=20)
+
+
+def _record_attempt(entry: dict) -> None:
+    with _RECENT_ATTEMPTS_LOCK:
+        _RECENT_ATTEMPTS.append(entry)
+
+
+def get_recent_attempts() -> list[dict]:
+    """Snapshot of the ring buffer for the diagnostic endpoint."""
+    with _RECENT_ATTEMPTS_LOCK:
+        return list(_RECENT_ATTEMPTS)
 
 
 CategorySource = Literal["cloud_llm", "heuristic", "fallback", "user"]
@@ -194,29 +215,50 @@ class ClaudeCategoryClassifier:
         attrs_hint: dict[str, Any] | None = None,
         media_type: str = "image/jpeg",
     ) -> CategoryPrediction:
+        attempt: dict = {
+            "ts": time.time(),
+            "image_bytes": len(image_bytes),
+            "media_type": media_type,
+            "breaker_open": self._breaker.is_open(),
+        }
         if self._breaker.is_open():
             logger.warning("category_classifier: breaker open, using heuristic")
-            return self._fallback.classify(
+            pred = self._fallback.classify(
                 image_bytes, attrs_hint=attrs_hint, media_type=media_type
             )
+            attempt["outcome"] = "breaker_open_fallback"
+            attempt["prediction"] = _pred_dict(pred)
+            _record_attempt(attempt)
+            return pred
 
         try:
-            return self._call_claude(image_bytes, attrs_hint, media_type)
+            pred = self._call_claude(image_bytes, attrs_hint, media_type, attempt)
+            attempt["outcome"] = "cloud_ok"
+            attempt["prediction"] = _pred_dict(pred)
+            _record_attempt(attempt)
+            return pred
         except Exception as exc:  # noqa: BLE001 — we genuinely fall back on anything
             self._breaker.record_failure()
+            attempt["outcome"] = "cloud_exception_then_fallback"
+            attempt["exception_type"] = type(exc).__name__
+            attempt["exception_message"] = str(exc)[:500]
             logger.warning(
                 "category_classifier: claude call failed (%s), falling back to heuristic",
                 type(exc).__name__,
             )
-            return self._fallback.classify(
+            pred = self._fallback.classify(
                 image_bytes, attrs_hint=attrs_hint, media_type=media_type
             )
+            attempt["prediction"] = _pred_dict(pred)
+            _record_attempt(attempt)
+            return pred
 
     def _call_claude(
         self,
         image_bytes: bytes,
         attrs_hint: dict[str, Any] | None,
         media_type: str,
+        attempt: dict | None = None,
     ) -> CategoryPrediction:
         b64 = base64.standard_b64encode(image_bytes).decode("ascii")
         user_text_parts = [
@@ -253,20 +295,38 @@ class ClaudeCategoryClassifier:
         }
 
         client = self._get_client()
+        t0 = time.perf_counter()
         response = client.post(
             f"{self._base_url}/v1/messages",
             headers={"Content-Type": "application/json", **self._auth_headers()},
             json=body,
             timeout=self._timeout_s,
         )
+        if attempt is not None:
+            attempt["http_status"] = response.status_code
+            attempt["latency_s"] = round(time.perf_counter() - t0, 2)
         response.raise_for_status()
         data = response.json()
+        if attempt is not None:
+            # Record everything except input image bytes — the response
+            # is what we need to debug.
+            attempt["claude_response"] = data
+            attempt["claude_stop_reason"] = (
+                data.get("stop_reason") if isinstance(data, dict) else None
+            )
+            attempt["claude_output_tokens"] = (
+                data.get("usage", {}).get("output_tokens") if isinstance(data, dict) else None
+            )
 
         text = _extract_text_block(data)
+        if attempt is not None:
+            attempt["text_block"] = text
         if not text:
-            raise ValueError(f"claude response had no text content: {data!r}")
+            raise ValueError(f"claude response had no text content")
 
         payload = _parse_json_object(text)
+        if attempt is not None:
+            attempt["parsed_json"] = payload
         if payload is None:
             raise ValueError(f"claude text was not parseable JSON: {text!r}")
 
@@ -290,6 +350,15 @@ class ClaudeCategoryClassifier:
             source="cloud_llm",
             reasoning=reasoning,
         )
+
+
+def _pred_dict(pred: CategoryPrediction) -> dict:
+    return {
+        "category": pred.category,
+        "confidence": pred.confidence,
+        "source": pred.source,
+        "reasoning": pred.reasoning,
+    }
 
 
 def _extract_text_block(response: dict | Any) -> str | None:

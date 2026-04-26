@@ -23,9 +23,26 @@ from app.services.category_classifier import (
     _SYSTEM_PROMPT,
     _parse_json_object,
     get_category_classifier,
+    get_recent_attempts,
 )
 
 router = APIRouter()
+
+
+@router.get("/cv-classifier/recent")
+def cv_classifier_recent() -> dict:
+    """Return the most recent in-process classifier attempts.
+
+    Each entry includes the raw kie.ai response, the parser outcome, and
+    the final prediction stored. Useful for diagnosing prod failures
+    where the wrapped classifier silently fell back to heuristic and the
+    user sees ``category=None``.
+    """
+    attempts = get_recent_attempts()
+    return {
+        "count": len(attempts),
+        "attempts": attempts,
+    }
 
 
 @router.get("/cv-classifier/config")
