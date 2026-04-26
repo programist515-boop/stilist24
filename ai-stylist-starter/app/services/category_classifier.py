@@ -178,14 +178,39 @@ _CATEGORIES_LIST = ", ".join(WARDROBE_CATEGORIES)
 # accepted, but output_tokens=0). Direct Anthropic supports tool_use
 # fine, but mixing two output paths in one classifier doubles the test
 # surface — JSON-in-text works on both providers, so we stick with it.
-_SYSTEM_PROMPT = (
-    f"You classify photos of clothing items into one of 15 categories: "
-    f"{_CATEGORIES_LIST}. "
-    "If the photo shows a full outfit, pick the most prominent garment. "
-    "Reply with ONLY a single JSON object on one line, no markdown, no "
-    "code fence, no commentary: "
-    '{"category": "<one of the 15>", "confidence": <0..1>, "reasoning": "<1 sentence>"}'
-)
+#
+# Category definitions matter: without them Claude routinely calls a
+# t-shirt photographed flat on a white background "outerwear" because
+# the silhouette looks elongated when the garment is laid out without
+# being worn. Explicit per-category guidance + the "photographed flat"
+# hint cut the false-positive rate sharply in our prod tests.
+_SYSTEM_PROMPT = f"""You classify a photo of a single clothing item into exactly ONE of these 15 categories:
+
+- blouses: t-shirts, polos, shirts, button-ups, blouses, tank tops, camisoles, basic tops with sleeves of any length. The default for any short or long-sleeved upper-body garment that is NOT a sweater, jacket, or coat.
+- sweaters: knitwear — pullovers, cardigans, hoodies, sweatshirts, turtlenecks. Visibly knitted or fleecy texture.
+- dresses: one-piece garments covering torso and legs/hips together (sundresses, midi/maxi dresses, shirt dresses, sheath dresses).
+- jackets: structured upper-body outerwear that is hip-length or shorter — blazers, suit jackets, denim jackets, leather/biker jackets, bomber jackets.
+- outerwear: coats, parkas, trench coats, puffer jackets, raincoats, capes — long enough to layer over other clothes (typically below the hip).
+- pants: trousers, jeans, leggings, sweatpants, shorts. Two-leg lower-body garments.
+- skirts: skirts of any length (mini, midi, maxi, A-line, pencil).
+- shoes: any footwear — sneakers, boots, heels, flats, sandals, loafers.
+- hosiery: tights, stockings, socks.
+- bags: handbags, totes, backpacks, clutches, crossbody bags.
+- belts: standalone belts (not the belt on a dress/coat).
+- eyewear: sunglasses, optical glasses.
+- headwear: hats, caps, beanies, scarves worn on the head.
+- jewelry: necklaces, earrings, rings, bracelets, watches.
+- swimwear: swimsuits, bikinis, swim trunks, beachwear cover-ups.
+
+Important guidance for photos taken FLAT on a plain background (without a person wearing the item):
+- Garment silhouette is distorted because there's no body inside; do not assume "long" garments are coats.
+- Look for sleeve length, fabric texture, neckline, and collar details rather than overall length.
+- A short-sleeved cotton top photographed laid out flat on white background is BLOUSES, not outerwear.
+- A heavy coat will show thick fabric, lapels, lining, buttons; a t-shirt will show thin jersey fabric and a simple round/v-neckline.
+
+Reply with ONLY a single JSON object on one line, no markdown, no code fence, no commentary:
+{{"category": "<one of the 15 above>", "confidence": <0..1>, "reasoning": "<1 short sentence with the visual evidence>"}}
+"""
 
 
 # Greedy match — covers ```json {...} ```, ``` {...} ```, plain {...},
