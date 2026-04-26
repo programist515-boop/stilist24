@@ -154,13 +154,20 @@ _BREAKER_COOLDOWN_S = 300.0  # 5 minutes
 # more kie.ai credit, so we cap low.
 _TRANSIENT_RETRIES = 1
 
-# kie.ai rejects images bigger than ~100KB with HTTP 400/500 (proxy
+# kie.ai rejects images bigger than ~150KB with HTTP 400/500 (proxy
 # limit, not Anthropic's — direct Anthropic accepts up to 5MB). User
 # uploads from phones are routinely 1-3MB so we have to downscale
-# before encoding. 1024px on the long side keeps the garment legible
-# for Haiku Vision while staying well under the 100KB ceiling.
-_CLASSIFIER_MAX_IMAGE_DIM = 1024
-_CLASSIFIER_JPEG_QUALITY = 85
+# before encoding. We try progressively tighter (max-dim, JPEG-q)
+# steps and stop at the first one ≤ _CLASSIFIER_TARGET_BYTES — most
+# real garment photos hit the first step, only high-entropy/unusual
+# images need the lower steps.
+_CLASSIFIER_TARGET_BYTES = 95_000
+_CLASSIFIER_SHRINK_STEPS: tuple[tuple[int, int], ...] = (
+    (1024, 85),
+    (768, 80),
+    (640, 75),
+    (512, 70),
+)
 
 
 _CATEGORIES_LIST = ", ".join(WARDROBE_CATEGORIES)
@@ -469,42 +476,56 @@ class ClaudeCategoryClassifier:
 def _shrink_for_proxy(image_bytes: bytes, media_type: str) -> tuple[bytes, str]:
     """Downscale large images so the kie.ai proxy doesn't reject them.
 
+    Iteratively tries (max_dim, jpeg_quality) pairs from
+    ``_CLASSIFIER_SHRINK_STEPS`` until the encoded payload is at most
+    ``_CLASSIFIER_TARGET_BYTES``. If even the smallest step exceeds the
+    target (rare — only happens with high-entropy synthetic images),
+    we still send the smallest re-encoded version: better than the
+    original 1-3MB iPhone shot which always 400's.
+
     Returns ``(encoded_bytes, "image/jpeg")``. If Pillow can't open the
-    bytes (corrupted / unsupported format), the original bytes are
-    returned untouched — caller will get the upstream error and fall
-    back to heuristic, same as before this helper existed. Direct
-    Anthropic also gets the smaller payload (faster, cheaper) — no
-    visible accuracy loss for garment classification at 1024px.
+    bytes, the original is returned and the caller gets whatever error
+    the upstream throws (then heuristic fallback kicks in).
     """
-    if len(image_bytes) <= 100_000:
+    if len(image_bytes) <= _CLASSIFIER_TARGET_BYTES:
         return image_bytes, media_type
     try:
         from PIL import Image
     except ImportError:  # pragma: no cover — Pillow is in pyproject deps
         return image_bytes, media_type
+
+    smallest: bytes | None = None
     try:
         with Image.open(io.BytesIO(image_bytes)) as im:
-            # Pillow's thumbnail keeps aspect ratio and only shrinks.
-            im.thumbnail(
-                (_CLASSIFIER_MAX_IMAGE_DIM, _CLASSIFIER_MAX_IMAGE_DIM),
-                Image.Resampling.LANCZOS,
-            )
+            im.load()  # decode once; subsequent thumbnails operate on a copy
             # JPEG can't store alpha; convert RGBA/P → RGB on a white
             # background so transparent PNGs from rembg still encode.
             if im.mode in ("RGBA", "LA", "P"):
                 from PIL import Image as PILImage
 
-                bg = PILImage.new("RGB", im.size, (255, 255, 255))
-                bg.paste(im.convert("RGBA"), mask=im.convert("RGBA").split()[-1])
-                im = bg
+                rgba = im.convert("RGBA")
+                bg = PILImage.new("RGB", rgba.size, (255, 255, 255))
+                bg.paste(rgba, mask=rgba.split()[-1])
+                base = bg
             elif im.mode != "RGB":
-                im = im.convert("RGB")
-            buf = io.BytesIO()
-            im.save(buf, format="JPEG", quality=_CLASSIFIER_JPEG_QUALITY, optimize=True)
-            return buf.getvalue(), "image/jpeg"
+                base = im.convert("RGB")
+            else:
+                base = im.copy()
+
+            for max_dim, quality in _CLASSIFIER_SHRINK_STEPS:
+                step = base.copy()
+                step.thumbnail((max_dim, max_dim), Image.Resampling.LANCZOS)
+                buf = io.BytesIO()
+                step.save(buf, format="JPEG", quality=quality, optimize=True)
+                encoded = buf.getvalue()
+                smallest = encoded
+                if len(encoded) <= _CLASSIFIER_TARGET_BYTES:
+                    return encoded, "image/jpeg"
+            # Exhausted all steps — return the smallest variant we got.
+            return smallest or image_bytes, "image/jpeg" if smallest else media_type
     except Exception:  # noqa: BLE001
         logger.exception("category_classifier: shrink failed, sending original")
-        return image_bytes, media_type
+        return smallest or image_bytes, "image/jpeg" if smallest else media_type
 
 
 def _pred_dict(pred: CategoryPrediction) -> dict:
