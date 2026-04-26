@@ -66,6 +66,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Deploy via SSH
+        id: ssh_deploy
         uses: appleboy/ssh-action@v1.2.0
         env:
           JWT_SECRET: ${{ secrets.JWT_SECRET }}
@@ -126,17 +127,74 @@ jobs:
             docker image prune -f
 
             echo "Waiting for API health..."
+            api_up=0
             for i in $(seq 1 30); do
               if curl -fsS http://127.0.0.1:8002/docs >/dev/null 2>&1; then
-                echo "API up"; break
+                api_up=1
+                echo "API up after ${i} attempts"
+                break
               fi
               sleep 2
             done
+            if [ "$api_up" != "1" ]; then
+              echo "::error::API did not become healthy within 60s on 127.0.0.1:8002"
+              docker compose -p stilist24com -f docker-compose.prod.yml logs --tail=80 api || true
+              exit 1
+            fi
 
             echo "Waiting for web..."
+            web_up=0
             for i in $(seq 1 30); do
               if curl -fsS http://127.0.0.1:3002/ >/dev/null 2>&1; then
-                echo "Web up"; break
+                web_up=1
+                echo "Web up after ${i} attempts"
+                break
               fi
               sleep 2
             done
+            if [ "$web_up" != "1" ]; then
+              echo "::error::Web did not become healthy within 60s on 127.0.0.1:3002"
+              docker compose -p stilist24com -f docker-compose.prod.yml logs --tail=80 web || true
+              exit 1
+            fi
+
+      # Внешний smoke health-check через публичный домен. Ловит случаи,
+      # когда контейнеры поднялись локально, но nginx/TLS/прокси не доходят
+      # до них (или DNS/CDN-кэш сломан). Инцидент 2026-04-25: SSH-deploy
+      # рапортовал success, контейнер крашился на старте через ImportError —
+      # этот шаг сделал бы CI красным.
+      - name: Public health-check (api + web)
+        run: |
+          echo "Waiting for public /api/health..."
+          api_ok=0
+          for i in $(seq 1 30); do
+            if curl -fsS --max-time 5 https://stilist24.com/api/health >/dev/null 2>&1; then
+              api_ok=1
+              echo "Public /api/health OK after ${i} attempts ($((i * 5))s)"
+              break
+            fi
+            sleep 5
+          done
+          if [ "$api_ok" != "1" ]; then
+            echo "::error::https://stilist24.com/api/health did not respond OK within 150s after deploy"
+            curl -v --max-time 5 https://stilist24.com/api/health || true
+            exit 1
+          fi
+
+          echo "Waiting for public web root..."
+          web_ok=0
+          for i in $(seq 1 12); do
+            if curl -fsS --max-time 5 https://stilist24.com/ >/dev/null 2>&1; then
+              web_ok=1
+              echo "Public / OK after ${i} attempts"
+              break
+            fi
+            sleep 5
+          done
+          if [ "$web_ok" != "1" ]; then
+            echo "::error::https://stilist24.com/ did not respond OK within 60s after deploy"
+            curl -v --max-time 5 https://stilist24.com/ || true
+            exit 1
+          fi
+
+          echo "Deploy verified: api + web up on production."
