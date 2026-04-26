@@ -12,7 +12,6 @@ from app.api.routes import (
     auth,
     color,
     color_tryon,
-    debug_cv,
     events,
     feedback,
     gap_analysis,
@@ -88,9 +87,6 @@ app.include_router(
     prefix="/reference-looks",
     tags=["reference-looks"],
 )
-# Temporary diagnostic endpoint for the CV category classifier.
-# TODO(remove): clean up after kie.ai integration is validated in prod.
-app.include_router(debug_cv.router, prefix="/debug", tags=["debug"])
 
 
 @app.get("/health")
