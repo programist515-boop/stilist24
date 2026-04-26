@@ -375,11 +375,27 @@ class ClaudeCategoryClassifier:
                 data.get("usage", {}).get("output_tokens") if isinstance(data, dict) else None
             )
 
+        # kie.ai sometimes returns HTTP 200 with a proxy-level error
+        # envelope: ``{"code": <int>, "msg": "...", "data": null}``. The
+        # most common one is 402 ("Credits insufficient") — surfacing
+        # that distinctly is much more useful than the generic "no text
+        # content" we used to raise. Direct Anthropic never sets ``code``,
+        # so this branch is harmless there.
+        if isinstance(data, dict) and "code" in data and data.get("data") is None:
+            kie_code = data.get("code")
+            kie_msg = data.get("msg", "")
+            if attempt is not None:
+                attempt["proxy_error_code"] = kie_code
+                attempt["proxy_error_msg"] = kie_msg
+            if kie_code == 402:
+                raise RuntimeError(f"credits_insufficient: {kie_msg}")
+            raise RuntimeError(f"proxy_error code={kie_code}: {kie_msg}")
+
         text = _extract_text_block(data)
         if attempt is not None:
             attempt["text_block"] = text
         if not text:
-            raise ValueError(f"claude response had no text content")
+            raise ValueError("claude response had no text content")
 
         payload = _parse_json_object(text)
         if attempt is not None:

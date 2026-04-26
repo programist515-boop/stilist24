@@ -317,6 +317,44 @@ def test_claude_handles_json_with_surrounding_prose():
     assert pred.category == "shoes"
 
 
+def test_claude_kie_proxy_402_credits_insufficient_falls_back():
+    """kie.ai returns HTTP 200 with body ``{"code": 402, "msg": "...", "data": null}``
+    when the account is out of credits. Without this branch the parser
+    treated it as "no text content" — true but confusing. We now raise
+    ``RuntimeError("credits_insufficient: ...")`` so the diagnostic ring
+    buffer shows what actually happened.
+    """
+    body = {
+        "code": 402,
+        "msg": "Credits insufficient: Your current balance isn't enough to run this request.",
+        "data": None,
+    }
+    classifier = ClaudeCategoryClassifier(
+        api_key="sk-test",
+        client=_mock_httpx_client(body),
+        fallback=HeuristicCategoryClassifier(),
+    )
+
+    pred = classifier.classify(b"x", attrs_hint={"occasion": "work"})
+
+    # Falls back to heuristic — same UX as any other failure mode, but
+    # the wrapper-level attempt log will record proxy_error_code=402.
+    assert pred.source == "heuristic"
+
+
+def test_claude_kie_proxy_other_error_code_falls_back():
+    body = {"code": 500, "msg": "Internal server error", "data": None}
+    classifier = ClaudeCategoryClassifier(
+        api_key="sk-test",
+        client=_mock_httpx_client(body),
+        fallback=HeuristicCategoryClassifier(),
+    )
+
+    pred = classifier.classify(b"x", attrs_hint={"occasion": "work"})
+
+    assert pred.source == "heuristic"
+
+
 def test_claude_empty_content_falls_back_to_heuristic():
     """kie.ai returns an empty content array when ``tools`` is sent —
     treat that the same as any other malformed response."""
