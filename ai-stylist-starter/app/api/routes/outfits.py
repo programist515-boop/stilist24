@@ -47,6 +47,9 @@ def generate_outfits(
 
     items = [_item_to_dict(i) for i in wardrobe_repo.list_by_persona(persona_id)]
     user_context = _build_user_context(db, user_id)
+    if payload.style:
+        # Прокидывается в style_affinity scorer как фильтр style_tags.
+        user_context["selected_style"] = payload.style
     generated = OutfitGenerator().generate(
         items,
         user_profile=user_context,

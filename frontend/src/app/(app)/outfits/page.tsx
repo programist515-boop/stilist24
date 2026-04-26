@@ -8,6 +8,7 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { ErrorState } from "@/components/ui/ErrorState";
 import { Input } from "@/components/ui/Input";
 import { Label } from "@/components/ui/Label";
+import { StyleSelector } from "@/components/ui/StyleSelector";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import {
@@ -32,6 +33,7 @@ function pluralizeOutfits(n: number): string {
 export default function OutfitsPage() {
   const [occasion, setOccasion] = useState("");
   const [season, setSeason] = useState("");
+  const [style, setStyle] = useState("");
 
   const wardrobe = useQuery({
     queryKey: ["wardrobe"],
@@ -49,12 +51,14 @@ export default function OutfitsPage() {
       generateOutfits({
         occasion: occasion || undefined,
         season: season || undefined,
+        style: style || undefined,
       }),
     onSuccess: (data) => {
       trackEvent("outfits_generated", {
         count: data.count ?? data.outfits?.length ?? 0,
         occasion: occasion || null,
         season: season || null,
+        style: style || null,
       });
     },
   });
@@ -104,6 +108,14 @@ export default function OutfitsPage() {
               value={season}
               onChange={(e) => setSeason(e.target.value)}
               placeholder="весна, осень…"
+            />
+          </div>
+          <div className="space-y-1.5 sm:col-span-2">
+            <Label htmlFor="style">Стиль</Label>
+            <StyleSelector
+              id="style"
+              value={style}
+              onChange={setStyle}
             />
           </div>
         </div>

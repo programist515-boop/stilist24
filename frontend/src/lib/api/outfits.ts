@@ -7,6 +7,7 @@ import {
 export async function generateOutfits(input: {
   occasion?: string;
   season?: string;
+  style?: string;
 }): Promise<OutfitGenerateResponse> {
   const data = await apiRequest("/outfits/generate", {
     method: "POST",

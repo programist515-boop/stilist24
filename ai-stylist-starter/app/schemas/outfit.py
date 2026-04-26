@@ -27,10 +27,17 @@ from pydantic import BaseModel, ConfigDict
 
 
 class OutfitGenerateIn(BaseModel):
-    """Payload for ``POST /outfits/generate``."""
+    """Payload for ``POST /outfits/generate``.
+
+    ``style`` (опционально) — ключ стиля из ``config/rules/styles.yaml``
+    (smart_casual, casual, military, dandy, preppy, romantic_adapted,
+    dramatic, twenties). При указании scorer ``style_affinity`` фильтрует
+    style_tags вещей под этот стиль. Если не задан — выбираются все теги.
+    """
 
     occasion: str | None = None
     season: str | None = None
+    style: str | None = None
 
 
 class OutfitGenerateOut(BaseModel):

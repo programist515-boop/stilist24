@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Input } from "@/components/ui/Input";
 import { Label } from "@/components/ui/Label";
+import { StyleSelector } from "@/components/ui/StyleSelector";
 import { Card } from "@/components/ui/Card";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { SectionHeader } from "@/components/ui/SectionHeader";
@@ -27,10 +28,11 @@ function pluralizeLooks(n: number): string {
 export default function TodayPage() {
   const [weather, setWeather] = useState("");
   const [occasion, setOccasion] = useState("");
+  const [style, setStyle] = useState("");
 
   const today = useQuery({
-    queryKey: ["today", weather, occasion],
-    queryFn: () => getToday({ weather, occasion }),
+    queryKey: ["today", weather, occasion, style],
+    queryFn: () => getToday({ weather, occasion, style }),
   });
 
   // Outfit responses strip image_url from items, so we join client-side
@@ -81,6 +83,14 @@ export default function TodayPage() {
               value={occasion}
               onChange={(e) => setOccasion(e.target.value)}
               placeholder="работа, свидание, casual…"
+            />
+          </div>
+          <div className="space-y-1.5 sm:col-span-2">
+            <Label htmlFor="style">Стиль</Label>
+            <StyleSelector
+              id="style"
+              value={style}
+              onChange={setStyle}
             />
           </div>
         </div>

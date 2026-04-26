@@ -146,6 +146,7 @@ class TodayService:
         weather: str | None = None,
         occasion: str | None = None,
         persona_id: uuid.UUID | None = None,
+        style: str | None = None,
     ) -> dict:
         notes: list[str] = []
         items = self._load_wardrobe(user_id, persona_id=persona_id)
@@ -159,6 +160,9 @@ class TodayService:
             }
 
         user_context, experimentation_score = self._build_user_context(user_id)
+        if style:
+            # Прокидывается в style_affinity scorer как фильтр style_tags.
+            user_context["selected_style"] = style
 
         if self._outfit_generator is not None:
             pool = self._outfit_generator.generate(

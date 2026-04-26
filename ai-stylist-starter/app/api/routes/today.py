@@ -21,6 +21,7 @@ def _make_today_service(db: Session) -> TodayService:
 def get_today(
     weather: str | None = None,
     occasion: str | None = None,
+    style: str | None = None,
     db: Session = Depends(get_db),
     user_id: uuid.UUID = Depends(get_current_user_id),
     persona_id: uuid.UUID = Depends(get_current_persona_id),
@@ -30,4 +31,5 @@ def get_today(
         persona_id=persona_id,
         weather=weather,
         occasion=occasion,
+        style=style,
     )
