@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ApiError } from "@/lib/api/client";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
@@ -91,6 +91,8 @@ export default function StyleQuizPage() {
     "algorithmic"
   );
 
+  const queryClient = useQueryClient();
+
   // reference photos (needed for advance-to-tryon)
   const photosQuery = useQuery({
     queryKey: ["user", "photos"],
@@ -158,6 +160,10 @@ export default function StyleQuizPage() {
     onSuccess: (res) => {
       setTryOnCandidates(res.candidates);
       setStep("identity-tryon");
+      // Funnel: stock-стадия завершена, top-3 кандидаты пошли в try-on
+      trackEvent("style_quiz_stock_completed", {
+        candidates: res.candidates.length,
+      });
     },
   });
 
@@ -169,6 +175,12 @@ export default function StyleQuizPage() {
     onSuccess: (res) => {
       setIdentityResult(res);
       trackEvent("preference_quiz_identity_completed", {
+        winner: res.winner,
+        confidence: res.confidence,
+      });
+      // Funnel-алиас по канонической схеме (см.
+      // .business/goals/preference-quiz-followups.md): try-on завершён.
+      trackEvent("style_quiz_tryon_completed", {
         winner: res.winner,
         confidence: res.confidence,
       });
@@ -233,6 +245,18 @@ export default function StyleQuizPage() {
     onSuccess: (res) => {
       setCurrentSource(res.source);
       trackEvent("preference_quiz_source_applied", { source: res.source });
+      // При переключении профиля рекомендации/today/gap-analysis
+      // должны перезапроситься — старые висят в TanStack-кэше иначе.
+      // Wardrobe не трогаем — он не зависит от профиля.
+      void queryClient.invalidateQueries({ queryKey: ["today"] });
+      void queryClient.invalidateQueries({ queryKey: ["outfits"] });
+      void queryClient.invalidateQueries({ queryKey: ["recommendations"] });
+      void queryClient.invalidateQueries({ queryKey: ["gap-analysis"] });
+      void queryClient.invalidateQueries({ queryKey: ["identity-dna"] });
+      // Funnel-алиас: пользователь активировал профиль по лайкам.
+      if (res.source === "preference") {
+        trackEvent("preference_profile_activated", { source: res.source });
+      }
     },
   });
 
