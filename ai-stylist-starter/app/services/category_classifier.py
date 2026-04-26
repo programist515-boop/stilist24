@@ -24,6 +24,7 @@ The factory :func:`get_category_classifier` picks one based on
 from __future__ import annotations
 
 import base64
+import io
 import json
 import logging
 import re
@@ -152,6 +153,14 @@ _BREAKER_COOLDOWN_S = 300.0  # 5 minutes
 # and letting the wrapper fall through to heuristic. Each retry costs one
 # more kie.ai credit, so we cap low.
 _TRANSIENT_RETRIES = 1
+
+# kie.ai rejects images bigger than ~100KB with HTTP 400/500 (proxy
+# limit, not Anthropic's — direct Anthropic accepts up to 5MB). User
+# uploads from phones are routinely 1-3MB so we have to downscale
+# before encoding. 1024px on the long side keeps the garment legible
+# for Haiku Vision while staying well under the 100KB ceiling.
+_CLASSIFIER_MAX_IMAGE_DIM = 1024
+_CLASSIFIER_JPEG_QUALITY = 85
 
 
 _CATEGORIES_LIST = ", ".join(WARDROBE_CATEGORIES)
@@ -351,7 +360,11 @@ class ClaudeCategoryClassifier:
         media_type: str,
         log_entry: dict[str, Any] | None = None,
     ) -> CategoryPrediction:
-        b64 = base64.standard_b64encode(image_bytes).decode("ascii")
+        encoded_bytes, encoded_media_type = _shrink_for_proxy(image_bytes, media_type)
+        if log_entry is not None:
+            log_entry["encoded_bytes"] = len(encoded_bytes)
+            log_entry["encoded_media_type"] = encoded_media_type
+        b64 = base64.standard_b64encode(encoded_bytes).decode("ascii")
         user_text_parts = [
             "Classify the garment in this photo into one of the 15 supported categories."
         ]
@@ -372,7 +385,7 @@ class ClaudeCategoryClassifier:
                             "type": "image",
                             "source": {
                                 "type": "base64",
-                                "media_type": media_type,
+                                "media_type": encoded_media_type,
                                 "data": b64,
                             },
                         },
@@ -451,6 +464,47 @@ class ClaudeCategoryClassifier:
             source="cloud_llm",
             reasoning=reasoning,
         )
+
+
+def _shrink_for_proxy(image_bytes: bytes, media_type: str) -> tuple[bytes, str]:
+    """Downscale large images so the kie.ai proxy doesn't reject them.
+
+    Returns ``(encoded_bytes, "image/jpeg")``. If Pillow can't open the
+    bytes (corrupted / unsupported format), the original bytes are
+    returned untouched — caller will get the upstream error and fall
+    back to heuristic, same as before this helper existed. Direct
+    Anthropic also gets the smaller payload (faster, cheaper) — no
+    visible accuracy loss for garment classification at 1024px.
+    """
+    if len(image_bytes) <= 100_000:
+        return image_bytes, media_type
+    try:
+        from PIL import Image
+    except ImportError:  # pragma: no cover — Pillow is in pyproject deps
+        return image_bytes, media_type
+    try:
+        with Image.open(io.BytesIO(image_bytes)) as im:
+            # Pillow's thumbnail keeps aspect ratio and only shrinks.
+            im.thumbnail(
+                (_CLASSIFIER_MAX_IMAGE_DIM, _CLASSIFIER_MAX_IMAGE_DIM),
+                Image.Resampling.LANCZOS,
+            )
+            # JPEG can't store alpha; convert RGBA/P → RGB on a white
+            # background so transparent PNGs from rembg still encode.
+            if im.mode in ("RGBA", "LA", "P"):
+                from PIL import Image as PILImage
+
+                bg = PILImage.new("RGB", im.size, (255, 255, 255))
+                bg.paste(im.convert("RGBA"), mask=im.convert("RGBA").split()[-1])
+                im = bg
+            elif im.mode != "RGB":
+                im = im.convert("RGB")
+            buf = io.BytesIO()
+            im.save(buf, format="JPEG", quality=_CLASSIFIER_JPEG_QUALITY, optimize=True)
+            return buf.getvalue(), "image/jpeg"
+    except Exception:  # noqa: BLE001
+        logger.exception("category_classifier: shrink failed, sending original")
+        return image_bytes, media_type
 
 
 def _pred_dict(pred: CategoryPrediction) -> dict:
