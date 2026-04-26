@@ -27,6 +27,8 @@ from app.services.outfit_engine import ACCESSORY_LIKE, OUTFIT_TEMPLATES, OutfitE
 if TYPE_CHECKING:
     from sqlalchemy.orm import Session
 
+    from app.services.reference_matcher import ReferenceMatcher
+
 logger = logging.getLogger(__name__)
 
 _RULES_PATH = (
@@ -50,10 +52,17 @@ class GapAnalysisService:
         db: "Session | None" = None,
         *,
         outfit_engine: OutfitEngine | None = None,
+        reference_matcher: "ReferenceMatcher | None" = None,
     ) -> None:
         self.db = db
         self._engine = outfit_engine or OutfitEngine()
         self._rules = _load_gap_rules()
+        # Lazy-import: reference_matcher тащит YAML, не нужно при старте
+        # gap_analysis в окружениях без reference_looks.
+        if reference_matcher is None:
+            from app.services.reference_matcher import ReferenceMatcher
+            reference_matcher = ReferenceMatcher()
+        self._reference_matcher = reference_matcher
 
     def analyze(
         self,
@@ -93,6 +102,16 @@ class GapAnalysisService:
         suggestions = self._build_suggestions(
             missing_categories, buckets, ctx, owned_categories
         )
+
+        # Reference-look gaps: незакрытые слоты из референсных луков
+        # подтипа становятся дополнительными suggestion'ами с подсказкой
+        # «что докупить».
+        subtype = ctx.get("identity_family") if isinstance(ctx, dict) else None
+        if subtype:
+            ref_suggestions = self._reference_based_suggestions(
+                wardrobe, subtype, suggestions
+            )
+            suggestions.extend(ref_suggestions)
 
         untapped_threshold = self._rules.get("untapped_threshold", 2)
         untapped_items = self._find_untapped(
@@ -222,6 +241,73 @@ class GapAnalysisService:
                 })
         untapped.sort(key=lambda u: u["outfit_count"])
         return untapped
+
+    def _reference_based_suggestions(
+        self,
+        wardrobe: list[dict],
+        subtype: str,
+        existing: list[dict],
+    ) -> list[dict]:
+        """Превратить ``missing_slots`` каждого реф-лука подтипа в suggestion.
+
+        Дедупликация: пропускаем (category, item) пары, которые уже есть в
+        ``existing``-suggestion'ах или в обработанных ref-suggestion'ах
+        этого вызова. Это нужно, чтобы один и тот же missing-слот из
+        нескольких луков не порождал дубликаты.
+        """
+        try:
+            matches = self._reference_matcher.match_wardrobe(wardrobe, subtype)
+        except Exception as exc:  # pragma: no cover — guard-rail
+            logger.warning(
+                "gap_analysis: reference_matcher failed for subtype=%s: %s",
+                subtype,
+                exc,
+            )
+            return []
+
+        existing_keys: set[tuple[str | None, str]] = {
+            (s.get("category"), s.get("item")) for s in existing
+        }
+        seen: set[tuple[str | None, str]] = set()
+        out: list[dict] = []
+
+        for match in matches:
+            for missing in match.missing_slots:
+                cat = self._missing_slot_category(missing)
+                label = missing.shopping_hint or missing.slot
+                key = (cat, label)
+                if key in existing_keys or key in seen:
+                    continue
+                seen.add(key)
+                out.append({
+                    "item": label,
+                    "category": cat or "item",
+                    "why": f"Из образа «{match.title}»",
+                    "action": gap_action_label(cat or "item"),
+                    "from_reference_look": match.look_id or None,
+                    "slot_hint": missing.slot,
+                })
+        return out
+
+    @staticmethod
+    def _missing_slot_category(missing: Any) -> str | None:
+        """Вытащить читаемую category из ``missing.requires``.
+
+        ``requires.category`` может быть строкой или списком — берём первое
+        ненулевое значение.
+        """
+        requires = getattr(missing, "requires", None) or {}
+        if not isinstance(requires, dict):
+            return None
+        cat = requires.get("category")
+        if isinstance(cat, list):
+            for c in cat:
+                if c:
+                    return str(c)
+            return None
+        if cat:
+            return str(cat)
+        return None
 
     @staticmethod
     def _untapped_reason(

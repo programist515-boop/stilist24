@@ -13,6 +13,11 @@ class GapSuggestion(BaseModel):
       * ``why``    — одно короткое предложение, зачем она нужна
       * ``action`` — предлагаемое действие (кнопка)
     ``category`` сохранён для фронтенда (фильтры / иконки).
+
+    Reference-look suggestions (Phase 7 integration) дополнительно несут
+    ``from_reference_look`` (id референсного лука, под который не нашлось
+    вещи в гардеробе) и ``slot_hint`` (имя слота — top/bottom/shoes/...).
+    Оба поля опциональные — обычные suggestions их не выставляют.
     """
 
     model_config = ConfigDict(extra="forbid")
@@ -21,6 +26,8 @@ class GapSuggestion(BaseModel):
     category: str
     why: str
     action: str = "Попробовать добавить"
+    from_reference_look: str | None = None
+    slot_hint: str | None = None
 
 
 class UntappedItem(BaseModel):
