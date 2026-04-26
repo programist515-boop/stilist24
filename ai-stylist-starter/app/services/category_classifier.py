@@ -29,7 +29,6 @@ import logging
 import re
 import threading
 import time
-from collections import deque
 from dataclasses import dataclass
 from typing import Any, Literal, Protocol
 
@@ -41,24 +40,82 @@ from app.services.categories import WARDROBE_CATEGORIES
 logger = logging.getLogger(__name__)
 
 
-# In-memory ring buffer of recent classifier attempts (TEMPORARY).
-# Used by /debug/cv-classifier/recent to inspect what kie.ai is actually
-# returning when the wardrobe upload route stores ``category=None`` in
-# prod. Bounded — won't grow unbounded if the buffer is forgotten.
+# Cross-worker ring buffer of recent classifier attempts (TEMPORARY).
+#
+# Uvicorn runs N=4 workers in prod, each a separate Python process, so
+# an in-process ``deque`` would fragment the log across them. We use a
+# JSONL file in /tmp shared by all workers in the same container, with
+# ``fcntl.flock`` for write coordination. Bounded to 20 entries.
+#
 # Remove together with debug_cv routes when the integration is stable.
-_RECENT_ATTEMPTS_LOCK = threading.Lock()
-_RECENT_ATTEMPTS: deque[dict] = deque(maxlen=20)
+import os as _os
+from pathlib import Path as _Path
+
+try:
+    import fcntl as _fcntl  # POSIX-only (Linux/macOS); not available on Windows tests
+except ImportError:  # pragma: no cover — only matters on Windows
+    _fcntl = None
+
+_ATTEMPTS_PATH = _Path(_os.environ.get("CV_CLASSIFIER_LOG", "/tmp/cv_classifier_attempts.jsonl"))
+_ATTEMPTS_MAX = 20
 
 
 def _record_attempt(entry: dict) -> None:
-    with _RECENT_ATTEMPTS_LOCK:
-        _RECENT_ATTEMPTS.append(entry)
+    """Append one attempt to the shared JSONL log, then trim to MAX.
+
+    Trimming is best-effort: when concurrent workers race we may
+    momentarily exceed MAX by a couple of lines — that's fine, the
+    next call rebalances.
+    """
+    line = json.dumps(entry, default=str)
+    try:
+        _ATTEMPTS_PATH.parent.mkdir(parents=True, exist_ok=True)
+        with open(_ATTEMPTS_PATH, "a+", encoding="utf-8") as f:
+            if _fcntl is not None:
+                _fcntl.flock(f.fileno(), _fcntl.LOCK_EX)
+            try:
+                f.write(line + "\n")
+                f.flush()
+                f.seek(0)
+                lines = [ln for ln in f.read().splitlines() if ln.strip()]
+                if len(lines) > _ATTEMPTS_MAX:
+                    keep = lines[-_ATTEMPTS_MAX:]
+                    f.seek(0)
+                    f.truncate()
+                    f.write("\n".join(keep) + "\n")
+            finally:
+                if _fcntl is not None:
+                    _fcntl.flock(f.fileno(), _fcntl.LOCK_UN)
+    except Exception:  # noqa: BLE001
+        logger.exception("category_classifier: failed to record attempt")
 
 
 def get_recent_attempts() -> list[dict]:
-    """Snapshot of the ring buffer for the diagnostic endpoint."""
-    with _RECENT_ATTEMPTS_LOCK:
-        return list(_RECENT_ATTEMPTS)
+    """Snapshot of the shared JSONL log for the diagnostic endpoint."""
+    if not _ATTEMPTS_PATH.exists():
+        return []
+    try:
+        with open(_ATTEMPTS_PATH, "r", encoding="utf-8") as f:
+            if _fcntl is not None:
+                _fcntl.flock(f.fileno(), _fcntl.LOCK_SH)
+            try:
+                lines = f.read().splitlines()
+            finally:
+                if _fcntl is not None:
+                    _fcntl.flock(f.fileno(), _fcntl.LOCK_UN)
+        out = []
+        for ln in lines:
+            ln = ln.strip()
+            if not ln:
+                continue
+            try:
+                out.append(json.loads(ln))
+            except json.JSONDecodeError:
+                continue
+        return out
+    except Exception:  # noqa: BLE001
+        logger.exception("category_classifier: failed to read attempts log")
+        return []
 
 
 CategorySource = Literal["cloud_llm", "heuristic", "fallback", "user"]
