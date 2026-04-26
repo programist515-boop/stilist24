@@ -40,6 +40,76 @@ from app.services.categories import WARDROBE_CATEGORIES
 logger = logging.getLogger(__name__)
 
 
+# Cross-worker observability log for the classifier — see
+# ``app/api/routes/cv_classifier_observability.py`` for the read API.
+# Uvicorn runs several workers (separate Python processes) so an
+# in-process deque would fragment the log; we use a JSONL file in /tmp
+# with ``fcntl.flock`` for write coordination. Bounded to 100 entries.
+import os as _os
+from pathlib import Path as _Path
+
+try:
+    import fcntl as _fcntl  # POSIX-only; on Windows tests we no-op the lock
+except ImportError:  # pragma: no cover
+    _fcntl = None
+
+_ATTEMPTS_PATH = _Path(_os.environ.get("CV_CLASSIFIER_LOG", "/tmp/cv_classifier_attempts.jsonl"))
+_ATTEMPTS_MAX = 100
+
+
+def _record_attempt(entry: dict) -> None:
+    """Append one attempt to the shared JSONL log, then trim to MAX."""
+    line = json.dumps(entry, default=str)
+    try:
+        _ATTEMPTS_PATH.parent.mkdir(parents=True, exist_ok=True)
+        with open(_ATTEMPTS_PATH, "a+", encoding="utf-8") as f:
+            if _fcntl is not None:
+                _fcntl.flock(f.fileno(), _fcntl.LOCK_EX)
+            try:
+                f.write(line + "\n")
+                f.flush()
+                f.seek(0)
+                lines = [ln for ln in f.read().splitlines() if ln.strip()]
+                if len(lines) > _ATTEMPTS_MAX:
+                    keep = lines[-_ATTEMPTS_MAX:]
+                    f.seek(0)
+                    f.truncate()
+                    f.write("\n".join(keep) + "\n")
+            finally:
+                if _fcntl is not None:
+                    _fcntl.flock(f.fileno(), _fcntl.LOCK_UN)
+    except Exception:  # noqa: BLE001
+        logger.exception("category_classifier: failed to record attempt")
+
+
+def get_recent_attempts() -> list[dict]:
+    """Snapshot of the JSONL log for the diagnostic endpoint."""
+    if not _ATTEMPTS_PATH.exists():
+        return []
+    try:
+        with open(_ATTEMPTS_PATH, "r", encoding="utf-8") as f:
+            if _fcntl is not None:
+                _fcntl.flock(f.fileno(), _fcntl.LOCK_SH)
+            try:
+                lines = f.read().splitlines()
+            finally:
+                if _fcntl is not None:
+                    _fcntl.flock(f.fileno(), _fcntl.LOCK_UN)
+        out = []
+        for ln in lines:
+            ln = ln.strip()
+            if not ln:
+                continue
+            try:
+                out.append(json.loads(ln))
+            except json.JSONDecodeError:
+                continue
+        return out
+    except Exception:  # noqa: BLE001
+        logger.exception("category_classifier: failed to read attempts log")
+        return []
+
+
 CategorySource = Literal["cloud_llm", "heuristic", "fallback", "user"]
 
 
@@ -200,16 +270,33 @@ class ClaudeCategoryClassifier:
         attrs_hint: dict[str, Any] | None = None,
         media_type: str = "image/jpeg",
     ) -> CategoryPrediction:
+        log_entry: dict[str, Any] = {
+            "ts": time.time(),
+            "image_bytes": len(image_bytes),
+            "media_type": media_type,
+            "breaker_open": self._breaker.is_open(),
+            "attempts": 0,
+        }
+
         if self._breaker.is_open():
             logger.warning("category_classifier: breaker open, using heuristic")
-            return self._fallback.classify(
+            pred = self._fallback.classify(
                 image_bytes, attrs_hint=attrs_hint, media_type=media_type
             )
+            log_entry["outcome"] = "breaker_open_fallback"
+            log_entry["prediction"] = _pred_dict(pred)
+            _record_attempt(log_entry)
+            return pred
 
         last_exc: Exception | None = None
         for attempt_idx in range(_TRANSIENT_RETRIES + 1):
+            log_entry["attempts"] = attempt_idx + 1
             try:
-                return self._call_claude(image_bytes, attrs_hint, media_type)
+                pred = self._call_claude(image_bytes, attrs_hint, media_type, log_entry)
+                log_entry["outcome"] = "cloud_ok"
+                log_entry["prediction"] = _pred_dict(pred)
+                _record_attempt(log_entry)
+                return pred
             except (httpx.TimeoutException, httpx.NetworkError) as exc:
                 # Transient — kie.ai proxy queue spike or flaky network.
                 # Retry without burning the breaker so a single slow call
@@ -229,9 +316,15 @@ class ClaudeCategoryClassifier:
                     type(exc).__name__,
                     exc,
                 )
-                return self._fallback.classify(
+                pred = self._fallback.classify(
                     image_bytes, attrs_hint=attrs_hint, media_type=media_type
                 )
+                log_entry["outcome"] = "cloud_exception_then_fallback"
+                log_entry["exception_type"] = type(exc).__name__
+                log_entry["exception_message"] = str(exc)[:500]
+                log_entry["prediction"] = _pred_dict(pred)
+                _record_attempt(log_entry)
+                return pred
 
         # Exhausted retries on transient errors — count as one breaker
         # strike and fall back to heuristic.
@@ -241,15 +334,22 @@ class ClaudeCategoryClassifier:
             _TRANSIENT_RETRIES + 1,
             type(last_exc).__name__ if last_exc else "?",
         )
-        return self._fallback.classify(
+        pred = self._fallback.classify(
             image_bytes, attrs_hint=attrs_hint, media_type=media_type
         )
+        log_entry["outcome"] = "transient_retries_exhausted_fallback"
+        log_entry["exception_type"] = type(last_exc).__name__ if last_exc else None
+        log_entry["exception_message"] = str(last_exc)[:500] if last_exc else None
+        log_entry["prediction"] = _pred_dict(pred)
+        _record_attempt(log_entry)
+        return pred
 
     def _call_claude(
         self,
         image_bytes: bytes,
         attrs_hint: dict[str, Any] | None,
         media_type: str,
+        log_entry: dict[str, Any] | None = None,
     ) -> CategoryPrediction:
         b64 = base64.standard_b64encode(image_bytes).decode("ascii")
         user_text_parts = [
@@ -286,14 +386,22 @@ class ClaudeCategoryClassifier:
         }
 
         client = self._get_client()
+        t0 = time.perf_counter()
         response = client.post(
             f"{self._base_url}/v1/messages",
             headers={"Content-Type": "application/json", **self._auth_headers()},
             json=body,
             timeout=self._timeout_s,
         )
+        if log_entry is not None:
+            log_entry["http_status"] = response.status_code
+            log_entry["latency_s"] = round(time.perf_counter() - t0, 2)
         response.raise_for_status()
         data = response.json()
+        if log_entry is not None and isinstance(data, dict):
+            log_entry["claude_stop_reason"] = data.get("stop_reason")
+            log_entry["claude_output_tokens"] = (data.get("usage") or {}).get("output_tokens")
+            log_entry["credits_consumed"] = data.get("credits_consumed")
 
         # kie.ai sometimes returns HTTP 200 with a proxy-level error
         # envelope: ``{"code": <int>, "msg": "...", "data": null}``. The
@@ -304,15 +412,22 @@ class ClaudeCategoryClassifier:
         if isinstance(data, dict) and "code" in data and data.get("data") is None:
             kie_code = data.get("code")
             kie_msg = data.get("msg", "")
+            if log_entry is not None:
+                log_entry["proxy_error_code"] = kie_code
+                log_entry["proxy_error_msg"] = kie_msg
             if kie_code == 402:
                 raise RuntimeError(f"credits_insufficient: {kie_msg}")
             raise RuntimeError(f"proxy_error code={kie_code}: {kie_msg}")
 
         text = _extract_text_block(data)
+        if log_entry is not None:
+            log_entry["text_block"] = text
         if not text:
             raise ValueError("claude response had no text content")
 
         payload = _parse_json_object(text)
+        if log_entry is not None:
+            log_entry["parsed_json"] = payload
         if payload is None:
             raise ValueError(f"claude text was not parseable JSON: {text!r}")
 
@@ -336,6 +451,15 @@ class ClaudeCategoryClassifier:
             source="cloud_llm",
             reasoning=reasoning,
         )
+
+
+def _pred_dict(pred: CategoryPrediction) -> dict:
+    return {
+        "category": pred.category,
+        "confidence": pred.confidence,
+        "source": pred.source,
+        "reasoning": pred.reasoning,
+    }
 
 
 def _extract_text_block(response: dict | Any) -> str | None:

@@ -12,6 +12,7 @@ from app.api.routes import (
     auth,
     color,
     color_tryon,
+    cv_classifier_observability,
     events,
     feedback,
     gap_analysis,
@@ -86,6 +87,11 @@ app.include_router(
     reference_looks.router,
     prefix="/reference-looks",
     tags=["reference-looks"],
+)
+app.include_router(
+    cv_classifier_observability.router,
+    prefix="/cv-classifier",
+    tags=["cv-classifier"],
 )
 
 
