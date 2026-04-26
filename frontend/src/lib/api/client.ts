@@ -22,7 +22,18 @@ type RequestOptions = {
   json?: unknown;
   form?: FormData;
   signal?: AbortSignal;
+  /**
+   * Таймаут запроса в миллисекундах. Применяется через AbortController
+   * параллельно с пользовательским ``signal`` (если оба заданы — побеждает
+   * первый сработавший). По умолчанию 30s — достаточно для всех быстрых
+   * GET/JSON-эндпоинтов. Длинные операции (upload + CV) должны явно
+   * передавать больший лимит, иначе fetch может висеть бесконечно при
+   * обрыве соединения без TCP-FIN.
+   */
+  timeoutMs?: number;
 };
+
+const DEFAULT_TIMEOUT_MS = 30_000;
 
 function buildUrl(path: string, query?: RequestOptions["query"]): string {
   const url = new URL(`${BASE_URL}${path.startsWith("/") ? path : `/${path}`}`);
@@ -58,7 +69,28 @@ export async function apiRequest<T = unknown>(
   path: string,
   options: RequestOptions = {}
 ): Promise<T> {
-  const { method = "GET", query, json, form, signal } = options;
+  const {
+    method = "GET",
+    query,
+    json,
+    form,
+    signal: userSignal,
+    timeoutMs = DEFAULT_TIMEOUT_MS,
+  } = options;
+
+  // Композитный signal: внутренний таймер + пользовательский signal.
+  // Когда любой из них fires, fetch отменяется с AbortError.
+  const timeoutController = new AbortController();
+  const timer = setTimeout(
+    () => timeoutController.abort(new DOMException("Timeout", "TimeoutError")),
+    timeoutMs
+  );
+  const userAbortHandler = () => timeoutController.abort(userSignal?.reason);
+  if (userSignal) {
+    if (userSignal.aborted) timeoutController.abort(userSignal.reason);
+    else userSignal.addEventListener("abort", userAbortHandler, { once: true });
+  }
+  const signal = timeoutController.signal;
 
   const headers: Record<string, string> = {};
 
@@ -87,12 +119,32 @@ export async function apiRequest<T = unknown>(
     body = form;
   }
 
-  const res = await fetch(buildUrl(path, query), {
-    method,
-    headers,
-    body,
-    signal,
-  });
+  let res: Response;
+  try {
+    res = await fetch(buildUrl(path, query), {
+      method,
+      headers,
+      body,
+      signal,
+    });
+  } catch (err) {
+    clearTimeout(timer);
+    if (userSignal) userSignal.removeEventListener("abort", userAbortHandler);
+    if (
+      err instanceof DOMException &&
+      (err.name === "TimeoutError" || err.name === "AbortError")
+    ) {
+      throw new ApiError(
+        0,
+        `Запрос превысил лимит ожидания (${Math.round(timeoutMs / 1000)}s). ` +
+          `Попробуйте ещё раз или уменьшите размер файла.`,
+        err
+      );
+    }
+    throw err;
+  }
+  clearTimeout(timer);
+  if (userSignal) userSignal.removeEventListener("abort", userAbortHandler);
 
   const isJson = res.headers.get("content-type")?.includes("application/json");
   const payload = isJson ? await res.json().catch(() => null) : await res.text();

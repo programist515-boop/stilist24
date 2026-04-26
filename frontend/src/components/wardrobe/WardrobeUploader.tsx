@@ -80,12 +80,18 @@ export function WardrobeUploader() {
             onClick={() => mutation.mutate()}
             disabled={!file}
             loading={mutation.isPending}
-            loadingText="Загружаем…"
+            loadingText="Идёт CV-анализ…"
             fullWidth
             className="sm:w-auto"
           >
             Загрузить вещь
           </Button>
+          {mutation.isPending ? (
+            <p className="text-xs text-ink-muted">
+              Загружаем фото, убираем фон и распознаём вещь — на первом
+              фото это может занять до минуты.
+            </p>
+          ) : null}
         </div>
       </div>
 

@@ -24,9 +24,13 @@ export async function uploadWardrobeItem(input: {
   form.append("image", input.image);
   if (input.category) form.append("category", input.category);
 
+  // Upload + rembg (cold-start ONNX модели может занять 30–60s) +
+  // CV-распознавание + S3-сохранение → 90s — реалистичный потолок.
+  // Дефолтный 30s в apiRequest для этого эндпоинта мал.
   const data = await apiRequest("/wardrobe/upload", {
     method: "POST",
     form,
+    timeoutMs: 120_000,
   });
   return WardrobeItemSchema.parse(data);
 }
