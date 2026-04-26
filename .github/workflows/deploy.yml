@@ -74,12 +74,13 @@ jobs:
           S3_ACCESS_KEY: ${{ secrets.S3_ACCESS_KEY }}
           S3_SECRET_KEY: ${{ secrets.S3_SECRET_KEY }}
           FASHN_API_KEY: ${{ secrets.FASHN_API_KEY }}
+          CLAUDE_API_KEY: ${{ secrets.CLAUDE_API_KEY }}
           NEXT_PUBLIC_API_URL: ${{ secrets.NEXT_PUBLIC_API_URL }}
         with:
           host: 194.67.99.214
           username: root
           key: ${{ secrets.DEPLOY_SSH_KEY }}
-          envs: JWT_SECRET,POSTGRES_PASSWORD,S3_ACCESS_KEY,S3_SECRET_KEY,FASHN_API_KEY,NEXT_PUBLIC_API_URL
+          envs: JWT_SECRET,POSTGRES_PASSWORD,S3_ACCESS_KEY,S3_SECRET_KEY,FASHN_API_KEY,CLAUDE_API_KEY,NEXT_PUBLIC_API_URL
           script_stop: true
           script: |
             set -e
@@ -103,6 +104,21 @@ jobs:
             S3_BUCKET=ai-stylist
             FASHN_API_KEY=${FASHN_API_KEY}
             FASHN_BASE_URL=https://api.fashn.ai
+            # CV-классификатор категории при загрузке вещи. Флаг OFF —
+            # поведение как раньше (category из формы или None). Когда
+            # acceptance-прогон зелёный, переключаем USE_CV_CATEGORY_CLASSIFIER
+            # на true и CATEGORY_CLASSIFIER_PROVIDER на "claude" (этот
+            # commit + CLAUDE_API_KEY уже добавленный в GitHub Secrets).
+            # Default endpoint — kie.ai (Anthropic-compatible proxy с Bearer
+            # auth). Для прямого Anthropic — base_url=https://api.anthropic.com,
+            # auth_scheme=x-api-key.
+            USE_CV_CATEGORY_CLASSIFIER=false
+            CATEGORY_CLASSIFIER_PROVIDER=heuristic
+            CATEGORY_CONFIDENCE_THRESHOLD=0.6
+            CLAUDE_API_KEY=${CLAUDE_API_KEY}
+            CLAUDE_BASE_URL=https://api.kie.ai/claude
+            CLAUDE_MODEL=claude-haiku-4-5
+            CLAUDE_AUTH_SCHEME=bearer
             JWT_SECRET=${JWT_SECRET}
             JWT_ALGORITHM=HS256
             JWT_ACCESS_MINUTES=60

@@ -26,6 +26,12 @@ from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from app.services.categories import (
+    WARDROBE_CATEGORIES,
+    is_legacy_category,
+    legacy_to_detailed,
+)
+
 
 class WardrobeItemOut(BaseModel):
     """Single wardrobe item as exposed on the wire.
@@ -74,21 +80,16 @@ class WardrobeConfirmIn(BaseModel):
     attributes: dict[str, Any]
 
 
-_ALLOWED_CATEGORIES = (
-    "top",
-    "bottom",
-    "outerwear",
-    "shoes",
-    "dress",
-    "accessory",
-)
-
-
 class WardrobeCategoryPatchIn(BaseModel):
     """Payload for ``PATCH /wardrobe/{item_id}/category``.
 
     Используется для ручного исправления категории, когда CV-определение
     оказалось неверным (или не было) и пользователь поправляет вручную.
+
+    Принимаем 15 текущих категорий + 6 legacy (top, bottom, ...). Legacy
+    значения автоматически мапятся в ближайший detailed через
+    :func:`legacy_to_detailed`, чтобы старые PWA-кэши не получали 422
+    после расширения enum.
     """
 
     model_config = ConfigDict(extra="forbid")
@@ -96,17 +97,28 @@ class WardrobeCategoryPatchIn(BaseModel):
     category: str = Field(
         ...,
         description=(
-            "Новая категория вещи. Допустимые: top, bottom, outerwear, "
-            "shoes, dress, accessory."
+            "Новая категория вещи. Допустимые значения — 15 detailed "
+            "(blouses, dresses, jackets, ...) либо 6 legacy "
+            "(top, bottom, outerwear, shoes, dress, accessory)."
         ),
     )
 
     def model_post_init(self, _context) -> None:
-        if self.category not in _ALLOWED_CATEGORIES:
+        if self.category in WARDROBE_CATEGORIES:
+            return
+        if is_legacy_category(self.category):
+            mapped = legacy_to_detailed(self.category)
+            if mapped is not None:
+                self.category = mapped
+                return
             raise ValueError(
-                f"category должен быть одним из {_ALLOWED_CATEGORIES}, "
-                f"получено '{self.category}'"
+                f"legacy-категория {self.category!r} не маппится автоматически — "
+                "пользователь должен выбрать одну из 15 detailed категорий"
             )
+        raise ValueError(
+            f"category должен быть одним из {WARDROBE_CATEGORIES}, "
+            f"получено '{self.category}'"
+        )
 
 
 class WardrobeConfirmOut(BaseModel):

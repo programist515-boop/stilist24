@@ -69,6 +69,26 @@ class Settings(BaseSettings):
     # CV-путь (rembg + HSV) работает всегда, без флага.
     enable_ml_color_tryon: bool = False
 
+    # --- CV category classifier ------------------------------------------
+    # Включает автоопределение категории вещи при загрузке через Claude
+    # Vision. Off — поведение как раньше: либо category из формы, либо
+    # None (фронт попросит уточнить).
+    use_cv_category_classifier: bool = False
+    # "claude" (= cloud Claude через kie.ai или прямой Anthropic) |
+    # "heuristic" (rule-based на Phase-0 атрибутах) | "disabled".
+    # При "heuristic" платные вызовы не делаются даже если флаг включён.
+    category_classifier_provider: str = "heuristic"
+    # Минимальный confidence от классификатора, ниже которого category
+    # сохраняется как None — фронт показывает «уточни категорию».
+    category_confidence_threshold: float = 0.6
+    # Claude endpoint config. Default — kie.ai (proxy с Bearer auth).
+    # Для прямого Anthropic API: claude_base_url="https://api.anthropic.com",
+    # claude_auth_scheme="x-api-key". Имя модели в kie.ai — без даты-суффикса.
+    claude_api_key: str = ""
+    claude_base_url: str = "https://api.kie.ai/claude"
+    claude_model: str = "claude-haiku-4-5"
+    claude_auth_scheme: str = "bearer"  # "bearer" | "x-api-key"
+
     # --- FASHN / Auth (unchanged) -----------------------------------------
     fashn_api_key: str = ""
     fashn_base_url: str = "https://api.fashn.ai"

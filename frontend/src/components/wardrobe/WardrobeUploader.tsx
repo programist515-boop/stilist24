@@ -17,17 +17,36 @@ import { trackEvent } from "@/lib/api/events";
 import type { WardrobeItem } from "@/lib/schemas";
 
 const CATEGORIES: Array<{ value: string; label: string }> = [
-  { value: "top", label: "Верх" },
-  { value: "bottom", label: "Низ" },
+  { value: "blouses", label: "Блузки и рубашки" },
+  { value: "sweaters", label: "Свитеры и трикотаж" },
+  { value: "dresses", label: "Платья" },
+  { value: "jackets", label: "Жакеты и пиджаки" },
   { value: "outerwear", label: "Верхняя одежда" },
+  { value: "pants", label: "Брюки и джинсы" },
+  { value: "skirts", label: "Юбки" },
   { value: "shoes", label: "Обувь" },
-  { value: "dress", label: "Платье" },
-  { value: "accessory", label: "Аксессуар" },
+  { value: "hosiery", label: "Колготки и чулки" },
+  { value: "bags", label: "Сумки" },
+  { value: "belts", label: "Ремни" },
+  { value: "eyewear", label: "Очки" },
+  { value: "headwear", label: "Головные уборы" },
+  { value: "jewelry", label: "Украшения" },
+  { value: "swimwear", label: "Купальники" },
 ];
 
-const CATEGORY_LABEL: Record<string, string> = Object.fromEntries(
-  CATEGORIES.map((c) => [c.value, c.label])
-);
+// Старые items, загруженные до расширения enum, имеют legacy-категории.
+// Показываем человекочитаемые лейблы, чтобы UI не отображал «top».
+const LEGACY_CATEGORY_LABEL: Record<string, string> = {
+  top: "Верх (старая запись)",
+  bottom: "Низ (старая запись)",
+  dress: "Платье (старая запись)",
+  accessory: "Аксессуар (старая запись)",
+};
+
+const CATEGORY_LABEL: Record<string, string> = {
+  ...Object.fromEntries(CATEGORIES.map((c) => [c.value, c.label])),
+  ...LEGACY_CATEGORY_LABEL,
+};
 
 export function WardrobeUploader() {
   const queryClient = useQueryClient();
@@ -147,6 +166,26 @@ export function WardrobeUploader() {
   );
 }
 
+type CategoryMeta = {
+  value?: string | null;
+  confidence?: number | null;
+  source?: string | null;
+};
+
+function readCategoryMeta(item: WardrobeItem): CategoryMeta {
+  const attrs = item.attributes as Record<string, unknown> | undefined;
+  const meta = attrs?.category;
+  if (meta && typeof meta === "object") {
+    const m = meta as Record<string, unknown>;
+    return {
+      value: typeof m.value === "string" ? m.value : null,
+      confidence: typeof m.confidence === "number" ? m.confidence : null,
+      source: typeof m.source === "string" ? m.source : null,
+    };
+  }
+  return {};
+}
+
 function LastUploadedReview({
   item,
   onChangeCategory,
@@ -159,8 +198,31 @@ function LastUploadedReview({
   updateError: unknown;
 }) {
   const currentCategory = item.category ?? "";
+  const meta = readCategoryMeta(item);
+  const isAutoDetected = meta.source === "cloud_llm" || meta.source === "heuristic";
+  const confidencePct =
+    typeof meta.confidence === "number" ? Math.round(meta.confidence * 100) : null;
+  const isLowConfidence =
+    isAutoDetected && (confidencePct ?? 100) < 75;
+  const isUndetected = !currentCategory; // backend сохранил None при низком confidence
+
   const currentLabel =
     CATEGORY_LABEL[currentCategory] ?? currentCategory ?? "не определена";
+
+  let headline: string;
+  let dropdownLabel: string;
+  if (isUndetected) {
+    headline = "Не получилось определить категорию";
+    dropdownLabel = "Выбери категорию:";
+  } else if (isLowConfidence) {
+    headline = `Похоже на ${currentLabel}${
+      confidencePct !== null ? ` — уверенность ${confidencePct}%` : ""
+    }`;
+    dropdownLabel = "Поправить?";
+  } else {
+    headline = `Категория: ${currentLabel}`;
+    dropdownLabel = "Не та?";
+  }
 
   return (
     <div className="mt-5 flex flex-col gap-3 rounded-xl border border-canvas-border bg-canvas-card p-4 sm:flex-row sm:items-center">
@@ -174,20 +236,37 @@ function LastUploadedReview({
       ) : null}
       <div className="flex-1 space-y-1.5">
         <p className="text-sm text-ink">
-          Категория:{" "}
-          <span className="font-medium">{currentLabel}</span>
+          {isUndetected ? (
+            <span className="font-medium text-amber-700">{headline}</span>
+          ) : (
+            <>
+              {isLowConfidence ? "Похоже на: " : "Категория: "}
+              <span className="font-medium">{currentLabel}</span>
+              {isLowConfidence && confidencePct !== null ? (
+                <span className="ml-1 text-ink-muted">
+                  · уверенность {confidencePct}%
+                </span>
+              ) : null}
+            </>
+          )}
         </p>
         <div className="flex flex-wrap items-center gap-2">
           <Label htmlFor="fix-category" className="!normal-case">
-            Не та?
+            {dropdownLabel}
           </Label>
           <select
             id="fix-category"
             value={currentCategory}
             onChange={(e) => onChangeCategory(e.target.value)}
             disabled={isUpdating}
+            autoFocus={isUndetected}
             className="h-9 rounded-lg border border-canvas-border bg-canvas-card px-3 text-sm text-ink disabled:opacity-60"
           >
+            {isUndetected ? (
+              <option value="" disabled>
+                — выбери категорию —
+              </option>
+            ) : null}
             {CATEGORIES.map((c) => (
               <option key={c.value} value={c.value}>
                 {c.label}

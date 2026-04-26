@@ -22,6 +22,7 @@ from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_persona_id, get_current_user_id, get_db
 from app.api.errors import ApiError, ErrorCode
+from app.core.config import settings
 from app.core.storage import (
     StorageError,
     StorageService,
@@ -31,6 +32,7 @@ from app.core.storage import (
 )
 from app.models.style_profile import StyleProfile
 from app.repositories.wardrobe_repository import WardrobeRepository
+from app.services.category_classifier import get_category_classifier
 from app.services.user_context import build_user_context_from_db
 from app.services.garment_recognizer import recognize_garment
 from app.services.wardrobe.attribute_normalizer import apply_manual_update, normalize as normalize_attrs
@@ -131,13 +133,39 @@ async def upload_item(
                 item_id, exc,
             )
 
-    # Normalize to v2 structured attributes (value + confidence + source + editable)
+    # Если пользователь выбрал категорию вручную — доверяем ему и не
+    # вызываем classifier. Иначе при включённом флаге пробуем угадать
+    # категорию по фото; при низком confidence сохраняем None — фронт
+    # попросит уточнить.
+    resolved_category: str | None = category
+    category_meta: dict | None = (
+        {"value": category, "confidence": 1.0, "source": "user"} if category else None
+    )
+
+    if category is None and settings.use_cv_category_classifier:
+        classifier = get_category_classifier(settings)
+        pred = classifier.classify(data, attrs_hint=detected)
+        category_meta = {
+            "value": pred.category,
+            "confidence": pred.confidence,
+            "source": pred.source,
+        }
+        if pred.confidence >= settings.category_confidence_threshold:
+            resolved_category = pred.category
+
+    # Normalize to v2 structured attributes (value + confidence + source + editable).
+    # category умышленно не передаём в normalizer — он валидирует против
+    # legacy ontology (tops/bottoms/dresses), которая не знает наших 15
+    # detailed категорий. Мета по category пишется отдельно после.
     raw_for_normalizer = {
-        "category": category or "tops",
         "primary_color": {"value": detected["primary_color"], "confidence": 0.7, "source": detected["_color_source"]},
         "pattern": {"value": detected["print_type"], "confidence": 0.7, "source": detected["_print_source"]},
     }
     attributes_v2 = normalize_attrs(raw_for_normalizer)
+    if category_meta is not None:
+        # Перезаписываем «по умолчанию пустую» category-мету от normalizer
+        # нашей: с реальным confidence и source классификатора.
+        attributes_v2["category"] = {**category_meta, "editable": True}
 
     repo = WardrobeRepository(db)
     item = repo.create(
@@ -146,7 +174,7 @@ async def upload_item(
         item_id=item_id,
         image_key=image_key_final,
         image_url=image_url_final,
-        category=category or "top",
+        category=resolved_category,
         attributes=attributes_v2,
     )
     return _serialize(item)
