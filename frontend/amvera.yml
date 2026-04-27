@@ -1,0 +1,29 @@
+# Amvera Cloud application config — frontend (Next.js standalone).
+# Docs: https://docs.amvera.ru/applications/configuration.html
+#
+# Схема выверена по реальному UI Amvera (раздел «Конфигурация» приложения
+# stilist24-web): build.dockerfile, run.command/args/persistenceMount/containerPort.
+#
+# КРИТИЧНО про NEXT_PUBLIC_API_URL: Next.js впекает все NEXT_PUBLIC_*
+# в бандл на этапе `next build`. Если не передать build-arg —
+# Dockerfile подставит дефолт http://localhost:8000 (см. ARG в frontend/Dockerfile),
+# и фронт в проде будет ходить «в никуда». Поэтому значение должно быть тут,
+# в репо, а не только в UI Amvera.
+#
+# Phase 2 — технический домен api: https://stilist24-api-expertgds.amvera.io
+# Phase 4 — кастомный домен:        https://api.stilist24.com
+# При смене значения Amvera пересоберёт фронт автоматически.
+
+meta:
+  environment: docker
+  toolchain:
+    name: docker
+    version: latest
+
+build:
+  dockerfile: frontend/Dockerfile
+
+run:
+  containerPort: 3000
+  args: NEXT_PUBLIC_API_URL=https://stilist24-api-expertgds.amvera.io
+  persistenceMount: /data
