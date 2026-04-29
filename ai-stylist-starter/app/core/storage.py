@@ -45,6 +45,7 @@ class _DefaultSettings:
     s3_force_path_style: bool = True
     s3_public_base_url: str | None = None
     s3_presign_expires: int = 3600
+    s3_object_acl: str | None = None
     storage_max_bytes: int = 8 * 1024 * 1024
     storage_allowed_mime: tuple[str, ...] = (
         "image/jpeg",
@@ -411,13 +412,19 @@ class S3StorageBackend:
     # --- StorageBackend ---------------------------------------------------
 
     def put(self, key: str, data: bytes, *, content_type: str) -> None:
+        kwargs: dict[str, Any] = {
+            "Bucket": self.bucket,
+            "Key": key,
+            "Body": data,
+            "ContentType": content_type,
+        }
+        # Per-object ACL для провайдеров без bucket-policy public-read (Yandex
+        # с ролью storage.editor). Если settings.s3_object_acl задан —
+        # каждый объект становится publicly readable.
+        if settings.s3_object_acl:
+            kwargs["ACL"] = settings.s3_object_acl
         try:
-            self._get_client().put_object(
-                Bucket=self.bucket,
-                Key=key,
-                Body=data,
-                ContentType=content_type,
-            )
+            self._get_client().put_object(**kwargs)
         except Exception as exc:  # pragma: no cover - network path
             raise StorageBackendError(f"failed to put {key!r}: {exc}") from exc
 

@@ -22,6 +22,13 @@ class Settings(BaseSettings):
     s3_force_path_style: bool = True
     s3_public_base_url: str | None = None
     s3_presign_expires: int = 3600
+    # Canned ACL для каждого PUT object. Нужен для провайдеров, где
+    # bucket-level public-read недоступен через bucket policy без admin-роли
+    # (Yandex Object Storage: storage.editor может ставить per-object ACL,
+    # но не bucket policy). Значения: "public-read" — публичные объекты
+    # после bucket setting «Чтение объектов: С авторизацией»; None — не
+    # передавать ACL (поведение MinIO/AWS с Block Public Access).
+    s3_object_acl: str | None = None
 
     # Storage validation
     storage_max_bytes: int = 8 * 1024 * 1024  # 8 MB
