@@ -10,7 +10,8 @@
 # и фронт в проде будет ходить «в никуда». Поэтому значение должно быть тут,
 # в репо, а не только в UI Amvera.
 #
-# Phase 2 — технический домен api: https://stilist24-api-expertgds.amvera.io
+# Phase 2 — технический домен api: https://stilist24-api.expertgds.amvera.io
+# (паттерн Amvera: <app>.<user>.amvera.io через ТОЧКУ, не дефис).
 # Phase 4 — кастомный домен:        https://api.stilist24.com
 # При смене значения Amvera пересоберёт фронт автоматически.
 
@@ -25,5 +26,5 @@ build:
 
 run:
   containerPort: 3000
-  args: NEXT_PUBLIC_API_URL=https://stilist24-api-expertgds.amvera.io
+  args: NEXT_PUBLIC_API_URL=https://stilist24-api.expertgds.amvera.io
   persistenceMount: /data
