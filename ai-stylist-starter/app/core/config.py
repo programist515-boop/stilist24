@@ -1,5 +1,7 @@
+from typing import Annotated
+
 from pydantic import field_validator
-from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
 
 
 class Settings(BaseSettings):
@@ -50,7 +52,13 @@ class Settings(BaseSettings):
     # custom ``X-User-Id`` header plus multipart bodies, which trigger a
     # CORS preflight. Without the middleware the preflight returns 405 and
     # the browser silently aborts the real request.
-    cors_allow_origins: list[str] = [
+    #
+    # ``NoDecode`` отключает JSON pre-parsing pydantic-settings'а для list-полей
+    # из process environment. Без него Amvera (передающий env через ОС, не
+    # .env-файлом) падает на старте: SettingsError → JSONDecodeError, потому
+    # что "https://a,https://b" — не валидный JSON. На VPS с .env-файлом
+    # JSON-парсинг не запускается, поэтому баг не проявлялся до миграции.
+    cors_allow_origins: Annotated[list[str], NoDecode] = [
         "http://localhost:3000",
         "http://127.0.0.1:3000",
     ]
@@ -58,10 +66,8 @@ class Settings(BaseSettings):
     @field_validator("cors_allow_origins", mode="before")
     @classmethod
     def _split_cors_csv(cls, v):
-        # Pydantic-settings defaults to JSON-parsing list fields, which is
-        # awful in a .env file ("[...]" quoting pain). Accept a plain
-        # comma-separated string instead, e.g.
-        #   CORS_ALLOW_ORIGINS=https://stilist24.com,https://www.stilist24.com
+        # Принимаем CSV из env (Amvera/process-env) и list из .env-файла.
+        # Пример env: CORS_ALLOW_ORIGINS=https://a.com,https://b.com
         if isinstance(v, str):
             return [origin.strip() for origin in v.split(",") if origin.strip()]
         return v
