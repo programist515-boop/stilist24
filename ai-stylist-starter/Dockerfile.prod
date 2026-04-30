@@ -12,10 +12,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends libglib2.0-0 li
 # Two-step install (see dev Dockerfile): cached deps first, source + editable
 # install after. Editable here is harmless (no volume mount in prod) and keeps
 # parity with dev so "No module named 'app'" cannot resurface.
-COPY pyproject.toml /app/pyproject.toml
+COPY ai-stylist-starter/pyproject.toml /app/pyproject.toml
 RUN pip install --upgrade pip && pip install .
 
-COPY . /app
+COPY ai-stylist-starter/ /app
 RUN pip install --no-deps -e .
 
 RUN python scripts/download_models.py

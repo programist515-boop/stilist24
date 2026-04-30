@@ -5,8 +5,8 @@
 FROM node:20-alpine AS deps
 WORKDIR /app
 
-# Copy lockfile if present, fall back to package.json only.
-COPY package.json package-lock.json* ./
+# Build context is the repo root (both Amvera and docker-compose.prod.yml).
+COPY frontend/package.json frontend/package-lock.json* ./
 
 # Use `npm ci` when a lockfile is present (reproducible), `npm install`
 # otherwise. The `--no-audit --no-fund` flags keep build logs quiet.
@@ -29,7 +29,7 @@ ARG NEXT_PUBLIC_API_URL=https://stilist24-api.expertgds.amvera.io
 ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
 
 COPY --from=deps /app/node_modules ./node_modules
-COPY . .
+COPY frontend/ .
 
 ENV NEXT_TELEMETRY_DISABLED=1
 RUN npm run build
