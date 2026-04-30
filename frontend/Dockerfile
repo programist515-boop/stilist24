@@ -56,4 +56,10 @@ COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 USER nextjs
 EXPOSE 3000
 
-CMD ["node", "server.js"]
+# ENTRYPOINT в exec-форме защищает от Amvera UI, который может вписать
+# в поле "Команда запуска" / "Аргументы" строку вида
+# `NEXT_PUBLIC_API_URL=https://...`. С CMD такая строка перебивала бы
+# `node server.js` и улетала первым аргументом → Node искал её как файл
+# (`Cannot find module '/app/NEXT_PUBLIC_API_URL=...'`). С ENTRYPOINT
+# любые UI-args приклеиваются ПОСЛЕ `server.js` — Node их игнорирует.
+ENTRYPOINT ["node", "server.js"]
