@@ -16,6 +16,10 @@ else
   echo "[startup] DATABASE_URL is EMPTY — env not propagated"
 fi
 
-alembic upgrade head
+if alembic upgrade head; then
+  echo "[startup] migrations applied"
+else
+  echo "[startup] WARNING: alembic upgrade head failed — starting API anyway so /health responds for diagnostics"
+fi
 
 exec uvicorn app.main:app --host 0.0.0.0 --port 8002 --workers 4
