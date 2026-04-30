@@ -18,8 +18,8 @@
 
 set -u
 
-API="${1:-https://stilist24-api.expertgds.amvera.io}"
-WEB="${2:-https://stilist24-web.expertgds.amvera.io}"
+API="${1:-https://stilist24-api-expertgds.amvera.io}"
+WEB="${2:-https://stilist24-web-expertgds.amvera.io}"
 
 echo "============================================================"
 echo "Amvera smoke-test"

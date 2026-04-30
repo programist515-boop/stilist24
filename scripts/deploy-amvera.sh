@@ -19,8 +19,8 @@ API_DIR="ai-stylist-starter"
 WEB_DIR="frontend"
 API_REMOTE="amvera-api"
 WEB_REMOTE="amvera-web"
-API_DOMAIN="stilist24-api.${AMVERA_USER}.amvera.io"
-WEB_DOMAIN="stilist24-web.${AMVERA_USER}.amvera.io"
+API_DOMAIN="stilist24-api-${AMVERA_USER}.amvera.io"
+WEB_DOMAIN="stilist24-web-${AMVERA_USER}.amvera.io"
 
 setup_remotes() {
   echo "=== Setting up Amvera git remotes ==="

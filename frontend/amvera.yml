@@ -6,7 +6,7 @@
 # передать build-time переменную в Amvera. При смене URL — редактируем
 # Dockerfile, пушим → Amvera пересоберёт.
 #
-# Phase 2 — технический домен: https://stilist24-api.expertgds.amvera.io
+# Phase 2 — технический домен: https://stilist24-api-expertgds.amvera.io
 # Phase 4 — кастомный домен:   https://api.stilist24.com
 
 meta:
