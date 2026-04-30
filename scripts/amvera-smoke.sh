@@ -109,8 +109,12 @@ check "web / → Next.js HTML (не пустое)" \
   '^[[:space:]]*[0-9]{4,}$'
 
 api_in_html_pattern=$(echo "$API" | sed 's|https://||' | sed 's/\./\\./g')
-check "web / → HTML содержит $API (build-arg вшит правильно)" \
-  "curl -sSk --max-time 15 $WEB/" \
+# Ищем NEXT_PUBLIC_API_URL не в HTML главной (там его нет — landing
+# не использует api), а в JS-bundles страницы /sign-in, которая делает
+# auth-call. Bundle paths меняются между билдами, поэтому динамически
+# извлекаем chunks из HTML и grep'аем все из них.
+check "web /sign-in bundle содержит $API (build-arg вшит правильно)" \
+  "html=\$(curl -sSk --max-time 15 $WEB/sign-in); chunks=\$(echo \"\$html\" | grep -oE '/_next/static/chunks/[^\"]*\\.js' | sort -u); for c in \$chunks; do curl -sSk --max-time 10 $WEB\$c; done" \
   "$api_in_html_pattern"
 
 # Phase 2.11 — alembic upgrade head в логах api проверяется отдельно через
