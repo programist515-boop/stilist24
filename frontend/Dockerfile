@@ -21,10 +21,11 @@ RUN if [ -f package-lock.json ]; then \
 FROM node:20-alpine AS builder
 WORKDIR /app
 
-# NEXT_PUBLIC_* vars are inlined at build time, so they must be present
-# during `next build`. Override at build time with:
-#   docker build --build-arg NEXT_PUBLIC_API_URL=https://api.example.com .
-ARG NEXT_PUBLIC_API_URL=http://localhost:8000
+# NEXT_PUBLIC_* vars are inlined at build time. Amvera does not support
+# --build-arg, so the default here IS the production value for Amvera.
+# VPS deploy (docker-compose.prod.yml) overrides via build.args.
+# Phase 2: technical domain; Phase 4: change to https://api.stilist24.com
+ARG NEXT_PUBLIC_API_URL=https://stilist24-api.expertgds.amvera.io
 ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
 
 COPY --from=deps /app/node_modules ./node_modules

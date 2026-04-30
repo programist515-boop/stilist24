@@ -120,8 +120,9 @@ class TestOutfitScorerIntegration:
         items = _outfit()
         result = scorer.score(items)
         assert set(result.breakdown.keys()) == {
-            "color_harmony", "color_combination", "silhouette", "preference",
-            "palette_fit", "occasion", "reuse", "weather",
+            "color_harmony", "color_combination", "silhouette", "silhouette_rules",
+            "category_rules", "style_affinity", "preference", "palette_fit",
+            "occasion", "reuse", "weather",
         }
 
     def test_empty_outfit_does_not_crash(self):

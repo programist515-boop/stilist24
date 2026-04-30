@@ -16,7 +16,7 @@ meta:
     version: latest
 
 build:
-  dockerfile: ai-stylist-starter/Dockerfile.prod
+  dockerfile: Dockerfile.prod
 
 run:
   containerPort: 8002
