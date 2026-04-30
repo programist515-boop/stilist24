@@ -51,7 +51,7 @@ check() {
   local pattern="$3"
   local got
   got=$(eval "$cmd" 2>&1)
-  if echo "$got" | grep -qE "$pattern"; then
+  if echo "$got" | grep -qiE "$pattern"; then
     echo "[PASS] $name"
     PASS=$((PASS + 1))
   else
@@ -91,12 +91,12 @@ check "api OPTIONS preflight → 200/204" \
    -H 'Origin: $WEB' \
    -H 'Access-Control-Request-Method: POST' \
    -H 'Access-Control-Request-Headers: content-type' \
-   --max-time 15 $API/auth/sign-in" \
+   --max-time 15 $API/auth/login" \
   '^(200|204)$'
 
 cors_origin_pattern=$(echo "$WEB" | sed 's/\./\\./g')
 check "api Access-Control-Allow-Origin echoes $WEB" \
-  "curl -sSkI -X OPTIONS -H 'Origin: $WEB' -H 'Access-Control-Request-Method: POST' --max-time 15 $API/auth/sign-in" \
+  "curl -sSkI -X OPTIONS -H 'Origin: $WEB' -H 'Access-Control-Request-Method: POST' --max-time 15 $API/auth/login" \
   "Access-Control-Allow-Origin: ($cors_origin_pattern|\\*)"
 
 # Phase 2.10 — Web
