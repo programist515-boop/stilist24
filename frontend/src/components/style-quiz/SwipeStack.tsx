@@ -59,12 +59,19 @@ export function SwipeStack<T extends SwipeStackItem>({
   } | null>(null);
   const [history, setHistory] = useState<SwipeStackVote<T>[]>([]);
 
-  // If the parent swaps the card list (different quiz stage), reset.
+  // Reset only when the *set* of cards actually changes (new quiz stage),
+  // not on every parent re-render. Parents commonly build the array
+  // inline (`candidates.map(...)`), which yields a fresh reference each
+  // render — keying off `[cards]` would clobber `remaining` after every
+  // vote and bring the just-voted card right back, freezing the stack.
+  // The id-string is a stable identity for "this is the same deck".
+  const cardsKey = useMemo(() => cards.map((c) => c.id).join("|"), [cards]);
   useEffect(() => {
     setRemaining(cards);
     setOutgoing(null);
     setHistory([]);
-  }, [cards]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cardsKey]);
 
   const top = remaining[0];
   const visible = useMemo(() => remaining.slice(0, 3), [remaining]);

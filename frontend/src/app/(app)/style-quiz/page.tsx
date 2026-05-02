@@ -534,7 +534,15 @@ function IdentityStockStep({
     );
   }
 
-  const stackCards = candidates.map((c) => ({ ...c, id: c.candidate_id }));
+  // useMemo so the array reference is stable across re-renders triggered
+  // by parent state updates after a vote (counters, mutation flags).
+  // Without it, SwipeStack saw a fresh `cards` prop each render and
+  // reset its internal `remaining`, sending the just-voted card back
+  // to the top — the stack appeared frozen after the first like.
+  const stackCards = useMemo(
+    () => candidates.map((c) => ({ ...c, id: c.candidate_id })),
+    [candidates],
+  );
   const stackDepleted = votedCount >= candidates.length;
 
   return (
@@ -678,7 +686,12 @@ function ColorFamilyStep({
       />
     );
   }
-  const stackCards = candidates.map((c) => ({ ...c, id: c.candidate_id }));
+  // See IdentityStockStep — stable ref required so SwipeStack doesn't
+  // reset its `remaining` queue after every parent re-render.
+  const stackCards = useMemo(
+    () => candidates.map((c) => ({ ...c, id: c.candidate_id })),
+    [candidates],
+  );
   return (
     <div className="space-y-6">
       <SectionHeader
@@ -751,7 +764,12 @@ function ColorSeasonStep({
       />
     );
   }
-  const stackCards = candidates.map((c) => ({ ...c, id: c.candidate_id }));
+  // See IdentityStockStep — stable ref required so SwipeStack doesn't
+  // reset its `remaining` queue after every parent re-render.
+  const stackCards = useMemo(
+    () => candidates.map((c) => ({ ...c, id: c.candidate_id })),
+    [candidates],
+  );
   return (
     <div className="space-y-6">
       <SectionHeader
