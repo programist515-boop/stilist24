@@ -249,13 +249,46 @@ def _top_style_tags(style_vector: dict | None, limit: int = 3) -> list[str]:
     return [tag for _, tag in pairs[:limit]]
 
 
+def _normalize_item(raw: Any) -> dict | None:
+    """Normalise one ``recommended``/``avoid`` entry to ``RecommendationItem``.
+
+    Accepts two YAML shapes for back-compat during the gradual migration
+    to illustrated bullets:
+
+    * **legacy string** — `"Платья с отрезной талией"` → ``{text, slug=None, image_url=None}``
+    * **new dict** — `{text: "...", slug: "...", image: "/..."}` → all fields populated
+
+    The dict form may use ``image`` (YAML-friendly) or ``image_url``;
+    we accept both and emit ``image_url`` to match the schema. Returns
+    ``None`` for empty/invalid entries so callers can ``filter`` them.
+    """
+    if isinstance(raw, str):
+        text = _normalize_fashion_terms(raw.strip())
+        if not text:
+            return None
+        return {"text": text, "slug": None, "image_url": None}
+
+    if isinstance(raw, dict):
+        text = _normalize_fashion_terms(str(raw.get("text") or "").strip())
+        if not text:
+            return None
+        slug_raw = raw.get("slug")
+        slug = str(slug_raw).strip() if slug_raw not in (None, "") else None
+        image_raw = raw.get("image_url") if raw.get("image_url") is not None else raw.get("image")
+        image_url = str(image_raw).strip() if image_raw not in (None, "") else None
+        return {"text": text, "slug": slug, "image_url": image_url}
+
+    # Other types (numbers, bools, None) → drop defensively.
+    return None
+
+
 def _build_sections(raw_sections: list[Any]) -> list[dict]:
     """Normalise the raw YAML sections list into the response shape.
 
     * Reorders by :data:`SECTION_ORDER`; unknown keys go to the end in
       their original order.
-    * Coerces ``recommended`` / ``avoid`` to lists of strings so a
-      YAML typo doesn't leak a non-string into the response.
+    * Coerces ``recommended`` / ``avoid`` entries via :func:`_normalize_item`
+      so both legacy strings and new ``{text, slug, image}`` dicts work.
     * Drops sections without a key or title (defensive).
     """
     if not isinstance(raw_sections, list):
@@ -273,14 +306,14 @@ def _build_sections(raw_sections: list[Any]) -> list[dict]:
             str(entry.get("description") or "").strip()
         )
         recommended = [
-            _normalize_fashion_terms(str(x).strip())
-            for x in (entry.get("recommended") or [])
-            if str(x).strip()
+            item
+            for item in (_normalize_item(x) for x in (entry.get("recommended") or []))
+            if item is not None
         ]
         avoid = [
-            _normalize_fashion_terms(str(x).strip())
-            for x in (entry.get("avoid") or [])
-            if str(x).strip()
+            item
+            for item in (_normalize_item(x) for x in (entry.get("avoid") or []))
+            if item is not None
         ]
         by_key[key] = {
             "key": key,

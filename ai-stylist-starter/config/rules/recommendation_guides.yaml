@@ -17,141 +17,285 @@ recommendation_guides:
           Удлинённые, острые, архитектурные силуэты. Линии должны читаться
           одним непрерывным движением сверху вниз.
         recommended:
-          - "Прямые, узкие, удлинённые силуэты"
-          - "Острые плечи и чёткие лацканы"
-          - "Строгие колонны — платья-футляры, брюки-сигареты, длинные пальто"
-          - "Одна длинная вертикаль — монохром, длинный жакет, высокая посадка"
-          - "Контрастные разрезы и удлиняющие швы"
+          - text: Прямые, узкие, удлинённые силуэты
+            slug: pryamye_uzkie_udlinennye_siluety
+            image: /recommendations/dramatic/lines_silhouette/pryamye_uzkie_udlinennye_siluety.jpg
+          - text: Острые плечи и чёткие лацканы
+            slug: ostrye_plechi_i_chetkie
+            image: /recommendations/dramatic/lines_silhouette/ostrye_plechi_i_chetkie.jpg
+          - text: Строгие колонны — платья-футляры, брюки-сигареты, длинные пальто
+            slug: strogie_kolonny_platya_futlyary
+            image: /recommendations/dramatic/lines_silhouette/strogie_kolonny_platya_futlyary.jpg
+          - text: Одна длинная вертикаль — монохром, длинный жакет, высокая посадка
+            slug: odna_dlinnaya_vertikal_monohrom
+            image: /recommendations/dramatic/lines_silhouette/odna_dlinnaya_vertikal_monohrom.jpg
+          - text: Контрастные разрезы и удлиняющие швы
+            slug: kontrastnye_razrezy_i_udlinyayuschie
+            image: /recommendations/dramatic/lines_silhouette/kontrastnye_razrezy_i_udlinyayuschie.jpg
         avoid:
-          - "Округлые, мягкие, «детские» силуэты"
-          - "Многослойность с мелкими оборками"
-          - "Пышные юбки миди и романтические формы"
-          - "Укороченные куртки с кукольными пропорциями"
+          - text: Округлые, мягкие, «детские» силуэты
+            slug: okruglye_myagkie_detskie_siluety
+            image: /recommendations/dramatic/lines_silhouette/okruglye_myagkie_detskie_siluety.jpg
+          - text: Многослойность с мелкими оборками
+            slug: mnogosloinost_s_melkimi_oborkami
+            image: /recommendations/dramatic/lines_silhouette/mnogosloinost_s_melkimi_oborkami.jpg
+          - text: Пышные юбки миди и романтические формы
+            slug: pyshnye_yubki_midi_i
+            image: /recommendations/dramatic/lines_silhouette/pyshnye_yubki_midi_i.jpg
+          - text: Укороченные куртки с кукольными пропорциями
+            slug: ukorochennye_kurtki_s_kukolnymi
+            image: /recommendations/dramatic/lines_silhouette/ukorochennye_kurtki_s_kukolnymi.jpg
       - key: "necklines"
         title: "Вырезы и горловины"
         description: >-
           Линия выреза должна продолжать вертикаль и подчёркивать длину
           шеи и остроту ключиц.
         recommended:
-          - "V-образный и глубокий V"
-          - "Острый каре с прямыми углами"
-          - "Широкий лодочный при крепкой плечевой линии"
-          - "Высокая стойка в сочетании с открытым декольте спины"
-          - "Асимметричный вырез на одно плечо"
+          - text: V-образный и глубокий V
+            slug: v_obraznyi_i_glubokii
+            image: /recommendations/dramatic/necklines/v_obraznyi_i_glubokii.jpg
+          - text: Острый каре с прямыми углами
+            slug: ostryi_kare_s_pryamymi
+            image: /recommendations/dramatic/necklines/ostryi_kare_s_pryamymi.jpg
+          - text: Широкий лодочный при крепкой плечевой линии
+            slug: shirokii_lodochnyi_pri_krepkoi
+            image: /recommendations/dramatic/necklines/shirokii_lodochnyi_pri_krepkoi.jpg
+          - text: Высокая стойка в сочетании с открытым декольте спины
+            slug: vysokaya_stoika_v_sochetanii
+            image: /recommendations/dramatic/necklines/vysokaya_stoika_v_sochetanii.jpg
+          - text: Асимметричный вырез на одно плечо
+            slug: asimmetrichnyi_vyrez_na_odno
+            image: /recommendations/dramatic/necklines/asimmetrichnyi_vyrez_na_odno.jpg
         avoid:
-          - "Круглый мягкий вырез с рюшами"
-          - "Питер-пэн и мелкие воротнички"
-          - "Горловины с оборками и присборенные волны"
+          - text: Круглый мягкий вырез с рюшами
+            slug: kruglyi_myagkii_vyrez_s
+            image: /recommendations/dramatic/necklines/kruglyi_myagkii_vyrez_s.jpg
+          - text: Питер-пэн и мелкие воротнички
+            slug: piter_pen_i_melkie
+            image: /recommendations/dramatic/necklines/piter_pen_i_melkie.jpg
+          - text: Горловины с оборками и присборенные волны
+            slug: gorloviny_s_oborkami_i
+            image: /recommendations/dramatic/necklines/gorloviny_s_oborkami_i.jpg
       - key: "fabrics"
         title: "Ткани"
         description: >-
           Материалы должны держать форму и давать чёткий блик или
           графичную матовость.
         recommended:
-          - "Габардин, тонкая камвольная шерсть, плотный креп"
-          - "Кожа и эко-кожа с гладкой поверхностью"
-          - "Жаккард с крупным геометрическим рисунком"
-          - "Шёлк-сатин, дюшес, тафта"
-          - "Плотный атлас и полированный хлопок"
+          - text: Габардин, тонкая камвольная шерсть, плотный креп
+            slug: gabardin_tonkaya_kamvolnaya_sherst
+            image: /recommendations/dramatic/fabrics/gabardin_tonkaya_kamvolnaya_sherst.jpg
+          - text: Кожа и эко-кожа с гладкой поверхностью
+            slug: kozha_i_eko_kozha
+            image: /recommendations/dramatic/fabrics/kozha_i_eko_kozha.jpg
+          - text: Жаккард с крупным геометрическим рисунком
+            slug: zhakkard_s_krupnym_geometricheskim
+            image: /recommendations/dramatic/fabrics/zhakkard_s_krupnym_geometricheskim.jpg
+          - text: Шёлк-сатин, дюшес, тафта
+            slug: shelk_satin_dyushes_tafta
+            image: /recommendations/dramatic/fabrics/shelk_satin_dyushes_tafta.jpg
+          - text: Плотный атлас и полированный хлопок
+            slug: plotnyi_atlas_i_polirovannyi
+            image: /recommendations/dramatic/fabrics/plotnyi_atlas_i_polirovannyi.jpg
         avoid:
-          - "Букле, вязаный пух, ворсистый твид"
-          - "Мягкий кашемир без структуры"
-          - "Хлопковая марля и лёгкий муслин"
-          - "Шифон с мелкой оборкой"
+          - text: Букле, вязаный пух, ворсистый твид
+            slug: bukle_vyazanyi_puh_vorsistyi
+            image: /recommendations/dramatic/fabrics/bukle_vyazanyi_puh_vorsistyi.jpg
+          - text: Мягкий кашемир без структуры
+            slug: myagkii_kashemir_bez_struktury
+            image: /recommendations/dramatic/fabrics/myagkii_kashemir_bez_struktury.jpg
+          - text: Хлопковая марля и лёгкий муслин
+            slug: hlopkovaya_marlya_i_legkii
+            image: /recommendations/dramatic/fabrics/hlopkovaya_marlya_i_legkii.jpg
+          - text: Шифон с мелкой оборкой
+            slug: shifon_s_melkoi_oborkoi
+            image: /recommendations/dramatic/fabrics/shifon_s_melkoi_oborkoi.jpg
       - key: "textures"
         title: "Фактуры"
         description: >-
           Фактура работает на вас, когда она графична и даёт свет, а не
           пушистость.
         recommended:
-          - "Гладкие полированные поверхности"
-          - "Блестящая кожа, патент, металлик"
-          - "Крупный рельеф с чёткими линиями"
+          - text: Гладкие полированные поверхности
+            slug: gladkie_polirovannye_poverhnosti
+            image: /recommendations/dramatic/textures/gladkie_polirovannye_poverhnosti.jpg
+          - text: Блестящая кожа, патент, металлик
+            slug: blestyaschaya_kozha_patent_metallik
+            image: /recommendations/dramatic/textures/blestyaschaya_kozha_patent_metallik.jpg
+          - text: Крупный рельеф с чёткими линиями
+            slug: krupnyi_relef_s_chetkimi
+            image: /recommendations/dramatic/textures/krupnyi_relef_s_chetkimi.jpg
         avoid:
-          - "Мохер, ангора, пушистые трикотажи"
-          - "Мятые, случайные, «домашние» фактуры"
-          - "Мелкий декоративный ворс"
+          - text: Мохер, ангора, пушистые трикотажи
+            slug: moher_angora_pushistye_trikotazhi
+            image: /recommendations/dramatic/textures/moher_angora_pushistye_trikotazhi.jpg
+          - text: Мятые, случайные, «домашние» фактуры
+            slug: myatye_sluchainye_domashnie_faktury
+            image: /recommendations/dramatic/textures/myatye_sluchainye_domashnie_faktury.jpg
+          - text: Мелкий декоративный ворс
+            slug: melkii_dekorativnyi_vors
+            image: /recommendations/dramatic/textures/melkii_dekorativnyi_vors.jpg
       - key: "prints"
         title: "Принты"
         description: >-
           Принт — это ещё одна линия. Работают крупные, графичные и
           контрастные мотивы.
         recommended:
-          - "Крупная геометрия и полоса"
-          - "Абстрактные мазки большого масштаба"
-          - "Контрастный анималистический принт"
-          - "Строгая клетка виндзор или глен"
+          - text: Крупная геометрия и полоса
+            slug: krupnaya_geometriya_i_polosa
+            image: /recommendations/dramatic/prints/krupnaya_geometriya_i_polosa.jpg
+          - text: Абстрактные мазки большого масштаба
+            slug: abstraktnye_mazki_bolshogo_masshtaba
+            image: /recommendations/dramatic/prints/abstraktnye_mazki_bolshogo_masshtaba.jpg
+          - text: Контрастный анималистический принт
+            slug: kontrastnyi_animalisticheskii_print
+            image: /recommendations/dramatic/prints/kontrastnyi_animalisticheskii_print.jpg
+          - text: Строгая клетка виндзор или глен
+            slug: strogaya_kletka_vindzor_ili
+            image: /recommendations/dramatic/prints/strogaya_kletka_vindzor_ili.jpg
         avoid:
-          - "Мелкий цветочек и горошек"
-          - "Акварельные растяжки без чёткой формы"
-          - "Сладкие пейсли с мелким узором"
+          - text: Мелкий цветочек и горошек
+            slug: melkii_tsvetochek_i_goroshek
+            image: /recommendations/dramatic/prints/melkii_tsvetochek_i_goroshek.jpg
+          - text: Акварельные растяжки без чёткой формы
+            slug: akvarelnye_rastyazhki_bez_chetkoi
+            image: /recommendations/dramatic/prints/akvarelnye_rastyazhki_bez_chetkoi.jpg
+          - text: Сладкие пейсли с мелким узором
+            slug: sladkie_peisli_s_melkim
+            image: /recommendations/dramatic/prints/sladkie_peisli_s_melkim.jpg
       - key: "details"
         title: "Детали и декор"
         description: >-
           Детали — точечные и крупные. Меньше элементов, но каждый
           читается.
         recommended:
-          - "Острые металлические элементы"
-          - "Крупные пуговицы и массивная фурнитура"
-          - "Чёткие складки и стрелки"
-          - "Графичные лацканы и прямые манжеты"
+          - text: Острые металлические элементы
+            slug: ostrye_metallicheskie_elementy
+            image: /recommendations/dramatic/details/ostrye_metallicheskie_elementy.jpg
+          - text: Крупные пуговицы и массивная фурнитура
+            slug: krupnye_pugovitsy_i_massivnaya
+            image: /recommendations/dramatic/details/krupnye_pugovitsy_i_massivnaya.jpg
+          - text: Чёткие складки и стрелки
+            slug: chetkie_skladki_i_strelki
+            image: /recommendations/dramatic/details/chetkie_skladki_i_strelki.jpg
+          - text: Графичные лацканы и прямые манжеты
+            slug: grafichnye_latskany_i_pryamye
+            image: /recommendations/dramatic/details/grafichnye_latskany_i_pryamye.jpg
         avoid:
-          - "Бантики, рюши, оборки"
-          - "Мелкая вышивка и бисер"
-          - "Милая фурнитура в кукольном стиле"
+          - text: Бантики, рюши, оборки
+            slug: bantiki_ryushi_oborki
+            image: /recommendations/dramatic/details/bantiki_ryushi_oborki.jpg
+          - text: Мелкая вышивка и бисер
+            slug: melkaya_vyshivka_i_biser
+            image: /recommendations/dramatic/details/melkaya_vyshivka_i_biser.jpg
+          - text: Милая фурнитура в кукольном стиле
+            slug: milaya_furnitura_v_kukolnom
+            image: /recommendations/dramatic/details/milaya_furnitura_v_kukolnom.jpg
       - key: "jackets"
         title: "Жакеты и верхняя одежда"
         description: >-
           Верх должен удлинять фигуру и держать плечо. Длина — либо
           точно по талии, либо заметно ниже бёдер.
         recommended:
-          - "Длинное прямое пальто до середины голени"
-          - "Удлинённый блейзер с острыми плечами"
-          - "Тренч с поясом и чёткой линией плеча"
-          - "Кожаный байкер с архитектурными швами"
-          - "Двубортный жакет с удлинённым силуэтом"
+          - text: Длинное прямое пальто до середины голени
+            slug: dlinnoe_pryamoe_palto_do
+            image: /recommendations/dramatic/jackets/dlinnoe_pryamoe_palto_do.jpg
+          - text: Удлинённый блейзер с острыми плечами
+            slug: udlinennyi_bleizer_s_ostrymi
+            image: /recommendations/dramatic/jackets/udlinennyi_bleizer_s_ostrymi.jpg
+          - text: Тренч с поясом и чёткой линией плеча
+            slug: trench_s_poyasom_i
+            image: /recommendations/dramatic/jackets/trench_s_poyasom_i.jpg
+          - text: Кожаный байкер с архитектурными швами
+            slug: kozhanyi_baiker_s_arhitekturnymi
+            image: /recommendations/dramatic/jackets/kozhanyi_baiker_s_arhitekturnymi.jpg
+          - text: Двубортный жакет с удлинённым силуэтом
+            slug: dvubortnyi_zhaket_s_udlinennym
+            image: /recommendations/dramatic/jackets/dvubortnyi_zhaket_s_udlinennym.jpg
         avoid:
-          - "Укороченные пуховики с объёмными подушками"
-          - "Мягкие кардиганы без плечевой линии"
-          - "Тедди-куртки и пушистая верхняя одежда"
+          - text: Укороченные пуховики с объёмными подушками
+            slug: ukorochennye_puhoviki_s_obemnymi
+            image: /recommendations/dramatic/jackets/ukorochennye_puhoviki_s_obemnymi.jpg
+          - text: Мягкие кардиганы без плечевой линии
+            slug: myagkie_kardigany_bez_plechevoi
+            image: /recommendations/dramatic/jackets/myagkie_kardigany_bez_plechevoi.jpg
+          - text: Тедди-куртки и пушистая верхняя одежда
+            slug: teddi_kurtki_i_pushistaya
+            image: /recommendations/dramatic/jackets/teddi_kurtki_i_pushistaya.jpg
       - key: "tops"
         title: "Верх — рубашки, блузы, топы"
         description: >-
           Верх работает на длину шеи и линию плеча. Никаких милых
           деталей у лица.
         recommended:
-          - "Рубашка с острым воротником"
-          - "Шёлковая блуза с V-вырезом"
-          - "Водолазка из гладкого трикотажа"
-          - "Боди с чёткой горловиной"
-          - "Топ-корсет с прямой линией"
+          - text: Рубашка с острым воротником
+            slug: rubashka_s_ostrym_vorotnikom
+            image: /recommendations/dramatic/tops/rubashka_s_ostrym_vorotnikom.jpg
+          - text: Шёлковая блуза с V-вырезом
+            slug: shelkovaya_bluza_s_v
+            image: /recommendations/dramatic/tops/shelkovaya_bluza_s_v.jpg
+          - text: Водолазка из гладкого трикотажа
+            slug: vodolazka_iz_gladkogo_trikotazha
+            image: /recommendations/dramatic/tops/vodolazka_iz_gladkogo_trikotazha.jpg
+          - text: Боди с чёткой горловиной
+            slug: bodi_s_chetkoi_gorlovinoi
+            image: /recommendations/dramatic/tops/bodi_s_chetkoi_gorlovinoi.jpg
+          - text: Топ-корсет с прямой линией
+            slug: top_korset_s_pryamoi
+            image: /recommendations/dramatic/tops/top_korset_s_pryamoi.jpg
         avoid:
-          - "Блузы с бантами и оборками"
-          - "Топы с пышными рукавами"
-          - "Рубашки с мелкой оборкой по планке"
+          - text: Блузы с бантами и оборками
+            slug: bluzy_s_bantami_i
+            image: /recommendations/dramatic/tops/bluzy_s_bantami_i.jpg
+          - text: Топы с пышными рукавами
+            slug: topy_s_pyshnymi_rukavami
+            image: /recommendations/dramatic/tops/topy_s_pyshnymi_rukavami.jpg
+          - text: Рубашки с мелкой оборкой по планке
+            slug: rubashki_s_melkoi_oborkoi
+            image: /recommendations/dramatic/tops/rubashki_s_melkoi_oborkoi.jpg
       - key: "emphasize"
         title: "На чём делать акцент"
         description: >-
           Подчёркивайте то, что даёт драматическая природа — длину,
           остроту и вертикаль.
         recommended:
-          - "Длина линий — от плеча до пола"
-          - "Острые скулы и ключицы"
-          - "Высокая посадка и удлинённые ноги"
-          - "Чёткая линия плеч"
+          - text: Длина линий — от плеча до пола
+            slug: dlina_linii_ot_plecha
+            image: /recommendations/dramatic/emphasize/dlina_linii_ot_plecha.jpg
+          - text: Острые скулы и ключицы
+            slug: ostrye_skuly_i_klyuchitsy
+            image: /recommendations/dramatic/emphasize/ostrye_skuly_i_klyuchitsy.jpg
+          - text: Высокая посадка и удлинённые ноги
+            slug: vysokaya_posadka_i_udlinennye
+            image: /recommendations/dramatic/emphasize/vysokaya_posadka_i_udlinennye.jpg
+          - text: Чёткая линия плеч
+            slug: chetkaya_liniya_plech
+            image: /recommendations/dramatic/emphasize/chetkaya_liniya_plech.jpg
         avoid:
-          - "Округление форм"
-          - "Мелкое дробление фигуры поясами и ярусами"
+          - text: Округление форм
+            slug: okruglenie_form
+            image: /recommendations/dramatic/emphasize/okruglenie_form.jpg
+          - text: Мелкое дробление фигуры поясами и ярусами
+            slug: melkoe_droblenie_figury_poyasami
+            image: /recommendations/dramatic/emphasize/melkoe_droblenie_figury_poyasami.jpg
       - key: "avoid_overall"
         title: "Чего избегать в целом"
         description: >-
           Общие правила — они важнее любой отдельной вещи.
         recommended: []
         avoid:
-          - "Мягкая романтика и пастельная нежность"
-          - "Мелкие детские детали"
-          - "Оверсайз без архитектуры"
-          - "Пушистые фактуры и случайная многослойность"
+          - text: Мягкая романтика и пастельная нежность
+            slug: myagkaya_romantika_i_pastelnaya
+            image: /recommendations/dramatic/avoid_overall/myagkaya_romantika_i_pastelnaya.jpg
+          - text: Мелкие детские детали
+            slug: melkie_detskie_detali
+            image: /recommendations/dramatic/avoid_overall/melkie_detskie_detali.jpg
+          - text: Оверсайз без архитектуры
+            slug: oversaiz_bez_arhitektury
+            image: /recommendations/dramatic/avoid_overall/oversaiz_bez_arhitektury.jpg
+          - text: Пушистые фактуры и случайная многослойность
+            slug: pushistye_faktury_i_sluchainaya
+            image: /recommendations/dramatic/avoid_overall/pushistye_faktury_i_sluchainaya.jpg
   natural:
     style_key: "Ширина, непринуждённость, матовая фактура"
     summary: >-
@@ -169,137 +313,281 @@ recommendation_guides:
           Широкие, свободные, чуть «размытые» линии. Силуэт читается как
           мягкая геометрия — не слишком острая, не слишком округлая.
         recommended:
-          - "Прямые и чуть трапециевидные силуэты"
-          - "Свободные брюки с лёгким заломом"
-          - "Длинные рубашки-платья"
-          - "Оверсайз жакеты и мягкие плечи"
-          - "Удлинённые туники"
+          - text: Прямые и чуть трапециевидные силуэты
+            slug: pryamye_i_chut_trapetsievidnye
+            image: /recommendations/natural/lines_silhouette/pryamye_i_chut_trapetsievidnye.jpg
+          - text: Свободные брюки с лёгким заломом
+            slug: svobodnye_bryuki_s_legkim
+            image: /recommendations/natural/lines_silhouette/svobodnye_bryuki_s_legkim.jpg
+          - text: Длинные рубашки-платья
+            slug: dlinnye_rubashki_platya
+            image: /recommendations/natural/lines_silhouette/dlinnye_rubashki_platya.jpg
+          - text: Оверсайз жакеты и мягкие плечи
+            slug: oversaiz_zhakety_i_myagkie
+            image: /recommendations/natural/lines_silhouette/oversaiz_zhakety_i_myagkie.jpg
+          - text: Удлинённые туники
+            slug: udlinennye_tuniki
+            image: /recommendations/natural/lines_silhouette/udlinennye_tuniki.jpg
         avoid:
-          - "Слишком притянутые фигуре силуэты"
-          - "Очень острые, жёсткие линии"
-          - "Миниатюрные пропорции и «кукольные» образы"
+          - text: Слишком притянутые фигуре силуэты
+            slug: slishkom_prityanutye_figure_siluety
+            image: /recommendations/natural/lines_silhouette/slishkom_prityanutye_figure_siluety.jpg
+          - text: Очень острые, жёсткие линии
+            slug: ochen_ostrye_zhestkie_linii
+            image: /recommendations/natural/lines_silhouette/ochen_ostrye_zhestkie_linii.jpg
+          - text: Миниатюрные пропорции и «кукольные» образы
+            slug: miniatyurnye_proportsii_i_kukolnye
+            image: /recommendations/natural/lines_silhouette/miniatyurnye_proportsii_i_kukolnye.jpg
       - key: "necklines"
         title: "Вырезы и горловины"
         description: >-
           Вырез должен быть простым и немного небрежным — как будто
           линия сложилась сама.
         recommended:
-          - "Широкий V-вырез"
-          - "Лодочка с мягкой линией"
-          - "Хенли с несколькими пуговицами"
-          - "Распахнутая рубашка с открытой ключицей"
-          - "Слегка растянутый ворот футболки"
+          - text: Широкий V-вырез
+            slug: shirokii_v_vyrez
+            image: /recommendations/natural/necklines/shirokii_v_vyrez.jpg
+          - text: Лодочка с мягкой линией
+            slug: lodochka_s_myagkoi_liniei
+            image: /recommendations/natural/necklines/lodochka_s_myagkoi_liniei.jpg
+          - text: Хенли с несколькими пуговицами
+            slug: henli_s_neskolkimi_pugovitsami
+            image: /recommendations/natural/necklines/henli_s_neskolkimi_pugovitsami.jpg
+          - text: Распахнутая рубашка с открытой ключицей
+            slug: raspahnutaya_rubashka_s_otkrytoi
+            image: /recommendations/natural/necklines/raspahnutaya_rubashka_s_otkrytoi.jpg
+          - text: Слегка растянутый ворот футболки
+            slug: slegka_rastyanutyi_vorot_futbolki
+            image: /recommendations/natural/necklines/slegka_rastyanutyi_vorot_futbolki.jpg
         avoid:
-          - "Сложные воротники с декором"
-          - "Жёстко стоящие стойки"
-          - "Вырезы с бантами и оборками"
+          - text: Сложные воротники с декором
+            slug: slozhnye_vorotniki_s_dekorom
+            image: /recommendations/natural/necklines/slozhnye_vorotniki_s_dekorom.jpg
+          - text: Жёстко стоящие стойки
+            slug: zhestko_stoyaschie_stoiki
+            image: /recommendations/natural/necklines/zhestko_stoyaschie_stoiki.jpg
+          - text: Вырезы с бантами и оборками
+            slug: vyrezy_s_bantami_i
+            image: /recommendations/natural/necklines/vyrezy_s_bantami_i.jpg
       - key: "fabrics"
         title: "Ткани"
         description: >-
           Натуральные матовые материалы — с ощущением текстуры и веса.
         recommended:
-          - "Лён и льняные смеси"
-          - "Мягкая хлопковая саржа"
-          - "Грубая шерсть и твид"
-          - "Замша и матовая кожа"
-          - "Шамбре и плотный хлопок"
+          - text: Лён и льняные смеси
+            slug: len_i_lnyanye_smesi
+            image: /recommendations/natural/fabrics/len_i_lnyanye_smesi.jpg
+          - text: Мягкая хлопковая саржа
+            slug: myagkaya_hlopkovaya_sarzha
+            image: /recommendations/natural/fabrics/myagkaya_hlopkovaya_sarzha.jpg
+          - text: Грубая шерсть и твид
+            slug: grubaya_sherst_i_tvid
+            image: /recommendations/natural/fabrics/grubaya_sherst_i_tvid.jpg
+          - text: Замша и матовая кожа
+            slug: zamsha_i_matovaya_kozha
+            image: /recommendations/natural/fabrics/zamsha_i_matovaya_kozha.jpg
+          - text: Шамбре и плотный хлопок
+            slug: shambre_i_plotnyi_hlopok
+            image: /recommendations/natural/fabrics/shambre_i_plotnyi_hlopok.jpg
         avoid:
-          - "Жёсткий глянец и патент"
-          - "Тонкий шёлк и шифон"
-          - "Острый креп с чёткой формой"
+          - text: Жёсткий глянец и патент
+            slug: zhestkii_glyanets_i_patent
+            image: /recommendations/natural/fabrics/zhestkii_glyanets_i_patent.jpg
+          - text: Тонкий шёлк и шифон
+            slug: tonkii_shelk_i_shifon
+            image: /recommendations/natural/fabrics/tonkii_shelk_i_shifon.jpg
+          - text: Острый креп с чёткой формой
+            slug: ostryi_krep_s_chetkoi
+            image: /recommendations/natural/fabrics/ostryi_krep_s_chetkoi.jpg
       - key: "textures"
         title: "Фактуры"
         description: >-
           Ваша тема — осязаемая, честная фактура. Она должна читаться
           глазом и рукой.
         recommended:
-          - "Букле, твид, вязаная шерсть"
-          - "Замша, нубук, матовая кожа"
-          - "Лён с видимой нитью"
-          - "Плетёные, крафтовые фактуры"
+          - text: Букле, твид, вязаная шерсть
+            slug: bukle_tvid_vyazanaya_sherst
+            image: /recommendations/natural/textures/bukle_tvid_vyazanaya_sherst.jpg
+          - text: Замша, нубук, матовая кожа
+            slug: zamsha_nubuk_matovaya_kozha
+            image: /recommendations/natural/textures/zamsha_nubuk_matovaya_kozha.jpg
+          - text: Лён с видимой нитью
+            slug: len_s_vidimoi_nityu
+            image: /recommendations/natural/textures/len_s_vidimoi_nityu.jpg
+          - text: Плетёные, крафтовые фактуры
+            slug: pletenye_kraftovye_faktury
+            image: /recommendations/natural/textures/pletenye_kraftovye_faktury.jpg
         avoid:
-          - "Зеркальный глянец"
-          - "Стерильно гладкая полированная ткань"
-          - "Мелкий блестящий декор"
+          - text: Зеркальный глянец
+            slug: zerkalnyi_glyanets
+            image: /recommendations/natural/textures/zerkalnyi_glyanets.jpg
+          - text: Стерильно гладкая полированная ткань
+            slug: sterilno_gladkaya_polirovannaya_tkan
+            image: /recommendations/natural/textures/sterilno_gladkaya_polirovannaya_tkan.jpg
+          - text: Мелкий блестящий декор
+            slug: melkii_blestyaschii_dekor
+            image: /recommendations/natural/textures/melkii_blestyaschii_dekor.jpg
       - key: "prints"
         title: "Принты"
         description: >-
           Принты работают, когда они «органичные» — как если бы рисунок
           вырос сам.
         recommended:
-          - "Крупная естественная клетка"
-          - "Ботанические и растительные мотивы"
-          - "Этнические и племенные узоры"
-          - "Выцветшие пятна тай-дай"
-          - "Натуральные разводы"
+          - text: Крупная естественная клетка
+            slug: krupnaya_estestvennaya_kletka
+            image: /recommendations/natural/prints/krupnaya_estestvennaya_kletka.jpg
+          - text: Ботанические и растительные мотивы
+            slug: botanicheskie_i_rastitelnye_motivy
+            image: /recommendations/natural/prints/botanicheskie_i_rastitelnye_motivy.jpg
+          - text: Этнические и племенные узоры
+            slug: etnicheskie_i_plemennye_uzory
+            image: /recommendations/natural/prints/etnicheskie_i_plemennye_uzory.jpg
+          - text: Выцветшие пятна тай-дай
+            slug: vytsvetshie_pyatna_tai_dai
+            image: /recommendations/natural/prints/vytsvetshie_pyatna_tai_dai.jpg
+          - text: Натуральные разводы
+            slug: naturalnye_razvody
+            image: /recommendations/natural/prints/naturalnye_razvody.jpg
         avoid:
-          - "Геометрия в стиле оп-арт"
-          - "Слишком правильный узор"
-          - "Мелкий сладкий цветочек"
+          - text: Геометрия в стиле оп-арт
+            slug: geometriya_v_stile_op
+            image: /recommendations/natural/prints/geometriya_v_stile_op.jpg
+          - text: Слишком правильный узор
+            slug: slishkom_pravilnyi_uzor
+            image: /recommendations/natural/prints/slishkom_pravilnyi_uzor.jpg
+          - text: Мелкий сладкий цветочек
+            slug: melkii_sladkii_tsvetochek
+            image: /recommendations/natural/prints/melkii_sladkii_tsvetochek.jpg
       - key: "details"
         title: "Детали и декор"
         description: >-
           Минимум декоративного — максимум функционального.
         recommended:
-          - "Крупные накладные карманы"
-          - "Деревянные и роговые пуговицы"
-          - "Кожаные ремни с простой пряжкой"
-          - "Видимые швы и кант"
+          - text: Крупные накладные карманы
+            slug: krupnye_nakladnye_karmany
+            image: /recommendations/natural/details/krupnye_nakladnye_karmany.jpg
+          - text: Деревянные и роговые пуговицы
+            slug: derevyannye_i_rogovye_pugovitsy
+            image: /recommendations/natural/details/derevyannye_i_rogovye_pugovitsy.jpg
+          - text: Кожаные ремни с простой пряжкой
+            slug: kozhanye_remni_s_prostoi
+            image: /recommendations/natural/details/kozhanye_remni_s_prostoi.jpg
+          - text: Видимые швы и кант
+            slug: vidimye_shvy_i_kant
+            image: /recommendations/natural/details/vidimye_shvy_i_kant.jpg
         avoid:
-          - "Мелкая вышивка и стразы"
-          - "Декоративные бантики"
-          - "Жёстко симметричные элементы"
+          - text: Мелкая вышивка и стразы
+            slug: melkaya_vyshivka_i_strazy
+            image: /recommendations/natural/details/melkaya_vyshivka_i_strazy.jpg
+          - text: Декоративные бантики
+            slug: dekorativnye_bantiki
+            image: /recommendations/natural/details/dekorativnye_bantiki.jpg
+          - text: Жёстко симметричные элементы
+            slug: zhestko_simmetrichnye_elementy
+            image: /recommendations/natural/details/zhestko_simmetrichnye_elementy.jpg
       - key: "jackets"
         title: "Жакеты и верхняя одежда"
         description: >-
           Верх держит плечо, но не зажимает фигуру. Длина — средняя или
           удлинённая.
         recommended:
-          - "Блейзер-оверсайз из твида"
-          - "Кожаный или замшевый бомбер"
-          - "Тренч со свободным плечом"
-          - "Парка с накладными карманами"
-          - "Кардиган-пальто крупной вязки"
+          - text: Блейзер-оверсайз из твида
+            slug: bleizer_oversaiz_iz_tvida
+            image: /recommendations/natural/jackets/bleizer_oversaiz_iz_tvida.jpg
+          - text: Кожаный или замшевый бомбер
+            slug: kozhanyi_ili_zamshevyi_bomber
+            image: /recommendations/natural/jackets/kozhanyi_ili_zamshevyi_bomber.jpg
+          - text: Тренч со свободным плечом
+            slug: trench_so_svobodnym_plechom
+            image: /recommendations/natural/jackets/trench_so_svobodnym_plechom.jpg
+          - text: Парка с накладными карманами
+            slug: parka_s_nakladnymi_karmanami
+            image: /recommendations/natural/jackets/parka_s_nakladnymi_karmanami.jpg
+          - text: Кардиган-пальто крупной вязки
+            slug: kardigan_palto_krupnoi_vyazki
+            image: /recommendations/natural/jackets/kardigan_palto_krupnoi_vyazki.jpg
         avoid:
-          - "Жёстко структурированный пиджак с подкладкой"
-          - "Короткие приталенные куртки"
-          - "Блестящие пуховики"
+          - text: Жёстко структурированный пиджак с подкладкой
+            slug: zhestko_strukturirovannyi_pidzhak_s
+            image: /recommendations/natural/jackets/zhestko_strukturirovannyi_pidzhak_s.jpg
+          - text: Короткие приталенные куртки
+            slug: korotkie_pritalennye_kurtki
+            image: /recommendations/natural/jackets/korotkie_pritalennye_kurtki.jpg
+          - text: Блестящие пуховики
+            slug: blestyaschie_puhoviki
+            image: /recommendations/natural/jackets/blestyaschie_puhoviki.jpg
       - key: "tops"
         title: "Верх — рубашки, блузы, топы"
         description: >-
           Верх должен дышать и давать лёгкое движение.
         recommended:
-          - "Льняная рубашка свободного кроя"
-          - "Хлопковая майка с бельевой бретелью"
-          - "Мягкая водолазка тонкой вязки"
-          - "Рубашка-оверсайз"
-          - "Простая футболка качественного хлопка"
+          - text: Льняная рубашка свободного кроя
+            slug: lnyanaya_rubashka_svobodnogo_kroya
+            image: /recommendations/natural/tops/lnyanaya_rubashka_svobodnogo_kroya.jpg
+          - text: Хлопковая майка с бельевой бретелью
+            slug: hlopkovaya_maika_s_belevoi
+            image: /recommendations/natural/tops/hlopkovaya_maika_s_belevoi.jpg
+          - text: Мягкая водолазка тонкой вязки
+            slug: myagkaya_vodolazka_tonkoi_vyazki
+            image: /recommendations/natural/tops/myagkaya_vodolazka_tonkoi_vyazki.jpg
+          - text: Рубашка-оверсайз
+            slug: rubashka_oversaiz
+            image: /recommendations/natural/tops/rubashka_oversaiz.jpg
+          - text: Простая футболка качественного хлопка
+            slug: prostaya_futbolka_kachestvennogo_hlopka
+            image: /recommendations/natural/tops/prostaya_futbolka_kachestvennogo_hlopka.jpg
         avoid:
-          - "Строгие блузы с жабо"
-          - "Топы с пышным рукавом и бантами"
-          - "Жёсткие корсетные верхи"
+          - text: Строгие блузы с жабо
+            slug: strogie_bluzy_s_zhabo
+            image: /recommendations/natural/tops/strogie_bluzy_s_zhabo.jpg
+          - text: Топы с пышным рукавом и бантами
+            slug: topy_s_pyshnym_rukavom
+            image: /recommendations/natural/tops/topy_s_pyshnym_rukavom.jpg
+          - text: Жёсткие корсетные верхи
+            slug: zhestkie_korsetnye_verhi
+            image: /recommendations/natural/tops/zhestkie_korsetnye_verhi.jpg
       - key: "emphasize"
         title: "На чём делать акцент"
         description: >-
           Используйте свою открытую линию плеч и естественный рост.
         recommended:
-          - "Лёгкость движения"
-          - "Длина ноги в прямых брюках"
-          - "Открытая ключица и плечо"
-          - "Матовая естественная кожа"
+          - text: Лёгкость движения
+            slug: legkost_dvizheniya
+            image: /recommendations/natural/emphasize/legkost_dvizheniya.jpg
+          - text: Длина ноги в прямых брюках
+            slug: dlina_nogi_v_pryamyh
+            image: /recommendations/natural/emphasize/dlina_nogi_v_pryamyh.jpg
+          - text: Открытая ключица и плечо
+            slug: otkrytaya_klyuchitsa_i_plecho
+            image: /recommendations/natural/emphasize/otkrytaya_klyuchitsa_i_plecho.jpg
+          - text: Матовая естественная кожа
+            slug: matovaya_estestvennaya_kozha
+            image: /recommendations/natural/emphasize/matovaya_estestvennaya_kozha.jpg
         avoid:
-          - "Жёсткая симметрия"
-          - "Мелкое дробление фигуры поясами на талии"
+          - text: Жёсткая симметрия
+            slug: zhestkaya_simmetriya
+            image: /recommendations/natural/emphasize/zhestkaya_simmetriya.jpg
+          - text: Мелкое дробление фигуры поясами на талии
+            slug: melkoe_droblenie_figury_poyasami
+            image: /recommendations/natural/emphasize/melkoe_droblenie_figury_poyasami.jpg
       - key: "avoid_overall"
         title: "Чего избегать в целом"
         description: >-
           Натуральной противопоказано всё слишком «застёгнутое».
         recommended: []
         avoid:
-          - "Жёсткий кутюрный крой"
-          - "Глянец и лак"
-          - "Милые кукольные детали"
-          - "Плотно облегающие силуэты"
+          - text: Жёсткий кутюрный крой
+            slug: zhestkii_kutyurnyi_kroi
+            image: /recommendations/natural/avoid_overall/zhestkii_kutyurnyi_kroi.jpg
+          - text: Глянец и лак
+            slug: glyanets_i_lak
+            image: /recommendations/natural/avoid_overall/glyanets_i_lak.jpg
+          - text: Милые кукольные детали
+            slug: milye_kukolnye_detali
+            image: /recommendations/natural/avoid_overall/milye_kukolnye_detali.jpg
+          - text: Плотно облегающие силуэты
+            slug: plotno_oblegayuschie_siluety
+            image: /recommendations/natural/avoid_overall/plotno_oblegayuschie_siluety.jpg
   classic:
     style_key: "Баланс, симметрия, умеренность"
     summary: >-
@@ -318,133 +606,275 @@ recommendation_guides:
           Сбалансированные, симметричные, полированные силуэты. Ничего
           экстремального — ни в объёме, ни в крое.
         recommended:
-          - "Прямые силуэты с лёгкой приталенностью"
-          - "Платье-футляр миди"
-          - "Костюм-двойка классического кроя"
-          - "Пальто до колена с чистой линией"
-          - "Юбка-карандаш"
+          - text: Прямые силуэты с лёгкой приталенностью
+            slug: pryamye_siluety_s_legkoi
+            image: /recommendations/classic/lines_silhouette/pryamye_siluety_s_legkoi.jpg
+          - text: Платье-футляр миди
+            slug: plate_futlyar_midi
+            image: /recommendations/classic/lines_silhouette/plate_futlyar_midi.jpg
+          - text: Костюм-двойка классического кроя
+            slug: kostyum_dvoika_klassicheskogo_kroya
+            image: /recommendations/classic/lines_silhouette/kostyum_dvoika_klassicheskogo_kroya.jpg
+          - text: Пальто до колена с чистой линией
+            slug: palto_do_kolena_s
+            image: /recommendations/classic/lines_silhouette/palto_do_kolena_s.jpg
+          - text: Юбка-карандаш
+            slug: yubka_karandash
+            image: /recommendations/classic/lines_silhouette/yubka_karandash.jpg
         avoid:
-          - "Радикальный оверсайз"
-          - "Ультра-острая архитектура"
-          - "Экстремально короткие или драпированные формы"
+          - text: Радикальный оверсайз
+            slug: radikalnyi_oversaiz
+            image: /recommendations/classic/lines_silhouette/radikalnyi_oversaiz.jpg
+          - text: Ультра-острая архитектура
+            slug: ultra_ostraya_arhitektura
+            image: /recommendations/classic/lines_silhouette/ultra_ostraya_arhitektura.jpg
+          - text: Экстремально короткие или драпированные формы
+            slug: ekstremalno_korotkie_ili_drapirovannye
+            image: /recommendations/classic/lines_silhouette/ekstremalno_korotkie_ili_drapirovannye.jpg
       - key: "necklines"
         title: "Вырезы и горловины"
         description: >-
           Вырез — симметричный и умеренный. Никаких смещений и
           асимметрии.
         recommended:
-          - "Умеренный V-вырез"
-          - "Классический круглый вырез"
-          - "Рубашечный воротник"
-          - "Лодочка средней ширины"
-          - "Округлый вырез умеренной глубины"
+          - text: Умеренный V-вырез
+            slug: umerennyi_v_vyrez
+            image: /recommendations/classic/necklines/umerennyi_v_vyrez.jpg
+          - text: Классический круглый вырез
+            slug: klassicheskii_kruglyi_vyrez
+            image: /recommendations/classic/necklines/klassicheskii_kruglyi_vyrez.jpg
+          - text: Рубашечный воротник
+            slug: rubashechnyi_vorotnik
+            image: /recommendations/classic/necklines/rubashechnyi_vorotnik.jpg
+          - text: Лодочка средней ширины
+            slug: lodochka_srednei_shiriny
+            image: /recommendations/classic/necklines/lodochka_srednei_shiriny.jpg
+          - text: Округлый вырез умеренной глубины
+            slug: okruglyi_vyrez_umerennoi_glubiny
+            image: /recommendations/classic/necklines/okruglyi_vyrez_umerennoi_glubiny.jpg
         avoid:
-          - "Ассиметричные вырезы"
-          - "Глубокое декольте"
-          - "Сложные декоративные воротники"
+          - text: Ассиметричные вырезы
+            slug: assimetrichnye_vyrezy
+            image: /recommendations/classic/necklines/assimetrichnye_vyrezy.jpg
+          - text: Глубокое декольте
+            slug: glubokoe_dekolte
+            image: /recommendations/classic/necklines/glubokoe_dekolte.jpg
+          - text: Сложные декоративные воротники
+            slug: slozhnye_dekorativnye_vorotniki
+            image: /recommendations/classic/necklines/slozhnye_dekorativnye_vorotniki.jpg
       - key: "fabrics"
         title: "Ткани"
         description: >-
           Ткани должны быть качественными, полированными и спокойными.
         recommended:
-          - "Тонкая камвольная шерсть крепкого плетения"
-          - "Шёлк в закрытой форме"
-          - "Хлопок-поплин"
-          - "Мягкий твид среднего веса"
-          - "Кашемир среднего веса"
+          - text: Тонкая камвольная шерсть крепкого плетения
+            slug: tonkaya_kamvolnaya_sherst_krepkogo
+            image: /recommendations/classic/fabrics/tonkaya_kamvolnaya_sherst_krepkogo.jpg
+          - text: Шёлк в закрытой форме
+            slug: shelk_v_zakrytoi_forme
+            image: /recommendations/classic/fabrics/shelk_v_zakrytoi_forme.jpg
+          - text: Хлопок-поплин
+            slug: hlopok_poplin
+            image: /recommendations/classic/fabrics/hlopok_poplin.jpg
+          - text: Мягкий твид среднего веса
+            slug: myagkii_tvid_srednego_vesa
+            image: /recommendations/classic/fabrics/myagkii_tvid_srednego_vesa.jpg
+          - text: Кашемир среднего веса
+            slug: kashemir_srednego_vesa
+            image: /recommendations/classic/fabrics/kashemir_srednego_vesa.jpg
         avoid:
-          - "Блестящий лак"
-          - "Слишком грубый лён"
-          - "Прозрачные и экзотические материалы"
+          - text: Блестящий лак
+            slug: blestyaschii_lak
+            image: /recommendations/classic/fabrics/blestyaschii_lak.jpg
+          - text: Слишком грубый лён
+            slug: slishkom_grubyi_len
+            image: /recommendations/classic/fabrics/slishkom_grubyi_len.jpg
+          - text: Прозрачные и экзотические материалы
+            slug: prozrachnye_i_ekzoticheskie_materialy
+            image: /recommendations/classic/fabrics/prozrachnye_i_ekzoticheskie_materialy.jpg
       - key: "textures"
         title: "Фактуры"
         description: >-
           Фактура ровная, ухоженная, без контрастов.
         recommended:
-          - "Гладкая полированная поверхность"
-          - "Мелкая ровная вязка"
-          - "Аккуратный матовый финиш"
+          - text: Гладкая полированная поверхность
+            slug: gladkaya_polirovannaya_poverhnost
+            image: /recommendations/classic/textures/gladkaya_polirovannaya_poverhnost.jpg
+          - text: Мелкая ровная вязка
+            slug: melkaya_rovnaya_vyazka
+            image: /recommendations/classic/textures/melkaya_rovnaya_vyazka.jpg
+          - text: Аккуратный матовый финиш
+            slug: akkuratnyi_matovyi_finish
+            image: /recommendations/classic/textures/akkuratnyi_matovyi_finish.jpg
         avoid:
-          - "Пушистые и лохматые фактуры"
-          - "Крупный нарочитый рельеф"
-          - "Металлический блеск"
+          - text: Пушистые и лохматые фактуры
+            slug: pushistye_i_lohmatye_faktury
+            image: /recommendations/classic/textures/pushistye_i_lohmatye_faktury.jpg
+          - text: Крупный нарочитый рельеф
+            slug: krupnyi_narochityi_relef
+            image: /recommendations/classic/textures/krupnyi_narochityi_relef.jpg
+          - text: Металлический блеск
+            slug: metallicheskii_blesk
+            image: /recommendations/classic/textures/metallicheskii_blesk.jpg
       - key: "prints"
         title: "Принты"
         description: >-
           Принты — маленькие, классические, симметричные.
         recommended:
-          - "Полоска средней толщины"
-          - "Мелкая клетка — гусиная лапка, виши"
-          - "Классический фулард"
-          - "Сдержанный пейсли"
-          - "Маленький симметричный цветок"
+          - text: Полоска средней толщины
+            slug: poloska_srednei_tolschiny
+            image: /recommendations/classic/prints/poloska_srednei_tolschiny.jpg
+          - text: Мелкая клетка — гусиная лапка, виши
+            slug: melkaya_kletka_gusinaya_lapka
+            image: /recommendations/classic/prints/melkaya_kletka_gusinaya_lapka.jpg
+          - text: Классический фулард
+            slug: klassicheskii_fulard
+            image: /recommendations/classic/prints/klassicheskii_fulard.jpg
+          - text: Сдержанный пейсли
+            slug: sderzhannyi_peisli
+            image: /recommendations/classic/prints/sderzhannyi_peisli.jpg
+          - text: Маленький симметричный цветок
+            slug: malenkii_simmetrichnyi_tsvetok
+            image: /recommendations/classic/prints/malenkii_simmetrichnyi_tsvetok.jpg
         avoid:
-          - "Крупные абстрактные мазки"
-          - "Анималистические принты большого масштаба"
-          - "Яркий тай-дай"
+          - text: Крупные абстрактные мазки
+            slug: krupnye_abstraktnye_mazki
+            image: /recommendations/classic/prints/krupnye_abstraktnye_mazki.jpg
+          - text: Анималистические принты большого масштаба
+            slug: animalisticheskie_printy_bolshogo_masshtaba
+            image: /recommendations/classic/prints/animalisticheskie_printy_bolshogo_masshtaba.jpg
+          - text: Яркий тай-дай
+            slug: yarkii_tai_dai
+            image: /recommendations/classic/prints/yarkii_tai_dai.jpg
       - key: "details"
         title: "Детали и декор"
         description: >-
           Детали — скрытые, дорогие, функциональные.
         recommended:
-          - "Идеально выверенные лацканы"
-          - "Скрытые швы и канты"
-          - "Перламутровые или обтянутые тканью пуговицы"
-          - "Аккуратная строчка"
+          - text: Идеально выверенные лацканы
+            slug: idealno_vyverennye_latskany
+            image: /recommendations/classic/details/idealno_vyverennye_latskany.jpg
+          - text: Скрытые швы и канты
+            slug: skrytye_shvy_i_kanty
+            image: /recommendations/classic/details/skrytye_shvy_i_kanty.jpg
+          - text: Перламутровые или обтянутые тканью пуговицы
+            slug: perlamutrovye_ili_obtyanutye_tkanyu
+            image: /recommendations/classic/details/perlamutrovye_ili_obtyanutye_tkanyu.jpg
+          - text: Аккуратная строчка
+            slug: akkuratnaya_strochka
+            image: /recommendations/classic/details/akkuratnaya_strochka.jpg
         avoid:
-          - "Кричащая фурнитура"
-          - "Декоративные разрезы и порезы"
-          - "Слишком милые детали"
+          - text: Кричащая фурнитура
+            slug: krichaschaya_furnitura
+            image: /recommendations/classic/details/krichaschaya_furnitura.jpg
+          - text: Декоративные разрезы и порезы
+            slug: dekorativnye_razrezy_i_porezy
+            image: /recommendations/classic/details/dekorativnye_razrezy_i_porezy.jpg
+          - text: Слишком милые детали
+            slug: slishkom_milye_detali
+            image: /recommendations/classic/details/slishkom_milye_detali.jpg
       - key: "jackets"
         title: "Жакеты и верхняя одежда"
         description: >-
           Верх — эталонный, с идеальной посадкой.
         recommended:
-          - "Однобортный блейзер до бедра"
-          - "Тренч классической длины"
-          - "Пальто-бушлат"
-          - "Пиджак безукоризненной посадки"
-          - "Пальто-честерфилд"
+          - text: Однобортный блейзер до бедра
+            slug: odnobortnyi_bleizer_do_bedra
+            image: /recommendations/classic/jackets/odnobortnyi_bleizer_do_bedra.jpg
+          - text: Тренч классической длины
+            slug: trench_klassicheskoi_dliny
+            image: /recommendations/classic/jackets/trench_klassicheskoi_dliny.jpg
+          - text: Пальто-бушлат
+            slug: palto_bushlat
+            image: /recommendations/classic/jackets/palto_bushlat.jpg
+          - text: Пиджак безукоризненной посадки
+            slug: pidzhak_bezukoriznennoi_posadki
+            image: /recommendations/classic/jackets/pidzhak_bezukoriznennoi_posadki.jpg
+          - text: Пальто-честерфилд
+            slug: palto_chesterfild
+            image: /recommendations/classic/jackets/palto_chesterfild.jpg
         avoid:
-          - "Оверсайз с падающей линией плеч"
-          - "Коротко обрезанные куртки"
-          - "Структурно-экстремальные формы"
+          - text: Оверсайз с падающей линией плеч
+            slug: oversaiz_s_padayuschei_liniei
+            image: /recommendations/classic/jackets/oversaiz_s_padayuschei_liniei.jpg
+          - text: Коротко обрезанные куртки
+            slug: korotko_obrezannye_kurtki
+            image: /recommendations/classic/jackets/korotko_obrezannye_kurtki.jpg
+          - text: Структурно-экстремальные формы
+            slug: strukturno_ekstremalnye_formy
+            image: /recommendations/classic/jackets/strukturno_ekstremalnye_formy.jpg
       - key: "tops"
         title: "Верх — рубашки, блузы, топы"
         description: >-
           Верх — спокойный, идеально сидящий, с тонкой работой.
         recommended:
-          - "Белая рубашка классического кроя"
-          - "Шёлковая блуза с мягкими пуговицами"
-          - "Трикотажный джемпер тонкой вязки"
-          - "Рубашка-поло из тонкого хлопка"
-          - "Блуза с бантом умеренного размера"
+          - text: Белая рубашка классического кроя
+            slug: belaya_rubashka_klassicheskogo_kroya
+            image: /recommendations/classic/tops/belaya_rubashka_klassicheskogo_kroya.jpg
+          - text: Шёлковая блуза с мягкими пуговицами
+            slug: shelkovaya_bluza_s_myagkimi
+            image: /recommendations/classic/tops/shelkovaya_bluza_s_myagkimi.jpg
+          - text: Трикотажный джемпер тонкой вязки
+            slug: trikotazhnyi_dzhemper_tonkoi_vyazki
+            image: /recommendations/classic/tops/trikotazhnyi_dzhemper_tonkoi_vyazki.jpg
+          - text: Рубашка-поло из тонкого хлопка
+            slug: rubashka_polo_iz_tonkogo
+            image: /recommendations/classic/tops/rubashka_polo_iz_tonkogo.jpg
+          - text: Блуза с бантом умеренного размера
+            slug: bluza_s_bantom_umerennogo
+            image: /recommendations/classic/tops/bluza_s_bantom_umerennogo.jpg
         avoid:
-          - "Оверсайз-рубашки"
-          - "Кроп-топы"
-          - "Топы с экстремальным декольте"
+          - text: Оверсайз-рубашки
+            slug: oversaiz_rubashki
+            image: /recommendations/classic/tops/oversaiz_rubashki.jpg
+          - text: Кроп-топы
+            slug: krop_topy
+            image: /recommendations/classic/tops/krop_topy.jpg
+          - text: Топы с экстремальным декольте
+            slug: topy_s_ekstremalnym_dekolte
+            image: /recommendations/classic/tops/topy_s_ekstremalnym_dekolte.jpg
       - key: "emphasize"
         title: "На чём делать акцент"
         description: >-
           Работайте на качество и симметрию — это ваш козырь.
         recommended:
-          - "Безупречная посадка"
-          - "Качество тканей"
-          - "Умеренный силуэт"
-          - "Тонкая работа деталей"
+          - text: Безупречная посадка
+            slug: bezuprechnaya_posadka
+            image: /recommendations/classic/emphasize/bezuprechnaya_posadka.jpg
+          - text: Качество тканей
+            slug: kachestvo_tkanei
+            image: /recommendations/classic/emphasize/kachestvo_tkanei.jpg
+          - text: Умеренный силуэт
+            slug: umerennyi_siluet
+            image: /recommendations/classic/emphasize/umerennyi_siluet.jpg
+          - text: Тонкая работа деталей
+            slug: tonkaya_rabota_detalei
+            image: /recommendations/classic/emphasize/tonkaya_rabota_detalei.jpg
         avoid:
-          - "Экстремальные пропорции"
-          - "Слишком смелые эксперименты"
+          - text: Экстремальные пропорции
+            slug: ekstremalnye_proportsii
+            image: /recommendations/classic/emphasize/ekstremalnye_proportsii.jpg
+          - text: Слишком смелые эксперименты
+            slug: slishkom_smelye_eksperimenty
+            image: /recommendations/classic/emphasize/slishkom_smelye_eksperimenty.jpg
       - key: "avoid_overall"
         title: "Чего избегать в целом"
         description: >-
           Классической противопоказаны крайности.
         recommended: []
         avoid:
-          - "Радикальные формы"
-          - "Кричащие принты"
-          - "Грубая брутальность"
-          - "Сладкая кукольная эстетика"
+          - text: Радикальные формы
+            slug: radikalnye_formy
+            image: /recommendations/classic/avoid_overall/radikalnye_formy.jpg
+          - text: Кричащие принты
+            slug: krichaschie_printy
+            image: /recommendations/classic/avoid_overall/krichaschie_printy.jpg
+          - text: Грубая брутальность
+            slug: grubaya_brutalnost
+            image: /recommendations/classic/avoid_overall/grubaya_brutalnost.jpg
+          - text: Сладкая кукольная эстетика
+            slug: sladkaya_kukolnaya_estetika
+            image: /recommendations/classic/avoid_overall/sladkaya_kukolnaya_estetika.jpg
   gamine:
     style_key: "Компактность, контраст, игра пропорций"
     summary: >-
@@ -462,134 +892,280 @@ recommendation_guides:
           Короткие, ломаные, чёткие линии. Образ читается как
           собранный пазл из заметных частей.
         recommended:
-          - "Укороченные жакеты и куртки"
-          - "Приталенные силуэты с чёткой талией"
-          - "Кроп-топы и укороченные блузы"
-          - "Юбка выше колена с чёткой линией"
-          - "Брюки-сигареты длиной 7/8"
+          - text: Укороченные жакеты и куртки
+            slug: ukorochennye_zhakety_i_kurtki
+            image: /recommendations/gamine/lines_silhouette/ukorochennye_zhakety_i_kurtki.jpg
+          - text: Приталенные силуэты с чёткой талией
+            slug: pritalennye_siluety_s_chetkoi
+            image: /recommendations/gamine/lines_silhouette/pritalennye_siluety_s_chetkoi.jpg
+          - text: Кроп-топы и укороченные блузы
+            slug: krop_topy_i_ukorochennye
+            image: /recommendations/gamine/lines_silhouette/krop_topy_i_ukorochennye.jpg
+          - text: Юбка выше колена с чёткой линией
+            slug: yubka_vyshe_kolena_s
+            image: /recommendations/gamine/lines_silhouette/yubka_vyshe_kolena_s.jpg
+          - text: Брюки-сигареты длиной 7/8
+            slug: bryuki_sigarety_dlinoi_7
+            image: /recommendations/gamine/lines_silhouette/bryuki_sigarety_dlinoi_7.jpg
         avoid:
-          - "Длинные однотонные платья до пола"
-          - "Оверсайз без структуры"
-          - "Тяжёлые драпировки"
+          - text: Длинные однотонные платья до пола
+            slug: dlinnye_odnotonnye_platya_do
+            image: /recommendations/gamine/lines_silhouette/dlinnye_odnotonnye_platya_do.jpg
+          - text: Оверсайз без структуры
+            slug: oversaiz_bez_struktury
+            image: /recommendations/gamine/lines_silhouette/oversaiz_bez_struktury.jpg
+          - text: Тяжёлые драпировки
+            slug: tyazhelye_drapirovki
+            image: /recommendations/gamine/lines_silhouette/tyazhelye_drapirovki.jpg
       - key: "necklines"
         title: "Вырезы и горловины"
         description: >-
           Вырез должен давать чёткую графичную точку у лица.
         recommended:
-          - "Круглый вырез с контрастной окантовкой"
-          - "Небольшой острый V"
-          - "Питер-пэн и жёсткий отложной воротник"
-          - "Квадратный вырез с чёткими углами"
-          - "Вырез лодочкой средней ширины"
+          - text: Круглый вырез с контрастной окантовкой
+            slug: kruglyi_vyrez_s_kontrastnoi
+            image: /recommendations/gamine/necklines/kruglyi_vyrez_s_kontrastnoi.jpg
+          - text: Небольшой острый V
+            slug: nebolshoi_ostryi_v
+            image: /recommendations/gamine/necklines/nebolshoi_ostryi_v.jpg
+          - text: Питер-пэн и жёсткий отложной воротник
+            slug: piter_pen_i_zhestkii
+            image: /recommendations/gamine/necklines/piter_pen_i_zhestkii.jpg
+          - text: Квадратный вырез с чёткими углами
+            slug: kvadratnyi_vyrez_s_chetkimi
+            image: /recommendations/gamine/necklines/kvadratnyi_vyrez_s_chetkimi.jpg
+          - text: Вырез лодочкой средней ширины
+            slug: vyrez_lodochkoi_srednei_shiriny
+            image: /recommendations/gamine/necklines/vyrez_lodochkoi_srednei_shiriny.jpg
         avoid:
-          - "Драпированные свободные вырезы"
-          - "Глубокое мягкое декольте"
-          - "Пышные жабо и мягкие каскады"
+          - text: Драпированные свободные вырезы
+            slug: drapirovannye_svobodnye_vyrezy
+            image: /recommendations/gamine/necklines/drapirovannye_svobodnye_vyrezy.jpg
+          - text: Глубокое мягкое декольте
+            slug: glubokoe_myagkoe_dekolte
+            image: /recommendations/gamine/necklines/glubokoe_myagkoe_dekolte.jpg
+          - text: Пышные жабо и мягкие каскады
+            slug: pyshnye_zhabo_i_myagkie
+            image: /recommendations/gamine/necklines/pyshnye_zhabo_i_myagkie.jpg
       - key: "fabrics"
         title: "Ткани"
         description: >-
           Ткани — упругие, хрустящие, держащие форму.
         recommended:
-          - "Упругий хлопок и поплин"
-          - "Плотный трикотаж тонкой вязки"
-          - "Мягкая кожа с чёткой линией"
-          - "Лакированная кожа"
-          - "Плотный жаккард"
+          - text: Упругий хлопок и поплин
+            slug: uprugii_hlopok_i_poplin
+            image: /recommendations/gamine/fabrics/uprugii_hlopok_i_poplin.jpg
+          - text: Плотный трикотаж тонкой вязки
+            slug: plotnyi_trikotazh_tonkoi_vyazki
+            image: /recommendations/gamine/fabrics/plotnyi_trikotazh_tonkoi_vyazki.jpg
+          - text: Мягкая кожа с чёткой линией
+            slug: myagkaya_kozha_s_chetkoi
+            image: /recommendations/gamine/fabrics/myagkaya_kozha_s_chetkoi.jpg
+          - text: Лакированная кожа
+            slug: lakirovannaya_kozha
+            image: /recommendations/gamine/fabrics/lakirovannaya_kozha.jpg
+          - text: Плотный жаккард
+            slug: plotnyi_zhakkard
+            image: /recommendations/gamine/fabrics/plotnyi_zhakkard.jpg
         avoid:
-          - "Мягкий драпирующийся шёлк"
-          - "Пушистый мохер"
-          - "Ткани, теряющие форму"
+          - text: Мягкий драпирующийся шёлк
+            slug: myagkii_drapiruyuschiisya_shelk
+            image: /recommendations/gamine/fabrics/myagkii_drapiruyuschiisya_shelk.jpg
+          - text: Пушистый мохер
+            slug: pushistyi_moher
+            image: /recommendations/gamine/fabrics/pushistyi_moher.jpg
+          - text: Ткани, теряющие форму
+            slug: tkani_teryayuschie_formu
+            image: /recommendations/gamine/fabrics/tkani_teryayuschie_formu.jpg
       - key: "textures"
         title: "Фактуры"
         description: >-
           Фактура — контрастная, чёткая, часто блестящая.
         recommended:
-          - "Патент и лакированная кожа"
-          - "Контрастные комбинации гладкого и фактурного"
-          - "Мелкий рельеф с чёткой линией"
-          - "Пайетки и металлик"
+          - text: Патент и лакированная кожа
+            slug: patent_i_lakirovannaya_kozha
+            image: /recommendations/gamine/textures/patent_i_lakirovannaya_kozha.jpg
+          - text: Контрастные комбинации гладкого и фактурного
+            slug: kontrastnye_kombinatsii_gladkogo_i
+            image: /recommendations/gamine/textures/kontrastnye_kombinatsii_gladkogo_i.jpg
+          - text: Мелкий рельеф с чёткой линией
+            slug: melkii_relef_s_chetkoi
+            image: /recommendations/gamine/textures/melkii_relef_s_chetkoi.jpg
+          - text: Пайетки и металлик
+            slug: paietki_i_metallik
+            image: /recommendations/gamine/textures/paietki_i_metallik.jpg
         avoid:
-          - "Размытые мягкие фактуры"
-          - "Крупный небрежный твид"
-          - "Однородная пушистость"
+          - text: Размытые мягкие фактуры
+            slug: razmytye_myagkie_faktury
+            image: /recommendations/gamine/textures/razmytye_myagkie_faktury.jpg
+          - text: Крупный небрежный твид
+            slug: krupnyi_nebrezhnyi_tvid
+            image: /recommendations/gamine/textures/krupnyi_nebrezhnyi_tvid.jpg
+          - text: Однородная пушистость
+            slug: odnorodnaya_pushistost
+            image: /recommendations/gamine/textures/odnorodnaya_pushistost.jpg
       - key: "prints"
         title: "Принты"
         description: >-
           Принты — небольшие, контрастные, с чёткой геометрией.
         recommended:
-          - "Горошек малого и среднего размера"
-          - "Чёрно-белая графика"
-          - "Полоска тонкая контрастная"
-          - "Маленькая клетка"
-          - "Геометрическая плитка"
+          - text: Горошек малого и среднего размера
+            slug: goroshek_malogo_i_srednego
+            image: /recommendations/gamine/prints/goroshek_malogo_i_srednego.jpg
+          - text: Чёрно-белая графика
+            slug: cherno_belaya_grafika
+            image: /recommendations/gamine/prints/cherno_belaya_grafika.jpg
+          - text: Полоска тонкая контрастная
+            slug: poloska_tonkaya_kontrastnaya
+            image: /recommendations/gamine/prints/poloska_tonkaya_kontrastnaya.jpg
+          - text: Маленькая клетка
+            slug: malenkaya_kletka
+            image: /recommendations/gamine/prints/malenkaya_kletka.jpg
+          - text: Геометрическая плитка
+            slug: geometricheskaya_plitka
+            image: /recommendations/gamine/prints/geometricheskaya_plitka.jpg
         avoid:
-          - "Крупные абстрактные мазки"
-          - "Акварельные разводы"
-          - "Мягкие романтические цветы"
+          - text: Крупные абстрактные мазки
+            slug: krupnye_abstraktnye_mazki
+            image: /recommendations/gamine/prints/krupnye_abstraktnye_mazki.jpg
+          - text: Акварельные разводы
+            slug: akvarelnye_razvody
+            image: /recommendations/gamine/prints/akvarelnye_razvody.jpg
+          - text: Мягкие романтические цветы
+            slug: myagkie_romanticheskie_tsvety
+            image: /recommendations/gamine/prints/myagkie_romanticheskie_tsvety.jpg
       - key: "details"
         title: "Детали и декор"
         description: >-
           Детали — игривые, яркие, с точной посадкой.
         recommended:
-          - "Контрастные пуговицы"
-          - "Фигурные карманы"
-          - "Цветные молнии"
-          - "Декоративные бантики в точке фокуса"
-          - "Контрастная отделка горловины и манжет"
+          - text: Контрастные пуговицы
+            slug: kontrastnye_pugovitsy
+            image: /recommendations/gamine/details/kontrastnye_pugovitsy.jpg
+          - text: Фигурные карманы
+            slug: figurnye_karmany
+            image: /recommendations/gamine/details/figurnye_karmany.jpg
+          - text: Цветные молнии
+            slug: tsvetnye_molnii
+            image: /recommendations/gamine/details/tsvetnye_molnii.jpg
+          - text: Декоративные бантики в точке фокуса
+            slug: dekorativnye_bantiki_v_tochke
+            image: /recommendations/gamine/details/dekorativnye_bantiki_v_tochke.jpg
+          - text: Контрастная отделка горловины и манжет
+            slug: kontrastnaya_otdelka_gorloviny_i
+            image: /recommendations/gamine/details/kontrastnaya_otdelka_gorloviny_i.jpg
         avoid:
-          - "Аморфные драпировки"
-          - "Слишком скрытый минимализм"
-          - "Крупная брутальная фурнитура"
+          - text: Аморфные драпировки
+            slug: amorfnye_drapirovki
+            image: /recommendations/gamine/details/amorfnye_drapirovki.jpg
+          - text: Слишком скрытый минимализм
+            slug: slishkom_skrytyi_minimalizm
+            image: /recommendations/gamine/details/slishkom_skrytyi_minimalizm.jpg
+          - text: Крупная брутальная фурнитура
+            slug: krupnaya_brutalnaya_furnitura
+            image: /recommendations/gamine/details/krupnaya_brutalnaya_furnitura.jpg
       - key: "jackets"
         title: "Жакеты и верхняя одежда"
         description: >-
           Верх — короткий, чёткий, с заметной деталью.
         recommended:
-          - "Укороченный жакет с контрастной отделкой"
-          - "Кожаный байкер маленького размера"
-          - "Бомбер с чёткой резинкой"
-          - "Жакет-бокс в стиле Шанель"
-          - "Укороченный тренч"
+          - text: Укороченный жакет с контрастной отделкой
+            slug: ukorochennyi_zhaket_s_kontrastnoi
+            image: /recommendations/gamine/jackets/ukorochennyi_zhaket_s_kontrastnoi.jpg
+          - text: Кожаный байкер маленького размера
+            slug: kozhanyi_baiker_malenkogo_razmera
+            image: /recommendations/gamine/jackets/kozhanyi_baiker_malenkogo_razmera.jpg
+          - text: Бомбер с чёткой резинкой
+            slug: bomber_s_chetkoi_rezinkoi
+            image: /recommendations/gamine/jackets/bomber_s_chetkoi_rezinkoi.jpg
+          - text: Жакет-бокс в стиле Шанель
+            slug: zhaket_boks_v_stile
+            image: /recommendations/gamine/jackets/zhaket_boks_v_stile.jpg
+          - text: Укороченный тренч
+            slug: ukorochennyi_trench
+            image: /recommendations/gamine/jackets/ukorochennyi_trench.jpg
         avoid:
-          - "Длинные оверсайз-пальто"
-          - "Мягкие халаты-кардиганы"
-          - "Куртки с размытой линией плеча"
+          - text: Длинные оверсайз-пальто
+            slug: dlinnye_oversaiz_palto
+            image: /recommendations/gamine/jackets/dlinnye_oversaiz_palto.jpg
+          - text: Мягкие халаты-кардиганы
+            slug: myagkie_halaty_kardigany
+            image: /recommendations/gamine/jackets/myagkie_halaty_kardigany.jpg
+          - text: Куртки с размытой линией плеча
+            slug: kurtki_s_razmytoi_liniei
+            image: /recommendations/gamine/jackets/kurtki_s_razmytoi_liniei.jpg
       - key: "tops"
         title: "Верх — рубашки, блузы, топы"
         description: >-
           Верх — короткий и графичный, часто с декоративной деталью.
         recommended:
-          - "Кроп-топ с чёткой линией"
-          - "Рубашка с воротником «питер-пэн»"
-          - "Блуза в горошек"
-          - "Джемпер с контрастной каймой"
-          - "Блуза с бантом у горла"
+          - text: Кроп-топ с чёткой линией
+            slug: krop_top_s_chetkoi
+            image: /recommendations/gamine/tops/krop_top_s_chetkoi.jpg
+          - text: Рубашка с воротником «питер-пэн»
+            slug: rubashka_s_vorotnikom_piter
+            image: /recommendations/gamine/tops/rubashka_s_vorotnikom_piter.jpg
+          - text: Блуза в горошек
+            slug: bluza_v_goroshek
+            image: /recommendations/gamine/tops/bluza_v_goroshek.jpg
+          - text: Джемпер с контрастной каймой
+            slug: dzhemper_s_kontrastnoi_kaimoi
+            image: /recommendations/gamine/tops/dzhemper_s_kontrastnoi_kaimoi.jpg
+          - text: Блуза с бантом у горла
+            slug: bluza_s_bantom_u
+            image: /recommendations/gamine/tops/bluza_s_bantom_u.jpg
         avoid:
-          - "Длинные оверсайз-рубашки"
-          - "Блузы с мягкими драпировками"
-          - "Джемперы с опущенным плечом"
+          - text: Длинные оверсайз-рубашки
+            slug: dlinnye_oversaiz_rubashki
+            image: /recommendations/gamine/tops/dlinnye_oversaiz_rubashki.jpg
+          - text: Блузы с мягкими драпировками
+            slug: bluzy_s_myagkimi_drapirovkami
+            image: /recommendations/gamine/tops/bluzy_s_myagkimi_drapirovkami.jpg
+          - text: Джемперы с опущенным плечом
+            slug: dzhempery_s_opuschennym_plechom
+            image: /recommendations/gamine/tops/dzhempery_s_opuschennym_plechom.jpg
       - key: "emphasize"
         title: "На чём делать акцент"
         description: >-
           Акцентируйте игру пропорций — это ваш фирменный ход.
         recommended:
-          - "Чёткая талия"
-          - "Тонкие запястья и щиколотки"
-          - "Лицо — обрамляйте яркой деталью"
-          - "Контраст верха и низа"
+          - text: Чёткая талия
+            slug: chetkaya_taliya
+            image: /recommendations/gamine/emphasize/chetkaya_taliya.jpg
+          - text: Тонкие запястья и щиколотки
+            slug: tonkie_zapyastya_i_schikolotki
+            image: /recommendations/gamine/emphasize/tonkie_zapyastya_i_schikolotki.jpg
+          - text: Лицо — обрамляйте яркой деталью
+            slug: litso_obramlyaite_yarkoi_detalyu
+            image: /recommendations/gamine/emphasize/litso_obramlyaite_yarkoi_detalyu.jpg
+          - text: Контраст верха и низа
+            slug: kontrast_verha_i_niza
+            image: /recommendations/gamine/emphasize/kontrast_verha_i_niza.jpg
         avoid:
-          - "Удлинение одной непрерывной линией"
-          - "Монохром без акцента"
+          - text: Удлинение одной непрерывной линией
+            slug: udlinenie_odnoi_nepreryvnoi_liniei
+            image: /recommendations/gamine/emphasize/udlinenie_odnoi_nepreryvnoi_liniei.jpg
+          - text: Монохром без акцента
+            slug: monohrom_bez_aktsenta
+            image: /recommendations/gamine/emphasize/monohrom_bez_aktsenta.jpg
       - key: "avoid_overall"
         title: "Чего избегать в целом"
         description: >-
           Типологии гамин противопоказаны длинные аморфные образы.
         recommended: []
         avoid:
-          - "Длинная непрерывная вертикаль"
-          - "Тяжёлая драпировка"
-          - "Оверсайз без талии"
-          - "Монохром без контраста"
+          - text: Длинная непрерывная вертикаль
+            slug: dlinnaya_nepreryvnaya_vertikal
+            image: /recommendations/gamine/avoid_overall/dlinnaya_nepreryvnaya_vertikal.jpg
+          - text: Тяжёлая драпировка
+            slug: tyazhelaya_drapirovka
+            image: /recommendations/gamine/avoid_overall/tyazhelaya_drapirovka.jpg
+          - text: Оверсайз без талии
+            slug: oversaiz_bez_talii
+            image: /recommendations/gamine/avoid_overall/oversaiz_bez_talii.jpg
+          - text: Монохром без контраста
+            slug: monohrom_bez_kontrasta
+            image: /recommendations/gamine/avoid_overall/monohrom_bez_kontrasta.jpg
   romantic:
     style_key: "Мягкость, кривая, женственная округлость"
     summary: >-
@@ -607,132 +1183,278 @@ recommendation_guides:
           Мягкие, округлые, подчёркивающие талию силуэты. Фигура
           читается плавными изгибами.
         recommended:
-          - "Платья с отрезной талией"
-          - "Приталенный верх + пышная юбка"
-          - "Халат на запах"
-          - "Платье косого кроя"
-          - "Юбка-солнце или полусолнце"
+          - text: Платья с отрезной талией
+            slug: platya_s_otreznoi_taliei
+            image: /recommendations/romantic/lines_silhouette/platya_s_otreznoi_taliei.jpg
+          - text: Приталенный верх + пышная юбка
+            slug: pritalennyi_verh_pyshnaya_yubka
+            image: /recommendations/romantic/lines_silhouette/pritalennyi_verh_pyshnaya_yubka.jpg
+          - text: Халат на запах
+            slug: halat_na_zapah
+            image: /recommendations/romantic/lines_silhouette/halat_na_zapah.jpg
+          - text: Платье косого кроя
+            slug: plate_kosogo_kroya
+            image: /recommendations/romantic/lines_silhouette/plate_kosogo_kroya.jpg
+          - text: Юбка-солнце или полусолнце
+            slug: yubka_solntse_ili_polusolntse
+            image: /recommendations/romantic/lines_silhouette/yubka_solntse_ili_polusolntse.jpg
         avoid:
-          - "Жёсткие прямые силуэты без талии"
-          - "Острые архитектурные формы"
-          - "Слишком мужественный крой"
+          - text: Жёсткие прямые силуэты без талии
+            slug: zhestkie_pryamye_siluety_bez
+            image: /recommendations/romantic/lines_silhouette/zhestkie_pryamye_siluety_bez.jpg
+          - text: Острые архитектурные формы
+            slug: ostrye_arhitekturnye_formy
+            image: /recommendations/romantic/lines_silhouette/ostrye_arhitekturnye_formy.jpg
+          - text: Слишком мужественный крой
+            slug: slishkom_muzhestvennyi_kroi
+            image: /recommendations/romantic/lines_silhouette/slishkom_muzhestvennyi_kroi.jpg
       - key: "necklines"
         title: "Вырезы и горловины"
         description: >-
           Вырез — мягкий и округлый, часто с декоративной деталью.
         recommended:
-          - "Округлый вырез"
-          - "Мягкий V с округлением"
-          - "Вырез «сердечком»"
-          - "Вырез с мягкой драпировкой"
-          - "С открытыми плечами и плавной линией"
+          - text: Округлый вырез
+            slug: okruglyi_vyrez
+            image: /recommendations/romantic/necklines/okruglyi_vyrez.jpg
+          - text: Мягкий V с округлением
+            slug: myagkii_v_s_okrugleniem
+            image: /recommendations/romantic/necklines/myagkii_v_s_okrugleniem.jpg
+          - text: Вырез «сердечком»
+            slug: vyrez_serdechkom
+            image: /recommendations/romantic/necklines/vyrez_serdechkom.jpg
+          - text: Вырез с мягкой драпировкой
+            slug: vyrez_s_myagkoi_drapirovkoi
+            image: /recommendations/romantic/necklines/vyrez_s_myagkoi_drapirovkoi.jpg
+          - text: С открытыми плечами и плавной линией
+            slug: s_otkrytymi_plechami_i
+            image: /recommendations/romantic/necklines/s_otkrytymi_plechami_i.jpg
         avoid:
-          - "Острый геометричный вырез"
-          - "Жёсткий стоячий воротник"
-          - "Прямые углы у выреза"
+          - text: Острый геометричный вырез
+            slug: ostryi_geometrichnyi_vyrez
+            image: /recommendations/romantic/necklines/ostryi_geometrichnyi_vyrez.jpg
+          - text: Жёсткий стоячий воротник
+            slug: zhestkii_stoyachii_vorotnik
+            image: /recommendations/romantic/necklines/zhestkii_stoyachii_vorotnik.jpg
+          - text: Прямые углы у выреза
+            slug: pryamye_ugly_u_vyreza
+            image: /recommendations/romantic/necklines/pryamye_ugly_u_vyreza.jpg
       - key: "fabrics"
         title: "Ткани"
         description: >-
           Ткани — текучие, драпирующиеся, с мягким блеском.
         recommended:
-          - "Шёлк-шармёз и креп-шифон"
-          - "Мягкий кашемир и тонкий трикотаж"
-          - "Бархат и панбархат"
-          - "Кружево и гипюр"
-          - "Шёлковый сатин"
+          - text: Шёлк-шармёз и креп-шифон
+            slug: shelk_sharmez_i_krep
+            image: /recommendations/romantic/fabrics/shelk_sharmez_i_krep.jpg
+          - text: Мягкий кашемир и тонкий трикотаж
+            slug: myagkii_kashemir_i_tonkii
+            image: /recommendations/romantic/fabrics/myagkii_kashemir_i_tonkii.jpg
+          - text: Бархат и панбархат
+            slug: barhat_i_panbarhat
+            image: /recommendations/romantic/fabrics/barhat_i_panbarhat.jpg
+          - text: Кружево и гипюр
+            slug: kruzhevo_i_gipyur
+            image: /recommendations/romantic/fabrics/kruzhevo_i_gipyur.jpg
+          - text: Шёлковый сатин
+            slug: shelkovyi_satin
+            image: /recommendations/romantic/fabrics/shelkovyi_satin.jpg
         avoid:
-          - "Жёсткий габардин"
-          - "Патент и лак"
-          - "Грубый лён и твид"
+          - text: Жёсткий габардин
+            slug: zhestkii_gabardin
+            image: /recommendations/romantic/fabrics/zhestkii_gabardin.jpg
+          - text: Патент и лак
+            slug: patent_i_lak
+            image: /recommendations/romantic/fabrics/patent_i_lak.jpg
+          - text: Грубый лён и твид
+            slug: grubyi_len_i_tvid
+            image: /recommendations/romantic/fabrics/grubyi_len_i_tvid.jpg
       - key: "textures"
         title: "Фактуры"
         description: >-
           Фактура — мягкая, деликатная, с ощущением прикосновения.
         recommended:
-          - "Бархат и велюр"
-          - "Кружево и шитьё"
-          - "Тонкий мохер"
-          - "Шёлковый сатин"
+          - text: Бархат и велюр
+            slug: barhat_i_velyur
+            image: /recommendations/romantic/textures/barhat_i_velyur.jpg
+          - text: Кружево и шитьё
+            slug: kruzhevo_i_shite
+            image: /recommendations/romantic/textures/kruzhevo_i_shite.jpg
+          - text: Тонкий мохер
+            slug: tonkii_moher
+            image: /recommendations/romantic/textures/tonkii_moher.jpg
+          - text: Шёлковый сатин
+            slug: shelkovyi_satin
+            image: /recommendations/romantic/textures/shelkovyi_satin.jpg
         avoid:
-          - "Жёсткая кожа"
-          - "Крупный рельеф"
-          - "Грубый рустикальный лён"
+          - text: Жёсткая кожа
+            slug: zhestkaya_kozha
+            image: /recommendations/romantic/textures/zhestkaya_kozha.jpg
+          - text: Крупный рельеф
+            slug: krupnyi_relef
+            image: /recommendations/romantic/textures/krupnyi_relef.jpg
+          - text: Грубый рустикальный лён
+            slug: grubyi_rustikalnyi_len
+            image: /recommendations/romantic/textures/grubyi_rustikalnyi_len.jpg
       - key: "prints"
         title: "Принты"
         description: >-
           Принты — округлые, цветочные, с акварельным качеством.
         recommended:
-          - "Акварельные цветы"
-          - "Мягкий пейсли"
-          - "Маленький цветочный рисунок"
-          - "Округлый горошек"
-          - "Романтические растительные мотивы"
+          - text: Акварельные цветы
+            slug: akvarelnye_tsvety
+            image: /recommendations/romantic/prints/akvarelnye_tsvety.jpg
+          - text: Мягкий пейсли
+            slug: myagkii_peisli
+            image: /recommendations/romantic/prints/myagkii_peisli.jpg
+          - text: Маленький цветочный рисунок
+            slug: malenkii_tsvetochnyi_risunok
+            image: /recommendations/romantic/prints/malenkii_tsvetochnyi_risunok.jpg
+          - text: Округлый горошек
+            slug: okruglyi_goroshek
+            image: /recommendations/romantic/prints/okruglyi_goroshek.jpg
+          - text: Романтические растительные мотивы
+            slug: romanticheskie_rastitelnye_motivy
+            image: /recommendations/romantic/prints/romanticheskie_rastitelnye_motivy.jpg
         avoid:
-          - "Жёсткая геометрия"
-          - "Крупная острая клетка"
-          - "Абстрактные ломаные мазки"
+          - text: Жёсткая геометрия
+            slug: zhestkaya_geometriya
+            image: /recommendations/romantic/prints/zhestkaya_geometriya.jpg
+          - text: Крупная острая клетка
+            slug: krupnaya_ostraya_kletka
+            image: /recommendations/romantic/prints/krupnaya_ostraya_kletka.jpg
+          - text: Абстрактные ломаные мазки
+            slug: abstraktnye_lomanye_mazki
+            image: /recommendations/romantic/prints/abstraktnye_lomanye_mazki.jpg
       - key: "details"
         title: "Детали и декор"
         description: >-
           Детали — мягкие, декоративные, с ощущением нежности.
         recommended:
-          - "Рюши и мягкие оборки"
-          - "Банты и завязки"
-          - "Кружевные вставки"
-          - "Мягкая вышивка"
-          - "Пояс, подчёркивающий талию"
+          - text: Рюши и мягкие оборки
+            slug: ryushi_i_myagkie_oborki
+            image: /recommendations/romantic/details/ryushi_i_myagkie_oborki.jpg
+          - text: Банты и завязки
+            slug: banty_i_zavyazki
+            image: /recommendations/romantic/details/banty_i_zavyazki.jpg
+          - text: Кружевные вставки
+            slug: kruzhevnye_vstavki
+            image: /recommendations/romantic/details/kruzhevnye_vstavki.jpg
+          - text: Мягкая вышивка
+            slug: myagkaya_vyshivka
+            image: /recommendations/romantic/details/myagkaya_vyshivka.jpg
+          - text: Пояс, подчёркивающий талию
+            slug: poyas_podcherkivayuschii_taliyu
+            image: /recommendations/romantic/details/poyas_podcherkivayuschii_taliyu.jpg
         avoid:
-          - "Жёсткая брутальная фурнитура"
-          - "Индустриальные молнии"
-          - "Острые металлические элементы"
+          - text: Жёсткая брутальная фурнитура
+            slug: zhestkaya_brutalnaya_furnitura
+            image: /recommendations/romantic/details/zhestkaya_brutalnaya_furnitura.jpg
+          - text: Индустриальные молнии
+            slug: industrialnye_molnii
+            image: /recommendations/romantic/details/industrialnye_molnii.jpg
+          - text: Острые металлические элементы
+            slug: ostrye_metallicheskie_elementy
+            image: /recommendations/romantic/details/ostrye_metallicheskie_elementy.jpg
       - key: "jackets"
         title: "Жакеты и верхняя одежда"
         description: >-
           Верх должен повторять мягкость силуэта и не спорить с ней.
         recommended:
-          - "Тренч с поясом и мягкой линией плеча"
-          - "Пальто-халат"
-          - "Короткий болеро"
-          - "Мягкий жакет с округлым воротником"
-          - "Пальто с меховой отделкой"
+          - text: Тренч с поясом и мягкой линией плеча
+            slug: trench_s_poyasom_i
+            image: /recommendations/romantic/jackets/trench_s_poyasom_i.jpg
+          - text: Пальто-халат
+            slug: palto_halat
+            image: /recommendations/romantic/jackets/palto_halat.jpg
+          - text: Короткий болеро
+            slug: korotkii_bolero
+            image: /recommendations/romantic/jackets/korotkii_bolero.jpg
+          - text: Мягкий жакет с округлым воротником
+            slug: myagkii_zhaket_s_okruglym
+            image: /recommendations/romantic/jackets/myagkii_zhaket_s_okruglym.jpg
+          - text: Пальто с меховой отделкой
+            slug: palto_s_mehovoi_otdelkoi
+            image: /recommendations/romantic/jackets/palto_s_mehovoi_otdelkoi.jpg
         avoid:
-          - "Жёстко структурированный байкер"
-          - "Острый двубортный жакет"
-          - "Короткие резкие бомберы"
+          - text: Жёстко структурированный байкер
+            slug: zhestko_strukturirovannyi_baiker
+            image: /recommendations/romantic/jackets/zhestko_strukturirovannyi_baiker.jpg
+          - text: Острый двубортный жакет
+            slug: ostryi_dvubortnyi_zhaket
+            image: /recommendations/romantic/jackets/ostryi_dvubortnyi_zhaket.jpg
+          - text: Короткие резкие бомберы
+            slug: korotkie_rezkie_bombery
+            image: /recommendations/romantic/jackets/korotkie_rezkie_bombery.jpg
       - key: "tops"
         title: "Верх — рубашки, блузы, топы"
         description: >-
           Верх — мягкий, драпирующийся, подчёркивающий грудь и талию.
         recommended:
-          - "Блуза с мягким бантом"
-          - "Топ с рюшами у выреза"
-          - "Шёлковая камиcоль"
-          - "Блуза с пышным рукавом"
-          - "Топ с запáхом"
+          - text: Блуза с мягким бантом
+            slug: bluza_s_myagkim_bantom
+            image: /recommendations/romantic/tops/bluza_s_myagkim_bantom.jpg
+          - text: Топ с рюшами у выреза
+            slug: top_s_ryushami_u
+            image: /recommendations/romantic/tops/top_s_ryushami_u.jpg
+          - text: Шёлковая камиcоль
+            slug: shelkovaya_kamicol
+            image: /recommendations/romantic/tops/shelkovaya_kamicol.jpg
+          - text: Блуза с пышным рукавом
+            slug: bluza_s_pyshnym_rukavom
+            image: /recommendations/romantic/tops/bluza_s_pyshnym_rukavom.jpg
+          - text: Топ с запáхом
+            slug: top_s_zap_hom
+            image: /recommendations/romantic/tops/top_s_zap_hom.jpg
         avoid:
-          - "Жёсткие рубашки классического кроя"
-          - "Мужские оверсайз-рубашки"
-          - "Структурные корсетные верхи без мягкости"
+          - text: Жёсткие рубашки классического кроя
+            slug: zhestkie_rubashki_klassicheskogo_kroya
+            image: /recommendations/romantic/tops/zhestkie_rubashki_klassicheskogo_kroya.jpg
+          - text: Мужские оверсайз-рубашки
+            slug: muzhskie_oversaiz_rubashki
+            image: /recommendations/romantic/tops/muzhskie_oversaiz_rubashki.jpg
+          - text: Структурные корсетные верхи без мягкости
+            slug: strukturnye_korsetnye_verhi_bez
+            image: /recommendations/romantic/tops/strukturnye_korsetnye_verhi_bez.jpg
       - key: "emphasize"
         title: "На чём делать акцент"
         description: >-
           Подчёркивайте то, что даёт романтическая природа — мягкость
           и кривую.
         recommended:
-          - "Талия"
-          - "Линия груди"
-          - "Мягкость плеч"
-          - "Изгиб бедра"
+          - text: Талия
+            slug: taliya
+            image: /recommendations/romantic/emphasize/taliya.jpg
+          - text: Линия груди
+            slug: liniya_grudi
+            image: /recommendations/romantic/emphasize/liniya_grudi.jpg
+          - text: Мягкость плеч
+            slug: myagkost_plech
+            image: /recommendations/romantic/emphasize/myagkost_plech.jpg
+          - text: Изгиб бедра
+            slug: izgib_bedra
+            image: /recommendations/romantic/emphasize/izgib_bedra.jpg
         avoid:
-          - "Жёсткая геометрия"
-          - "Мужеподобные пропорции"
+          - text: Жёсткая геометрия
+            slug: zhestkaya_geometriya
+            image: /recommendations/romantic/emphasize/zhestkaya_geometriya.jpg
+          - text: Мужеподобные пропорции
+            slug: muzhepodobnye_proportsii
+            image: /recommendations/romantic/emphasize/muzhepodobnye_proportsii.jpg
       - key: "avoid_overall"
         title: "Чего избегать в целом"
         description: >-
           Романтической типологии противопоказано всё слишком жёсткое.
         recommended: []
         avoid:
-          - "Брутальная архитектура"
-          - "Острая геометрия"
-          - "Грубый рустик"
-          - "Жёсткий утилитарный крой"
+          - text: Брутальная архитектура
+            slug: brutalnaya_arhitektura
+            image: /recommendations/romantic/avoid_overall/brutalnaya_arhitektura.jpg
+          - text: Острая геометрия
+            slug: ostraya_geometriya
+            image: /recommendations/romantic/avoid_overall/ostraya_geometriya.jpg
+          - text: Грубый рустик
+            slug: grubyi_rustik
+            image: /recommendations/romantic/avoid_overall/grubyi_rustik.jpg
+          - text: Жёсткий утилитарный крой
+            slug: zhestkii_utilitarnyi_kroi
+            image: /recommendations/romantic/avoid_overall/zhestkii_utilitarnyi_kroi.jpg

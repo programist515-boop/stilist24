@@ -229,13 +229,22 @@ export const InsightsResponseSchema = z
 export type InsightsResponse = z.infer<typeof InsightsResponseSchema>;
 
 /* ---------- recommendations ---------- */
+export const RecommendationItemSchema = z
+  .object({
+    text: z.string(),
+    slug: z.string().nullable().optional(),
+    image_url: z.string().nullable().optional(),
+  })
+  .passthrough();
+export type RecommendationItem = z.infer<typeof RecommendationItemSchema>;
+
 export const RecommendationSectionSchema = z
   .object({
     key: z.string(),
     title: z.string(),
     description: z.string().default(""),
-    recommended: z.array(z.string()).default([]),
-    avoid: z.array(z.string()).default([]),
+    recommended: z.array(RecommendationItemSchema).default([]),
+    avoid: z.array(RecommendationItemSchema).default([]),
   })
   .passthrough();
 export type RecommendationSection = z.infer<typeof RecommendationSectionSchema>;

@@ -21,6 +21,7 @@ from app.services.recommendation_guide_service import (
     RecommendationGuideService,
     _color_profile_summary,
     _normalize_fashion_terms,
+    _normalize_item,
     _resolve_family,
     _top_style_tags,
 )
@@ -472,9 +473,116 @@ def test_build_sections_normalizes_english_terms():
     assert "charmeuse" not in section["description"].lower()
     assert "шармёз" in section["description"].lower()
     assert "велюр" in section["description"].lower()
-    assert any("блейзер" in r.lower() for r in section["recommended"])
-    assert any("рубашка-поло" in r.lower() for r in section["recommended"])
-    assert any("пышный" in a.lower() for a in section["avoid"])
+    assert any("блейзер" in r["text"].lower() for r in section["recommended"])
+    assert any("рубашка-поло" in r["text"].lower() for r in section["recommended"])
+    assert any("пышный" in a["text"].lower() for a in section["avoid"])
+
+
+# ----------------------------------- _normalize_item (str/dict YAML shapes)
+
+
+def test_normalize_item_legacy_string():
+    """Legacy YAML — bullet is a plain string."""
+    out = _normalize_item("Платья с отрезной талией")
+    assert out == {
+        "text": "Платья с отрезной талией",
+        "slug": None,
+        "image_url": None,
+    }
+
+
+def test_normalize_item_new_dict_with_image():
+    """New YAML — bullet has text, slug, image."""
+    out = _normalize_item(
+        {
+            "text": "Платья с отрезной талией",
+            "slug": "dress_drop_waist",
+            "image": "/recommendations/romantic/lines_silhouette/dress_drop_waist.jpg",
+        }
+    )
+    assert out == {
+        "text": "Платья с отрезной талией",
+        "slug": "dress_drop_waist",
+        "image_url": "/recommendations/romantic/lines_silhouette/dress_drop_waist.jpg",
+    }
+
+
+def test_normalize_item_dict_accepts_image_url_alias():
+    """``image_url`` is the schema field name; ``image`` is the YAML alias."""
+    out = _normalize_item(
+        {"text": "X", "slug": "x", "image_url": "/x.jpg"}
+    )
+    assert out["image_url"] == "/x.jpg"
+
+
+def test_normalize_item_dict_without_text_is_dropped():
+    assert _normalize_item({"slug": "x", "image": "/x.jpg"}) is None
+    assert _normalize_item({"text": "   "}) is None
+
+
+def test_normalize_item_normalizes_english_in_text():
+    out = _normalize_item({"text": "Шёлк charmeuse", "slug": "silk"})
+    assert out["text"] == "Шёлк шармёз"
+    assert out["slug"] == "silk"
+
+
+def test_normalize_item_legacy_empty_string_is_dropped():
+    assert _normalize_item("   ") is None
+    assert _normalize_item("") is None
+
+
+def test_normalize_item_unsupported_type_is_dropped():
+    assert _normalize_item(None) is None
+    assert _normalize_item(42) is None
+    assert _normalize_item(["wrong"]) is None
+
+
+def _guides_with_mixed_item_shapes() -> dict:
+    """One section mixes legacy strings and new dicts to exercise back-compat."""
+    sections = [
+        {
+            "key": "lines_silhouette",
+            "title": "Линии и силуэт",
+            "description": "test",
+            "recommended": [
+                "Старый формат строкой",
+                {
+                    "text": "Новый формат с картинкой",
+                    "slug": "wrap_robe",
+                    "image": "/recommendations/romantic/lines_silhouette/wrap_robe.jpg",
+                },
+            ],
+            "avoid": [
+                {"text": "Только без картинки", "slug": "no_img"},
+            ],
+        },
+    ]
+    return {
+        "romantic": {
+            "style_key": "test",
+            "summary": "test",
+            "closing_note": "test",
+            "sections": sections,
+        },
+    }
+
+
+def test_get_guide_supports_mixed_string_and_dict_items():
+    service = _make_service(kibbe="romantic", guides=_guides_with_mixed_item_shapes())
+    result = service.get_guide(USER_ID)
+
+    sec = next(s for s in result["sections"] if s["key"] == "lines_silhouette")
+    assert sec["recommended"] == [
+        {"text": "Старый формат строкой", "slug": None, "image_url": None},
+        {
+            "text": "Новый формат с картинкой",
+            "slug": "wrap_robe",
+            "image_url": "/recommendations/romantic/lines_silhouette/wrap_robe.jpg",
+        },
+    ]
+    assert sec["avoid"] == [
+        {"text": "Только без картинки", "slug": "no_img", "image_url": None},
+    ]
 
 
 # ------------------------------------------------ YAML l10n regression
@@ -532,7 +640,11 @@ def test_real_yaml_contains_no_english_in_user_text():
                         )
             for list_field in ("recommended", "avoid"):
                 for item in section.get(list_field) or []:
-                    text = str(item)
+                    # Item may be a legacy string or a new dict {text, slug, image}.
+                    if isinstance(item, dict):
+                        text = str(item.get("text") or "")
+                    else:
+                        text = str(item)
                     for match in english_word_re.finditer(text):
                         word = match.group(0).lower()
                         if word not in _YAML_STRUCTURAL_KEYS and word not in KIBBE_FAMILIES:

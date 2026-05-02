@@ -209,12 +209,9 @@ function SectionCard({ section }: { section: RecommendationSection }) {
           <p className="mb-2 text-xs font-medium uppercase tracking-[0.12em] text-emerald-700">
             Выбирайте
           </p>
-          <ul className="space-y-1.5 text-sm leading-relaxed text-ink">
-            {section.recommended.map((line, i) => (
-              <li key={i} className="flex gap-2">
-                <span className="mt-[0.55rem] h-1 w-1 flex-shrink-0 rounded-full bg-emerald-600" />
-                <span>{line}</span>
-              </li>
+          <ul className="space-y-2 text-sm leading-relaxed text-ink">
+            {section.recommended.map((item, i) => (
+              <RecommendationLine key={i} item={item} tone="recommend" />
             ))}
           </ul>
         </div>
@@ -225,17 +222,48 @@ function SectionCard({ section }: { section: RecommendationSection }) {
           <p className="mb-2 text-xs font-medium uppercase tracking-[0.12em] text-red-700">
             Избегайте
           </p>
-          <ul className="space-y-1.5 text-sm leading-relaxed text-ink-muted">
-            {section.avoid.map((line, i) => (
-              <li key={i} className="flex gap-2">
-                <span className="mt-[0.55rem] h-1 w-1 flex-shrink-0 rounded-full bg-red-600" />
-                <span>{line}</span>
-              </li>
+          <ul className="space-y-2 text-sm leading-relaxed text-ink-muted">
+            {section.avoid.map((item, i) => (
+              <RecommendationLine key={i} item={item} tone="avoid" />
             ))}
           </ul>
         </div>
       ) : null}
     </Card>
+  );
+}
+
+/**
+ * One bullet inside «Выбирайте» / «Избегайте». Renders a 48×48 thumbnail
+ * if `item.image_url` is set; otherwise falls back to the original
+ * coloured marker dot. This lets us roll out illustrations gradually:
+ * items in YAML without an `image` key keep the old look.
+ */
+function RecommendationLine({
+  item,
+  tone,
+}: {
+  item: { text: string; image_url?: string | null };
+  tone: "recommend" | "avoid";
+}) {
+  const dotClass =
+    tone === "recommend" ? "bg-emerald-600" : "bg-red-600";
+  return (
+    <li className="flex items-start gap-3">
+      {item.image_url ? (
+        <img
+          src={item.image_url}
+          alt=""
+          loading="lazy"
+          className="h-12 w-12 flex-shrink-0 rounded-md bg-canvas-soft object-cover"
+        />
+      ) : (
+        <span
+          className={`mt-[0.55rem] h-1 w-1 flex-shrink-0 rounded-full ${dotClass}`}
+        />
+      )}
+      <span className={item.image_url ? "pt-1" : undefined}>{item.text}</span>
+    </li>
   );
 }
 

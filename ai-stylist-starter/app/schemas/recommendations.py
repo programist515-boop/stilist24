@@ -18,6 +18,23 @@ from __future__ import annotations
 from pydantic import BaseModel, ConfigDict
 
 
+class RecommendationItem(BaseModel):
+    """A single bullet inside ``recommended`` or ``avoid``.
+
+    The text is always present; ``slug`` and ``image_url`` are populated
+    when an illustration has been generated for this item (see
+    ``scripts/generate_recommendation_images.py``). The frontend
+    falls back to a marker dot when ``image_url`` is null, so adding
+    illustrations is incremental — items without one still render fine.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    text: str
+    slug: str | None = None
+    image_url: str | None = None
+
+
 class RecommendationSection(BaseModel):
     """One themed block of the style guide (e.g. Линии и силуэт)."""
 
@@ -26,8 +43,8 @@ class RecommendationSection(BaseModel):
     key: str
     title: str
     description: str
-    recommended: list[str]
-    avoid: list[str]
+    recommended: list[RecommendationItem]
+    avoid: list[RecommendationItem]
 
 
 class RecommendationIdentity(BaseModel):
@@ -74,5 +91,6 @@ class RecommendationGuideResponse(BaseModel):
 __all__ = [
     "RecommendationGuideResponse",
     "RecommendationIdentity",
+    "RecommendationItem",
     "RecommendationSection",
 ]
