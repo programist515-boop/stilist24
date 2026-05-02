@@ -2,23 +2,19 @@
 
 Thin HTTP layer over :mod:`app.services.preference_quiz.identity_quiz`.
 
-To register in ``app/main.py``::
-
-    from app.api.routes.preference_quiz_identity import router as preference_quiz_identity_router
-    app.include_router(
-        preference_quiz_identity_router,
-        prefix="/preference-quiz/identity",
-        tags=["preference-quiz"],
-    )
-
-Routes (all require ``X-User-Id`` / ``?user_id=`` per
+Routes (all require ``X-User-Id`` / ``Authorization`` per
 :func:`app.api.deps.get_current_user_id`):
 
 * ``POST /start`` — create session, build stock cards.
 * ``POST /{session_id}/vote`` — record a like/dislike vote.
-* ``POST /{session_id}/advance-to-tryon`` — launch try-on for the top-3 subtypes.
-* ``GET  /{session_id}/tryon-status`` — poll status of the launched try-on jobs.
-* ``POST /{session_id}/complete`` — finalize and write the preference profile.
+* ``POST /{session_id}/wardrobe-match`` — for every liked stock look,
+  return matched wardrobe items + missing slots (with shopping hints).
+* ``POST /{session_id}/complete`` — finalize and write the preference
+  profile (winner from the stock likes).
+
+The earlier ``advance-to-tryon`` / ``tryon-status`` pair is gone: it
+fired three FASHN try-on jobs sequentially and was both slow and
+off-target. Personal try-on lives on the dedicated ``/tryon`` page.
 """
 
 from __future__ import annotations
@@ -27,16 +23,14 @@ import logging
 import uuid
 from datetime import datetime, timezone
 
-from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlalchemy import select
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
-from app.api.deps import get_current_user_id, get_db
+from app.api.deps import get_current_persona_id, get_current_user_id, get_db
 from app.core.storage import fresh_public_url
 from app.models.preference_quiz_session import (
     QUIZ_TYPE_IDENTITY,
     STAGE_STOCK,
-    STAGE_TRYON,
     STATUS_ACTIVE,
     STATUS_COMPLETED,
     PreferenceQuizSession,
@@ -45,18 +39,18 @@ from app.models.style_profile import (
     PROFILE_SOURCE_PREFERENCE,
     StyleProfile,
 )
-from app.models.tryon_job import TryOnJob
+from app.repositories.wardrobe_repository import WardrobeRepository
 from app.schemas.preference_quiz import (
     CandidateOut,
-    IdentityQuizAdvanceResponse,
+    IdentityLookMatchOut,
     IdentityQuizCompleteResponse,
     IdentityQuizStartResponse,
-    IdentityQuizTryonStatusResponse,
     IdentityQuizVoteIn,
-    TryonJobStatus,
+    IdentityWardrobeMatchResponse,
+    WardrobeMatchedItemOut,
+    WardrobeMissingSlotOut,
 )
 from app.services.preference_quiz import identity_quiz
-from app.services.tryon_service import TryOnService
 
 logger = logging.getLogger(__name__)
 
@@ -89,7 +83,6 @@ def _candidate_to_out(candidate: dict) -> CandidateOut:
         image_url=str(candidate.get("image_url") or ""),
         title=str(candidate.get("title") or candidate.get("subtype") or ""),
         stage=str(candidate.get("stage") or STAGE_STOCK),
-        tryon_job_id=candidate.get("tryon_job_id"),
     )
 
 
@@ -167,101 +160,95 @@ def vote_on_candidate(
     return {"status": "ok", "votes_recorded": len(session.votes_json or [])}
 
 
-# ---------------------------------------------------------------- POST /advance-to-tryon
+# ---------------------------------------------------------------- POST /wardrobe-match
 
 
 @router.post(
-    "/{session_id}/advance-to-tryon",
-    response_model=IdentityQuizAdvanceResponse,
+    "/{session_id}/wardrobe-match",
+    response_model=IdentityWardrobeMatchResponse,
 )
-async def advance_to_tryon(
+def wardrobe_match(
     session_id: uuid.UUID,
-    user_photo_id: uuid.UUID = Query(
-        ..., description="UserPhoto.id of the user's full-figure photo"
-    ),
     db: Session = Depends(get_db),
     user_id: uuid.UUID = Depends(get_current_user_id),
-) -> IdentityQuizAdvanceResponse:
+    persona_id: uuid.UUID = Depends(get_current_persona_id),
+) -> IdentityWardrobeMatchResponse:
+    """For every liked stock look, return wardrobe match + shopping hints.
+
+    Requires the user to have liked at least 3 distinct subtypes — same
+    threshold the old ``advance-to-tryon`` enforced. Returns 422 if not
+    yet (the frontend uses this to keep the «Достаточно, к примерке»
+    button disabled until the threshold is met).
+    """
     session = _get_session_or_404(db, session_id, user_id)
 
     finalists = identity_quiz.resolve_stock_stage(session)
     if not finalists:
         raise HTTPException(
-            status_code=409,
-            detail="need at least 3 liked subtypes before advancing to try-on",
-        )
-
-    session.stage = STAGE_TRYON
-    tryon_service = TryOnService(db)
-    try:
-        new_cards = await identity_quiz.build_tryon_finalists(
-            session=session,
-            user_figure_photo_id=user_photo_id,
-            tryon_service=tryon_service,
-            db=db,
-        )
-    except Exception as exc:
-        logger.exception(
-            "preference_quiz: advance_to_tryon failed for session=%s", session_id
-        )
-        raise HTTPException(status_code=502, detail=str(exc)) from exc
-
-    if not new_cards:
-        raise HTTPException(
             status_code=422,
-            detail="could not launch try-on for any finalist (missing wardrobe items)",
+            detail="need at least 3 liked subtypes before matching wardrobe",
         )
 
-    db.add(session)
-    db.commit()
-    db.refresh(session)
+    wardrobe = WardrobeRepository(db).list_by_persona(persona_id)
+    matches = identity_quiz.build_wardrobe_match(session, wardrobe)
 
-    return IdentityQuizAdvanceResponse(
-        session_id=str(session.id),
-        candidates=[_candidate_to_out(c) for c in new_cards],
-        tryon_job_ids=[str(c.get("tryon_job_id")) for c in new_cards if c.get("tryon_job_id")],
-    )
+    items_by_id: dict[str, object] = {str(item.id): item for item in wardrobe}
 
-
-# ---------------------------------------------------------------- GET /tryon-status
-
-
-@router.get(
-    "/{session_id}/tryon-status",
-    response_model=IdentityQuizTryonStatusResponse,
-)
-def get_tryon_status(
-    session_id: uuid.UUID,
-    db: Session = Depends(get_db),
-    user_id: uuid.UUID = Depends(get_current_user_id),
-) -> IdentityQuizTryonStatusResponse:
-    session = _get_session_or_404(db, session_id, user_id)
-    jobs: list[TryonJobStatus] = []
-    for candidate in session.candidates_json or []:
-        if not isinstance(candidate, dict):
-            continue
-        if candidate.get("stage") != STAGE_TRYON:
-            continue
-        raw_job_id = candidate.get("tryon_job_id")
-        if not raw_job_id:
-            continue
-        try:
-            job_uuid = uuid.UUID(str(raw_job_id))
-        except (ValueError, TypeError):
-            continue
-        job = db.get(TryOnJob, job_uuid)
-        if job is None or job.user_id != user_id:
-            continue
-        jobs.append(
-            TryonJobStatus(
-                job_id=str(job.id),
-                status=job.status,
-                result_image_url=fresh_public_url(
-                    job.result_image_key, job.result_image_url
-                ),
+    looks_out: list[IdentityLookMatchOut] = []
+    for subtype, match in matches:
+        matched_out: list[WardrobeMatchedItemOut] = []
+        for mi in match.matched_items:
+            item = items_by_id.get(mi.item_id)
+            image_url: str | None = None
+            category: str | None = None
+            if item is not None:
+                image_url = fresh_public_url(
+                    getattr(item, "image_key", None),
+                    getattr(item, "image_url", None),
+                )
+                category = getattr(item, "category", None)
+            matched_out.append(
+                WardrobeMatchedItemOut(
+                    slot=mi.slot,
+                    item_id=mi.item_id,
+                    image_url=image_url,
+                    category=category,
+                    match_quality=mi.match_quality,
+                    match_reasons=list(mi.match_reasons),
+                )
+            )
+        missing_out = [
+            WardrobeMissingSlotOut(
+                slot=ms.slot,
+                requires=dict(ms.requires),
+                shopping_hint=ms.shopping_hint,
+            )
+            for ms in match.missing_slots
+        ]
+        looks_out.append(
+            IdentityLookMatchOut(
+                look_id=match.look_id,
+                subtype=subtype,
+                title=match.title,
+                image_url=match.image_url,
+                occasion=match.occasion,
+                matched_items=matched_out,
+                missing_slots=missing_out,
+                completeness=match.completeness,
+                slot_order=list(match.slot_order),
             )
         )
-    return IdentityQuizTryonStatusResponse(jobs=jobs)
+
+    logger.info(
+        "preference_quiz: wardrobe-match returned %d looks (user=%s, wardrobe_size=%d)",
+        len(looks_out),
+        user_id,
+        len(wardrobe),
+    )
+    return IdentityWardrobeMatchResponse(
+        session_id=str(session.id),
+        looks=looks_out,
+    )
 
 
 # ---------------------------------------------------------------- POST /complete

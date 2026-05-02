@@ -54,54 +54,52 @@ export const IdentityStartResponseSchema = z
   .passthrough();
 export type IdentityStartResponse = z.infer<typeof IdentityStartResponseSchema>;
 
-export const IdentityTryOnCandidateSchema = z
+/* ---------- wardrobe match (replaces virtual try-on) ---------- */
+
+export const WardrobeMatchedItemSchema = z
   .object({
-    candidate_id: z.string(),
-    subtype: z.string(),
-    tryon_job_id: z.string(),
-    title: z.string().nullable().optional(),
-    subtitle: z.string().nullable().optional(),
-    stage: z.literal("tryon"),
+    slot: z.string(),
+    item_id: z.string(),
+    image_url: z.string().nullable().optional(),
+    category: z.string().nullable().optional(),
+    match_quality: z.number(),
+    match_reasons: z.array(z.string()).default([]),
   })
   .passthrough();
-export type IdentityTryOnCandidate = z.infer<typeof IdentityTryOnCandidateSchema>;
+export type WardrobeMatchedItem = z.infer<typeof WardrobeMatchedItemSchema>;
 
-export const IdentityAdvanceToTryOnResponseSchema = z
+export const WardrobeMissingSlotSchema = z
+  .object({
+    slot: z.string(),
+    requires: z.record(z.unknown()).default({}),
+    shopping_hint: z.string(),
+  })
+  .passthrough();
+export type WardrobeMissingSlot = z.infer<typeof WardrobeMissingSlotSchema>;
+
+export const IdentityLookMatchSchema = z
+  .object({
+    look_id: z.string(),
+    subtype: z.string(),
+    title: z.string(),
+    image_url: z.string().nullable().optional(),
+    occasion: z.string().nullable().optional(),
+    matched_items: z.array(WardrobeMatchedItemSchema).default([]),
+    missing_slots: z.array(WardrobeMissingSlotSchema).default([]),
+    completeness: z.number(),
+    slot_order: z.array(z.string()).default([]),
+  })
+  .passthrough();
+export type IdentityLookMatch = z.infer<typeof IdentityLookMatchSchema>;
+
+export const IdentityWardrobeMatchResponseSchema = z
   .object({
     session_id: z.string(),
-    candidates: z.array(IdentityTryOnCandidateSchema).default([]),
-    tryon_job_ids: z.array(z.string()).default([]),
+    looks: z.array(IdentityLookMatchSchema).default([]),
   })
   .passthrough();
-export type IdentityAdvanceToTryOnResponse = z.infer<
-  typeof IdentityAdvanceToTryOnResponseSchema
->;
-
-export const TryOnStatusSchema = z.enum([
-  "pending",
-  "running",
-  "succeeded",
-  "failed",
-]);
-export type TryOnStatus = z.infer<typeof TryOnStatusSchema>;
-
-export const TryOnJobStatusSchema = z
-  .object({
-    job_id: z.string(),
-    status: z.string(),
-    result_image_url: z.string().nullable().optional(),
-    error_message: z.string().nullable().optional(),
-  })
-  .passthrough();
-export type TryOnJobStatus = z.infer<typeof TryOnJobStatusSchema>;
-
-export const IdentityTryOnStatusResponseSchema = z
-  .object({
-    jobs: z.array(TryOnJobStatusSchema).default([]),
-  })
-  .passthrough();
-export type IdentityTryOnStatusResponse = z.infer<
-  typeof IdentityTryOnStatusResponseSchema
+export type IdentityWardrobeMatchResponse = z.infer<
+  typeof IdentityWardrobeMatchResponseSchema
 >;
 
 export const IdentityCompleteResponseSchema = z

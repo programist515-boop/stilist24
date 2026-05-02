@@ -1,21 +1,22 @@
 """Identity preference quiz engine.
 
-Phase 2 of the "preference-based kibbe identification" feature. The
-quiz runs in two stages:
+Two-step flow:
 
-1. ``stock``: pre-rendered reference looks for all 20 subtypes are shown
-   to the user, one look per subtype. The algorithmic winner (if any) is
-   surfaced first. The user likes/dislikes cards, the top-3 most liked
-   subtypes advance.
-2. ``tryon``: the 3 finalists go through virtual try-on on the user's
-   own figure photo. Whichever subtype wins the most likes in this
-   stage becomes the preference-based kibbe type, stored on
-   :class:`StyleProfile` as ``kibbe_type_preference``.
+1. ``stock``: pre-rendered reference looks for all configured subtypes
+   are shown to the user, one look per subtype. The algorithmic winner
+   (if any) is surfaced first. The user likes/dislikes cards.
+2. After ≥3 distinct subtypes have been liked, the backend can:
+   - run :func:`build_wardrobe_match` to project each liked look against
+     the user's wardrobe (matched items + missing slots), and
+   - run :func:`resolve_final_winner` to pick the dominant subtype from
+     the same stock votes (used to write
+     :attr:`StyleProfile.kibbe_type_preference`).
 
-This module owns the *pure* logic — candidate assembly, vote recording,
-stage resolution, finalist try-on triggering. Persistence of the quiz
-session itself and the derived profile fields is the route layer's
-responsibility (it owns the HTTP boundary).
+Earlier iterations had a virtual-try-on second stage powered by FASHN.
+That branch has been removed: matching the wardrobe to the liked looks
+is the actual signal users wanted ("can I assemble this outfit from
+what I own — and what's missing?"), and try-on for individual items
+already lives on the dedicated ``/tryon`` page.
 """
 
 from __future__ import annotations
@@ -31,6 +32,7 @@ import yaml
 
 if TYPE_CHECKING:  # pragma: no cover - typing only
     from app.models.preference_quiz_session import PreferenceQuizSession
+    from app.services.reference_matcher import ReferenceLookMatch
 
 logger = logging.getLogger(__name__)
 
@@ -46,8 +48,10 @@ ACTION_DISLIKE = "dislike"
 EVENT_LIKED = "style_preference_liked"
 EVENT_DISLIKED = "style_preference_disliked"
 
+#: All identity quiz cards live in the ``stock`` stage now. Constant
+#: kept for backwards-compatible test code and DB fixtures that still
+#: reference it.
 STAGE_STOCK = "stock"
-STAGE_TRYON = "tryon"
 
 
 # ---------------------------------------------------------------- helpers
@@ -256,14 +260,45 @@ def record_vote(
     return session
 
 
-# ---------------------------------------------------------------- stage 1 → 2 resolve
+# ---------------------------------------------------------------- stage resolve helpers
 
 
-def _subtype_for_candidate_id(session: PreferenceQuizSession, candidate_id: str) -> str | None:
+def _candidate_index(session: PreferenceQuizSession) -> dict[str, dict]:
+    """Map candidate_id → candidate dict (skipping malformed entries)."""
+    index: dict[str, dict] = {}
     for c in session.candidates_json or []:
-        if isinstance(c, dict) and c.get("candidate_id") == candidate_id:
-            return c.get("subtype")
-    return None
+        if not isinstance(c, dict):
+            continue
+        cid = c.get("candidate_id")
+        if cid:
+            index[cid] = c
+    return index
+
+
+def _iter_stock_likes(session: PreferenceQuizSession) -> list[dict]:
+    """Return candidate dicts for every liked stock-stage vote.
+
+    Dislikes, votes against unknown candidates, and votes against
+    non-stock candidates are filtered out. Order matches ``votes_json``
+    so callers can use ``Counter.most_common()`` for stable ranking.
+    """
+    candidates = _candidate_index(session)
+    out: list[dict] = []
+    for vote in session.votes_json or []:
+        if not isinstance(vote, dict):
+            continue
+        if vote.get("action") != ACTION_LIKE:
+            continue
+        cid = vote.get("candidate_id")
+        if not cid:
+            continue
+        candidate = candidates.get(cid)
+        if not candidate:
+            continue
+        if (candidate.get("stage") or STAGE_STOCK) != STAGE_STOCK:
+            continue
+        out.append(candidate)
+    return out
 
 
 def resolve_stock_stage(session: PreferenceQuizSession) -> list[str]:
@@ -274,28 +309,10 @@ def resolve_stock_stage(session: PreferenceQuizSession) -> list[str]:
     prompt the user.
     """
     like_counts: Counter[str] = Counter()
-    for vote in session.votes_json or []:
-        if not isinstance(vote, dict):
-            continue
-        if vote.get("action") != ACTION_LIKE:
-            continue
-        candidate_id = vote.get("candidate_id")
-        if not candidate_id:
-            continue
-        subtype = _subtype_for_candidate_id(session, candidate_id)
-        if subtype is None:
-            # Stage filter: only count stock-stage votes. We can
-            # identify stage via the candidate record; if the candidate
-            # is gone we skip the vote.
-            continue
-        # Enforce stage == stock by checking the candidate record.
-        candidate = next(
-            (c for c in (session.candidates_json or []) if isinstance(c, dict) and c.get("candidate_id") == candidate_id),
-            None,
-        )
-        if candidate and candidate.get("stage") not in (None, STAGE_STOCK):
-            continue
-        like_counts[subtype] += 1
+    for candidate in _iter_stock_likes(session):
+        subtype = candidate.get("subtype")
+        if subtype:
+            like_counts[subtype] += 1
 
     if len(like_counts) < 3:
         return []
@@ -307,201 +324,125 @@ def resolve_stock_stage(session: PreferenceQuizSession) -> list[str]:
     return [subtype for subtype, _ in like_counts.most_common(3)]
 
 
-# ---------------------------------------------------------------- stage 2: tryon
+# ---------------------------------------------------------------- wardrobe match
 
 
-def _pick_tryon_item_for_subtype(
-    subtype: str,
-    user_id: uuid.UUID,
-    db: Any,
-) -> tuple[uuid.UUID, str] | tuple[None, str | None]:
-    """Pick the wardrobe item id to try on for a given subtype.
-
-    Returns ``(item_id, source)`` where ``source`` is either the path
-    taken (``"wardrobe_top"``, ``"wardrobe_fallback"``, ``"reference"``)
-    or ``None`` if nothing suitable was found. ``item_id`` is ``None``
-    in the latter case.
-
-    We look for a wardrobe item matching the ``top`` slot of the
-    subtype's first look; failing that we take the first wardrobe item.
-    If the user's wardrobe is empty and the YAML look carries a
-    ``reference_item_id``, we fall back to that id. Otherwise we
-    return ``(None, None)`` — the caller skips the finalist with a
-    warning.
-    """
-    looks = _load_reference_looks_for_subtype(subtype) or []
-    look = _pick_representative_look(looks) if looks else None
-    top_categories: list[str] = []
-    reference_item_id: str | None = None
-    if isinstance(look, dict):
-        reference_item_id = look.get("reference_item_id")
-        for item in look.get("items", []) or []:
-            if not isinstance(item, dict):
-                continue
-            if item.get("slot") in ("top", "blazer", "dress", "dress_or_set"):
-                raw_cats = (item.get("requires") or {}).get("category")
-                if isinstance(raw_cats, str):
-                    top_categories.append(raw_cats)
-                elif isinstance(raw_cats, list):
-                    top_categories.extend(str(c) for c in raw_cats)
-                break
-
-    # Ask the DB for a matching wardrobe item. We use a tiny inline
-    # import so this module stays import-light for unit tests.
-    try:
-        from sqlalchemy import select
-
-        from app.models.wardrobe_item import WardrobeItem
-
-        if top_categories:
-            stmt = (
-                select(WardrobeItem)
-                .where(WardrobeItem.user_id == user_id)
-                .where(WardrobeItem.category.in_(top_categories))
-                .limit(1)
-            )
-            hit = db.execute(stmt).scalars().first()
-            if hit is not None:
-                return hit.id, "wardrobe_top"
-
-        stmt = (
-            select(WardrobeItem)
-            .where(WardrobeItem.user_id == user_id)
-            .limit(1)
-        )
-        hit = db.execute(stmt).scalars().first()
-        if hit is not None:
-            return hit.id, "wardrobe_fallback"
-    except Exception as exc:  # pragma: no cover - best effort
-        logger.warning(
-            "preference_quiz: wardrobe lookup for subtype=%s failed: %s",
-            subtype,
-            exc,
-        )
-
-    if reference_item_id:
-        try:
-            return uuid.UUID(str(reference_item_id)), "reference"
-        except (ValueError, TypeError):
-            logger.warning(
-                "preference_quiz: reference_item_id=%r is not a UUID (subtype=%s)",
-                reference_item_id,
-                subtype,
-            )
-
-    return None, None
-
-
-async def build_tryon_finalists(
+def build_wardrobe_match(
     session: PreferenceQuizSession,
-    user_figure_photo_id: uuid.UUID,
-    tryon_service: Any,
-    db: Any,
-) -> list[dict]:
-    """Kick off try-on jobs for the top-3 subtypes and record them.
+    wardrobe: list[Any],
+) -> list[tuple[str, ReferenceLookMatch]]:
+    """For each liked stock look, project it against the user's wardrobe.
 
-    Each finalist becomes a new candidate row in
-    ``session.candidates_json`` with ``stage=tryon`` and a
-    ``tryon_job_id`` pointing at the launched job.
+    Returns a list of ``(subtype, ReferenceLookMatch)`` tuples — one per
+    distinct ``(subtype, look_id)`` the user liked, in the order the
+    likes were cast. Each match contains ``matched_items``,
+    ``missing_slots`` (with shopping hints) and ``completeness``,
+    sourced from :class:`ReferenceMatcher`.
 
-    If we can't find a wardrobe item (or a YAML reference fallback)
-    for a subtype, we log a warning and skip that finalist — the
-    remaining finalists still proceed.
+    Looks whose YAML is missing or whose ``look_id`` is unknown are
+    skipped with a warning — the caller still gets matches for every
+    well-formed liked look.
     """
-    finalists = resolve_stock_stage(session)
-    if not finalists:
-        logger.info(
-            "preference_quiz: advance-to-tryon called but no top-3 finalists (user=%s)",
-            session.user_id,
-        )
+    # Local imports keep this module DB-free for unit tests that don't
+    # need the full reference_matcher chain.
+    from app.services.reference_matcher import (
+        ReferenceMatcher,
+        _item_blocked_by_global_stop,
+        _load_reference_looks_yaml,
+    )
+
+    # Collect ``(subtype, look_id)`` pairs in like-order, deduplicated.
+    seen: set[tuple[str, str]] = set()
+    pairs: list[tuple[str, str]] = []
+    for candidate in _iter_stock_likes(session):
+        subtype = candidate.get("subtype")
+        look_id = candidate.get("look_id")
+        if not subtype or not look_id:
+            continue
+        key = (str(subtype), str(look_id))
+        if key in seen:
+            continue
+        seen.add(key)
+        pairs.append(key)
+
+    if not pairs:
         return []
 
-    new_cards: list[dict] = []
-    for subtype in finalists:
-        item_id, source = _pick_tryon_item_for_subtype(subtype, session.user_id, db)
-        if item_id is None:
-            logger.warning(
-                "preference_quiz: no try-on item for subtype=%s (user=%s), skipping finalist",
-                subtype,
-                session.user_id,
-            )
-            continue
-        try:
-            response = await tryon_service.generate(
-                user_id=session.user_id,
-                item_id=item_id,
-                user_photo_id=user_figure_photo_id,
-            )
-        except Exception as exc:
-            logger.warning(
-                "preference_quiz: TryOnService.generate failed for subtype=%s: %s",
-                subtype,
-                exc,
-            )
-            continue
-        job_id = (response or {}).get("job_id") if isinstance(response, dict) else None
-        if not job_id:
-            logger.warning(
-                "preference_quiz: TryOnService.generate returned no job_id for subtype=%s",
-                subtype,
-            )
-            continue
-        card = {
-            "candidate_id": f"{subtype}:tryon:{job_id}",
-            "subtype": subtype,
-            "tryon_job_id": job_id,
-            "item_source": source,
-            "stage": STAGE_TRYON,
-        }
-        new_cards.append(card)
+    matcher = ReferenceMatcher()
+    # Cache YAML loads + filtered wardrobes per subtype so multiple
+    # liked looks of the same subtype don't re-read the file or
+    # re-walk the global stop list.
+    yaml_cache: dict[str, dict] = {}
+    allowed_cache: dict[str, list[Any]] = {}
 
-    # Append to candidates_json; reassign to trigger JSONB dirty flag.
-    candidates = list(session.candidates_json or [])
-    candidates.extend(new_cards)
-    session.candidates_json = candidates
+    results: list[tuple[str, ReferenceLookMatch]] = []
+    for subtype, look_id in pairs:
+        data = yaml_cache.get(subtype)
+        if data is None:
+            data = _load_reference_looks_yaml(subtype) or {}
+            yaml_cache[subtype] = data
+        looks = data.get("reference_looks") if isinstance(data, dict) else None
+        if not isinstance(looks, list):
+            logger.warning(
+                "wardrobe_match: no reference_looks for subtype=%s", subtype
+            )
+            continue
+
+        look = next(
+            (
+                entry
+                for entry in looks
+                if isinstance(entry, dict) and str(entry.get("id") or "") == look_id
+            ),
+            None,
+        )
+        if look is None:
+            logger.warning(
+                "wardrobe_match: look_id=%s not found in subtype=%s YAML",
+                look_id,
+                subtype,
+            )
+            continue
+
+        allowed = allowed_cache.get(subtype)
+        if allowed is None:
+            global_stop = data.get("global_stop_items") or []
+            allowed = [
+                item
+                for item in wardrobe
+                if _item_blocked_by_global_stop(item, global_stop) is None
+            ]
+            allowed_cache[subtype] = allowed
+
+        match = matcher._match_one_look(look, allowed, subtype)
+        results.append((subtype, match))
 
     logger.info(
-        "preference_quiz: launched %d try-on finalists for user=%s",
-        len(new_cards),
+        "preference_quiz: built %d wardrobe matches for user=%s",
+        len(results),
         session.user_id,
     )
-    return new_cards
+    return results
 
 
-# ---------------------------------------------------------------- stage 2 resolve
+# ---------------------------------------------------------------- complete
 
 
 def resolve_final_winner(session: PreferenceQuizSession) -> dict:
-    """Compute the winning subtype among the try-on finalists.
+    """Compute the winning subtype from the stock-stage likes.
 
-    Counts likes for ``stage == "tryon"`` candidates only. Confidence
-    is ``likes_for_winner / total_tryon_likes``, in ``[0.0, 1.0]``.
+    Counts ``like`` votes against ``stock`` candidates only. Confidence
+    is ``likes_for_winner / total_stock_likes`` in ``[0.0, 1.0]``.
 
     Returns ``{"winner": None, "confidence": 0.0, "ranking": []}`` when
-    there are zero try-on likes.
+    there are zero stock likes — the caller (route layer) decides
+    whether to surface an error or persist the empty result.
     """
-    # Map candidate_id → subtype, but only for try-on cards.
-    tryon_subtype_by_cid: dict[str, str] = {}
-    for c in session.candidates_json or []:
-        if not isinstance(c, dict):
-            continue
-        if c.get("stage") != STAGE_TRYON:
-            continue
-        cid = c.get("candidate_id")
-        subtype = c.get("subtype")
-        if cid and subtype:
-            tryon_subtype_by_cid[cid] = subtype
-
     like_counts: Counter[str] = Counter()
-    for vote in session.votes_json or []:
-        if not isinstance(vote, dict):
-            continue
-        if vote.get("action") != ACTION_LIKE:
-            continue
-        cid = vote.get("candidate_id")
-        if cid not in tryon_subtype_by_cid:
-            continue
-        like_counts[tryon_subtype_by_cid[cid]] += 1
+    for candidate in _iter_stock_likes(session):
+        subtype = candidate.get("subtype")
+        if subtype:
+            like_counts[subtype] += 1
 
     total = sum(like_counts.values())
     if total == 0:
@@ -526,9 +467,8 @@ __all__ = [
     "EVENT_DISLIKED",
     "EVENT_LIKED",
     "STAGE_STOCK",
-    "STAGE_TRYON",
     "build_stock_candidates",
-    "build_tryon_finalists",
+    "build_wardrobe_match",
     "record_vote",
     "resolve_final_winner",
     "resolve_stock_stage",

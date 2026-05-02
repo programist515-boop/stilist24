@@ -3,7 +3,8 @@ subtypes, each with a real image file on disk.
 
 This is the proof-of-life check that the content drop (YAMLs + generated
 placeholder images) has filled the blocker we had: before, only
-flamboyant_gamine had content, so advance-to-tryon would always 409.
+flamboyant_gamine had content, so the wardrobe-match step would never
+unlock (it needs ≥3 distinct subtypes liked).
 """
 from __future__ import annotations
 
@@ -42,7 +43,7 @@ def test_build_stock_candidates_returns_all_known_subtypes(monkeypatch):
     got = {c["subtype"] for c in cards}
 
     assert got == expected, f"missing subtypes: {expected - got}; extra: {got - expected}"
-    assert len(cards) >= 3, "need ≥3 cards for advance-to-tryon to ever succeed"
+    assert len(cards) >= 3, "need ≥3 cards for the wardrobe-match step to ever unlock"
 
 
 def test_stock_candidate_image_urls_resolve_to_real_files():

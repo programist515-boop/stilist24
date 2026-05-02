@@ -1,9 +1,13 @@
 """Unit tests for the identity preference quiz engine.
 
 Covers pure logic only — candidate assembly, vote resolution, winner
-computation — with lightweight in-memory stand-ins for
-:class:`PreferenceQuizSession`. The route layer is not exercised here
-(no DB or FastAPI is spun up).
+computation, and wardrobe matching — with lightweight in-memory
+stand-ins for :class:`PreferenceQuizSession`. The route layer is not
+exercised here (no DB or FastAPI is spun up).
+
+The previous virtual-try-on stage has been removed: the quiz now has a
+single stock stage and a wardrobe-match step that maps each liked look
+to ``matched_items`` + ``missing_slots``.
 """
 
 from __future__ import annotations
@@ -43,15 +47,6 @@ def _stock_card(subtype: str, look_id: str = "look_1") -> dict:
         "image_url": f"/static/{subtype}.jpg",
         "title": subtype,
         "stage": identity_quiz.STAGE_STOCK,
-    }
-
-
-def _tryon_card(subtype: str, job_id: str = "job-1") -> dict:
-    return {
-        "candidate_id": f"{subtype}:tryon:{job_id}",
-        "subtype": subtype,
-        "tryon_job_id": job_id,
-        "stage": identity_quiz.STAGE_TRYON,
     }
 
 
@@ -118,40 +113,58 @@ def test_resolve_stock_stage_not_enough_likes():
 # ---------------------------------------------------------------- resolve_final_winner
 
 
-def test_resolve_final_winner():
-    # 3 try-on finalists; dramatic gets 3 likes, romantic 2, natural 0.
+def test_resolve_final_winner_from_stock_likes():
+    # 4 subtypes; soft_dramatic gets 3 likes, classic 1, others 0/disliked.
     cards = [
-        _tryon_card("dramatic", "job-a"),
-        _tryon_card("romantic", "job-b"),
-        _tryon_card("natural", "job-c"),
+        _stock_card("soft_dramatic", "sd"),
+        _stock_card("classic", "cl"),
+        _stock_card("romantic", "ro"),
+        _stock_card("gamine", "ga"),
     ]
     votes = [
-        _like("dramatic:tryon:job-a"),
-        _like("dramatic:tryon:job-a"),
-        _like("dramatic:tryon:job-a"),
-        _like("romantic:tryon:job-b"),
-        _like("romantic:tryon:job-b"),
-        _dislike("natural:tryon:job-c"),
+        _like("soft_dramatic:sd"),
+        _like("soft_dramatic:sd"),
+        _like("soft_dramatic:sd"),
+        _like("classic:cl"),
+        _dislike("romantic:ro"),
     ]
     session = _session(candidates=cards, votes=votes)
 
     result = identity_quiz.resolve_final_winner(session)
 
-    assert result["winner"] == "dramatic"
-    # 3 of 5 total likes went to the winner.
-    assert result["confidence"] == 3 / 5
-    assert [r["subtype"] for r in result["ranking"]] == ["dramatic", "romantic"]
+    assert result["winner"] == "soft_dramatic"
+    # 3 of 4 stock likes went to the winner.
+    assert result["confidence"] == 3 / 4
+    assert [r["subtype"] for r in result["ranking"]] == ["soft_dramatic", "classic"]
     assert result["ranking"][0]["likes"] == 3
-    assert result["ranking"][1]["likes"] == 2
+    assert result["ranking"][1]["likes"] == 1
 
 
 def test_resolve_final_winner_no_votes():
-    cards = [_tryon_card("dramatic"), _tryon_card("romantic")]
+    cards = [_stock_card("dramatic"), _stock_card("romantic")]
     session = _session(candidates=cards, votes=[])
 
     result = identity_quiz.resolve_final_winner(session)
 
     assert result == {"winner": None, "confidence": 0.0, "ranking": []}
+
+
+def test_resolve_final_winner_ignores_dislikes_and_unknown_candidates():
+    cards = [_stock_card("dramatic", "d"), _stock_card("classic", "c")]
+    votes = [
+        _like("dramatic:d"),
+        _dislike("dramatic:d"),       # dislike — must not count
+        _like("classic:c"),
+        _like("ghost:gone"),          # candidate not in candidates_json — ignore
+    ]
+    session = _session(candidates=cards, votes=votes)
+
+    result = identity_quiz.resolve_final_winner(session)
+
+    # 1 like dramatic + 1 like classic = tie, dramatic comes first by insertion order.
+    assert result["winner"] == "dramatic"
+    assert result["confidence"] == 0.5
+    assert {r["subtype"] for r in result["ranking"]} == {"dramatic", "classic"}
 
 
 # ---------------------------------------------------------------- build_stock_candidates
@@ -191,3 +204,169 @@ def test_build_stock_candidates_algorithmic_first():
     assert cards[0]["look_id"] == "romantic_L1"
     assert cards[0]["stage"] == identity_quiz.STAGE_STOCK
     assert cards[0]["title"] == "romantic look"
+
+
+# ---------------------------------------------------------------- build_wardrobe_match
+
+
+def _fake_yaml_for(subtype: str, look_id: str, items: list[dict]) -> dict:
+    """Build the minimal reference_looks YAML structure used by the matcher."""
+    return {
+        "reference_looks": [
+            {
+                "id": look_id,
+                "name": f"{subtype} {look_id}",
+                "image_url": f"/static/{subtype}/{look_id}.jpg",
+                "items": items,
+            }
+        ],
+        "global_stop_items": [],
+    }
+
+
+def test_wardrobe_match_returns_one_entry_per_distinct_liked_look():
+    """Two different liked looks → two match entries with the right look_ids."""
+    cards = [
+        _stock_card("soft_dramatic", "sd_a"),
+        _stock_card("classic", "cl_b"),
+        _stock_card("natural", "na_c"),
+        _stock_card("romantic", "ro_d"),
+    ]
+    votes = [
+        _like("soft_dramatic:sd_a"),
+        _like("classic:cl_b"),
+        _like("classic:cl_b"),  # duplicate like — must collapse to one match entry
+        _dislike("natural:na_c"),
+        _like("romantic:ro_d"),
+    ]
+    session = _session(candidates=cards, votes=votes)
+
+    fake_data: dict[str, dict] = {
+        "soft_dramatic": _fake_yaml_for(
+            "soft_dramatic",
+            "sd_a",
+            items=[{"slot": "top", "requires": {"category": "blouse"}, "optional": False}],
+        ),
+        "classic": _fake_yaml_for(
+            "classic",
+            "cl_b",
+            items=[{"slot": "blazer", "requires": {"category": "blazer"}, "optional": False}],
+        ),
+        "romantic": _fake_yaml_for(
+            "romantic",
+            "ro_d",
+            items=[{"slot": "dress", "requires": {"category": "dress"}, "optional": False}],
+        ),
+    }
+
+    wardrobe = [
+        {"id": "w1", "category": "blouse"},
+        {"id": "w2", "category": "blazer"},
+        # No dress — romantic look will have a missing slot.
+    ]
+
+    with patch(
+        "app.services.reference_matcher._load_reference_looks_yaml",
+        side_effect=lambda subtype: fake_data.get(subtype),
+    ):
+        results = identity_quiz.build_wardrobe_match(session, wardrobe)
+
+    # Order = like-order, deduped: soft_dramatic (1st like), classic (2nd), romantic (5th).
+    assert [subtype for subtype, _ in results] == ["soft_dramatic", "classic", "romantic"]
+
+    by_subtype = {s: m for s, m in results}
+    assert by_subtype["soft_dramatic"].look_id == "sd_a"
+    assert by_subtype["classic"].look_id == "cl_b"
+    assert by_subtype["romantic"].look_id == "ro_d"
+
+
+def test_wardrobe_match_skips_dislikes_and_unknown_candidates():
+    cards = [_stock_card("classic", "cl"), _stock_card("dramatic", "dr")]
+    votes = [
+        _dislike("classic:cl"),       # dislikes never produce matches
+        _like("ghost:gone"),          # candidate not in candidates_json
+        _like("dramatic:dr"),
+    ]
+    session = _session(candidates=cards, votes=votes)
+
+    fake_data = {
+        "dramatic": _fake_yaml_for(
+            "dramatic",
+            "dr",
+            items=[{"slot": "top", "requires": {"category": "shirt"}, "optional": False}],
+        ),
+    }
+    with patch(
+        "app.services.reference_matcher._load_reference_looks_yaml",
+        side_effect=lambda subtype: fake_data.get(subtype),
+    ):
+        results = identity_quiz.build_wardrobe_match(
+            session, [{"id": "w", "category": "shirt"}]
+        )
+
+    assert [s for s, _ in results] == ["dramatic"]
+
+
+def test_wardrobe_match_completeness_and_missing_slot_shopping_hint():
+    cards = [_stock_card("classic", "cl")]
+    votes = [_like("classic:cl")]
+    session = _session(candidates=cards, votes=votes)
+
+    fake_data = {
+        "classic": _fake_yaml_for(
+            "classic",
+            "cl",
+            items=[
+                {"slot": "blazer", "requires": {"category": "blazer"}, "optional": False},
+                {"slot": "trousers", "requires": {"category": "trousers"}, "optional": False},
+            ],
+        ),
+    }
+    wardrobe = [{"id": "w-blazer", "category": "blazer"}]
+
+    with patch(
+        "app.services.reference_matcher._load_reference_looks_yaml",
+        side_effect=lambda subtype: fake_data.get(subtype),
+    ):
+        results = identity_quiz.build_wardrobe_match(session, wardrobe)
+
+    assert len(results) == 1
+    _, match = results[0]
+    # 1 of 2 required slots closed → completeness == 0.5.
+    assert match.completeness == 0.5
+    assert [mi.slot for mi in match.matched_items] == ["blazer"]
+    assert [ms.slot for ms in match.missing_slots] == ["trousers"]
+    assert match.missing_slots[0].shopping_hint, "shopping_hint must be non-empty"
+    assert "trousers" in match.missing_slots[0].shopping_hint
+
+
+def test_wardrobe_match_skips_look_id_not_in_yaml():
+    # User somehow liked a look_id that no longer exists in the YAML —
+    # the matcher must skip it without raising.
+    cards = [_stock_card("classic", "ghost_look")]
+    votes = [_like("classic:ghost_look")]
+    session = _session(candidates=cards, votes=votes)
+
+    fake_data = {
+        "classic": _fake_yaml_for(
+            "classic",
+            "real_look",
+            items=[{"slot": "top", "requires": {"category": "shirt"}, "optional": False}],
+        ),
+    }
+    with patch(
+        "app.services.reference_matcher._load_reference_looks_yaml",
+        side_effect=lambda subtype: fake_data.get(subtype),
+    ):
+        results = identity_quiz.build_wardrobe_match(session, [])
+
+    assert results == []
+
+
+def test_wardrobe_match_empty_when_no_likes():
+    cards = [_stock_card("classic"), _stock_card("dramatic")]
+    session = _session(candidates=cards, votes=[])
+
+    results = identity_quiz.build_wardrobe_match(session, [])
+
+    assert results == []

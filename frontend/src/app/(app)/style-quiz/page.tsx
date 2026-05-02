@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { ApiError } from "@/lib/api/client";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
@@ -12,21 +12,20 @@ import { ErrorState } from "@/components/ui/ErrorState";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import { ColorDraperyCard } from "@/components/style-quiz/ColorDraperyCard";
+import { IdentityMatchStep } from "@/components/style-quiz/IdentityMatchStep";
 import { QuizCard } from "@/components/style-quiz/QuizCard";
 import {
   SwipeStack,
   SwipeStackProgress,
 } from "@/components/style-quiz/SwipeStack";
-import { TryOnReveal } from "@/components/style-quiz/TryOnReveal";
 import { ResultReveal } from "@/components/style-quiz/ResultReveal";
-import { listUserPhotos } from "@/lib/api/user";
 import { loadLastAnalysis } from "@/lib/local-store";
 import { trackEvent } from "@/lib/api/events";
 import {
   advanceToSeason,
-  advanceToTryon,
   completeColorQuiz,
   completeIdentityQuiz,
+  getWardrobeMatch,
   setActiveProfileSource,
   startColorQuiz,
   startIdentityQuiz,
@@ -39,8 +38,8 @@ import type {
   ColorFamilyCandidate,
   ColorSeasonCandidate,
   IdentityCompleteResponse,
+  IdentityLookMatch,
   IdentityStockCandidate,
-  IdentityTryOnCandidate,
   ProfileSource,
 } from "@/lib/schemas/preferenceQuiz";
 import { formatKibbeFamily, formatSeason } from "@/lib/i18n/analysis";
@@ -48,7 +47,7 @@ import { formatKibbeFamily, formatSeason } from "@/lib/i18n/analysis";
 type Step =
   | "intro"
   | "identity-stock"
-  | "identity-tryon"
+  | "identity-match"
   | "color-family"
   | "color-season"
   | "result";
@@ -65,9 +64,7 @@ export default function StyleQuizPage() {
   >([]);
   const [stockLikeCount, setStockLikeCount] = useState(0);
   const [stockVotedCount, setStockVotedCount] = useState(0);
-  const [tryonCandidates, setTryOnCandidates] = useState<
-    IdentityTryOnCandidate[]
-  >([]);
+  const [matchLooks, setMatchLooks] = useState<IdentityLookMatch[]>([]);
   const [identityResult, setIdentityResult] =
     useState<IdentityCompleteResponse | null>(null);
 
@@ -92,22 +89,6 @@ export default function StyleQuizPage() {
   );
 
   const queryClient = useQueryClient();
-
-  // reference photos (needed for advance-to-tryon)
-  const photosQuery = useQuery({
-    queryKey: ["user", "photos"],
-    queryFn: listUserPhotos,
-    staleTime: 60_000,
-  });
-  const userPhotoId = useMemo(() => {
-    const photos = photosQuery.data ?? [];
-    // prefer front > portrait > side for full-body try-on.
-    const front = photos.find((p) => p.slot === "front");
-    if (front) return front.id;
-    const portrait = photos.find((p) => p.slot === "portrait");
-    if (portrait) return portrait.id;
-    return photos[0]?.id ?? null;
-  }, [photosQuery.data]);
 
   // cached algorithmic result from the last /analyze run — used in the
   // final comparison screen.
@@ -147,22 +128,16 @@ export default function StyleQuizPage() {
     },
   });
 
-  const advanceToTryonMutation = useMutation({
+  const wardrobeMatchMutation = useMutation({
     mutationFn: async () => {
       if (!identitySessionId) throw new Error("Нет активной сессии");
-      if (!userPhotoId) {
-        throw new Error(
-          "Нужно сначала запустить анализ — примерка использует ваше фото анфас."
-        );
-      }
-      return advanceToTryon(identitySessionId, userPhotoId);
+      return getWardrobeMatch(identitySessionId);
     },
     onSuccess: (res) => {
-      setTryOnCandidates(res.candidates);
-      setStep("identity-tryon");
-      // Funnel: stock-стадия завершена, top-3 кандидаты пошли в try-on
+      setMatchLooks(res.looks);
+      setStep("identity-match");
       trackEvent("style_quiz_stock_completed", {
-        candidates: res.candidates.length,
+        looks: res.looks.length,
       });
     },
   });
@@ -178,8 +153,7 @@ export default function StyleQuizPage() {
         winner: res.winner,
         confidence: res.confidence,
       });
-      // Funnel-алиас по канонической схеме (см.
-      // .business/goals/preference-quiz-followups.md): try-on завершён.
+      // Funnel-алиас: identity-фаза завершена.
       trackEvent("style_quiz_tryon_completed", {
         winner: res.winner,
         confidence: res.confidence,
@@ -260,16 +234,11 @@ export default function StyleQuizPage() {
     },
   });
 
-  // auto-complete identity once all try-on cards are voted
-  const handleTryOnAllVoted = () => {
-    completeIdentityMutation.mutate();
-  };
-
   // after identity is completed — auto-start color quiz
   useEffect(() => {
     if (
       identityResult &&
-      step === "identity-tryon" &&
+      step === "identity-match" &&
       !colorSessionId &&
       !startColor.isPending
     ) {
@@ -295,8 +264,6 @@ export default function StyleQuizPage() {
           onStart={() => startIdentity.mutate()}
           isPending={startIdentity.isPending}
           error={startIdentity.error}
-          photosReady={!!userPhotoId}
-          photosLoading={photosQuery.isLoading}
         />
       ) : null}
 
@@ -313,25 +280,17 @@ export default function StyleQuizPage() {
             setStockVotedCount((n) => n + 1);
             if (action === "like") setStockLikeCount((n) => n + 1);
           }}
-          onAdvance={() => advanceToTryonMutation.mutate()}
-          canAdvance={stockLikeCount >= 3 && !!userPhotoId}
-          advancing={advanceToTryonMutation.isPending}
-          error={advanceToTryonMutation.error}
-          noPhoto={!userPhotoId}
+          onAdvance={() => wardrobeMatchMutation.mutate()}
+          canAdvance={stockLikeCount >= 3}
+          advancing={wardrobeMatchMutation.isPending}
+          error={wardrobeMatchMutation.error}
         />
       ) : null}
 
-      {step === "identity-tryon" && identitySessionId ? (
-        <IdentityTryOnStep
-          sessionId={identitySessionId}
-          candidates={tryonCandidates}
-          onVote={(card, action) =>
-            voteIdentityMutation.mutate({
-              candidateId: card.candidate_id,
-              action,
-            })
-          }
-          onAllVoted={handleTryOnAllVoted}
+      {step === "identity-match" ? (
+        <IdentityMatchStep
+          looks={matchLooks}
+          onComplete={() => completeIdentityMutation.mutate()}
           completing={completeIdentityMutation.isPending}
           error={completeIdentityMutation.error}
         />
@@ -396,7 +355,7 @@ function Stepper({ current }: { current: Step }) {
   const steps: Array<{ key: Step; label: string }> = [
     { key: "intro", label: "Старт" },
     { key: "identity-stock", label: "Типаж" },
-    { key: "identity-tryon", label: "Примерка" },
+    { key: "identity-match", label: "Из гардероба" },
     { key: "color-family", label: "Палитра" },
     { key: "color-season", label: "Сезон" },
     { key: "result", label: "Итог" },
@@ -430,14 +389,10 @@ function IntroStep({
   onStart,
   isPending,
   error,
-  photosReady,
-  photosLoading,
 }: {
   onStart: () => void;
   isPending: boolean;
   error: unknown;
-  photosReady: boolean;
-  photosLoading: boolean;
 }) {
   return (
     <div className="space-y-6">
@@ -450,34 +405,25 @@ function IntroStep({
           <li>
             <strong className="font-semibold">1. Типаж.</strong> Лайкайте образы
             — алгоритм поймёт, какая эстетика вам ближе. На втором шаге мы
-            примерим топ-3 вариантов на ваше фото.
+            покажем, как собрать эти образы из вашего гардероба.
           </li>
           <li>
-            <strong className="font-semibold">2. Палитра.</strong> 4 карточки
+            <strong className="font-semibold">2. Из гардероба.</strong>{" "}
+            Для каждого лайкнутого образа — что у вас уже есть, чего не хватает,
+            и что докупить, чтобы повторить его.
+          </li>
+          <li>
+            <strong className="font-semibold">3. Палитра.</strong> 4 карточки
             со сменой оттенков у лица — выберите семью сезонов, где вы
             выглядите живее. Потом уточним сезон внутри.
           </li>
           <li>
-            <strong className="font-semibold">3. Результат.</strong> Сравниваем
+            <strong className="font-semibold">4. Результат.</strong> Сравниваем
             с тем, что показал автоматический анализ. Если предпочтения
             отличаются — одной кнопкой переключим профиль.
           </li>
         </ol>
       </Card>
-
-      {!photosReady && !photosLoading ? (
-        <Card className="border-amber-100 bg-amber-50">
-          <p className="text-sm text-amber-900">
-            <strong className="font-semibold">Нужно фото. </strong>
-            Квиз использует ваше фото анфас для примерки на втором шаге.
-            Запустите анализ на странице{" "}
-            <Link href="/analyze" className="underline">
-              «Анализ»
-            </Link>
-            , чтобы добавить его.
-          </p>
-        </Card>
-      ) : null}
 
       {error ? (
         <ErrorState
@@ -510,7 +456,6 @@ function IdentityStockStep({
   canAdvance,
   advancing,
   error,
-  noPhoto,
 }: {
   candidates: IdentityStockCandidate[];
   likeCount: number;
@@ -523,7 +468,6 @@ function IdentityStockStep({
   canAdvance: boolean;
   advancing: boolean;
   error: unknown;
-  noPhoto: boolean;
 }) {
   if (candidates.length === 0) {
     return (
@@ -549,7 +493,7 @@ function IdentityStockStep({
     <div className="space-y-6">
       <SectionHeader
         title="Шаг 1 — типаж"
-        description="Лайкайте образы, которые откликаются. Нужно минимум 3 лайка, чтобы перейти к примерке."
+        description="Лайкайте образы, которые откликаются. Нужно минимум 3 лайка, чтобы перейти к подбору из вашего гардероба."
       />
 
       <SwipeStack
@@ -574,24 +518,12 @@ function IdentityStockStep({
         likes={likeCount}
       />
 
-      {noPhoto ? (
-        <Card className="border-amber-100 bg-amber-50">
-          <p className="text-sm text-amber-900">
-            Фото для примерки нет. Запустите{" "}
-            <Link href="/analyze" className="underline">
-              анализ
-            </Link>{" "}
-            — после этого сможем перейти ко второму шагу.
-          </p>
-        </Card>
-      ) : null}
-
       {error ? (
         <ErrorState
           title={
-            error instanceof ApiError && error.status === 409
+            error instanceof ApiError && error.status === 422
               ? "Нужно больше лайков"
-              : "Не удалось перейти к примерке"
+              : "Не удалось собрать образы из гардероба"
           }
           error={error}
           onRetry={onAdvance}
@@ -605,56 +537,14 @@ function IdentityStockStep({
           loading={advancing}
           size="lg"
         >
-          {stackDepleted ? "Показать финалистов" : "Достаточно, к примерке"}
+          {stackDepleted ? "Показать как собрать" : "Готово, к подбору из гардероба"}
         </Button>
-        {!canAdvance && !noPhoto ? (
+        {!canAdvance ? (
           <span className="self-center text-xs text-ink-muted">
             Ещё {Math.max(0, 3 - likeCount)} лайка до следующего шага
           </span>
         ) : null}
       </div>
-    </div>
-  );
-}
-
-function IdentityTryOnStep({
-  sessionId,
-  candidates,
-  onVote,
-  onAllVoted,
-  completing,
-  error,
-}: {
-  sessionId: string;
-  candidates: IdentityTryOnCandidate[];
-  onVote: (card: IdentityTryOnCandidate, action: "like" | "dislike") => void;
-  onAllVoted: () => void;
-  completing: boolean;
-  error: unknown;
-}) {
-  return (
-    <div className="space-y-6">
-      <SectionHeader
-        title="Шаг 2 — примерка"
-        description="Топ-3 варианта на вашем фото. Лайкните финалистов — зафиксируем типаж."
-      />
-
-      <TryOnReveal
-        sessionId={sessionId}
-        candidates={candidates}
-        onVote={onVote}
-        onAllVoted={onAllVoted}
-      />
-
-      {completing ? (
-        <Card>
-          <p className="text-sm text-ink-muted">Фиксируем результат…</p>
-        </Card>
-      ) : null}
-
-      {error ? (
-        <ErrorState title="Не удалось завершить этап" error={error} />
-      ) : null}
     </div>
   );
 }

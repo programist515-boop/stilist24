@@ -4,18 +4,16 @@ import {
   ColorAdvanceToSeasonResponseSchema,
   ColorCompleteResponseSchema,
   ColorStartResponseSchema,
-  IdentityAdvanceToTryOnResponseSchema,
   IdentityCompleteResponseSchema,
   IdentityStartResponseSchema,
-  IdentityTryOnStatusResponseSchema,
+  IdentityWardrobeMatchResponseSchema,
   type ActiveProfileSourceResponse,
   type ColorAdvanceToSeasonResponse,
   type ColorCompleteResponse,
   type ColorStartResponse,
-  type IdentityAdvanceToTryOnResponse,
   type IdentityCompleteResponse,
   type IdentityStartResponse,
-  type IdentityTryOnStatusResponse,
+  type IdentityWardrobeMatchResponse,
   type ProfileSource,
   type VoteAction,
 } from "@/lib/schemas/preferenceQuiz";
@@ -40,34 +38,22 @@ export async function voteIdentity(
   });
 }
 
-export async function advanceToTryon(
-  sessionId: string,
-  userPhotoId: string
-): Promise<IdentityAdvanceToTryOnResponse> {
-  // Backend builds three FASHN try-on jobs sequentially (each: submit +
-  // up to 180s polling against the FASHN provider + S3 upload), so the
-  // whole call can take 1–3 min on a slow FASHN day. The default 30s
-  // client timeout was killing the request before the first job even
-  // finished. 4 min gives the backend room without letting requests
-  // hang forever if FASHN is dead.
-  const data = await apiRequest(
-    `/preference-quiz/identity/${sessionId}/advance-to-tryon`,
-    {
-      method: "POST",
-      query: { user_photo_id: userPhotoId },
-      timeoutMs: 240_000,
-    }
-  );
-  return IdentityAdvanceToTryOnResponseSchema.parse(data);
-}
-
-export async function getTryonStatus(
+/**
+ * Project every liked stock-stage look against the user's wardrobe.
+ *
+ * For each (subtype, look_id) the user liked, the backend returns
+ * the matched wardrobe items + missing slots (with shopping hints) +
+ * completeness. This is fast (no FASHN, no external API) — the
+ * default 30s timeout is plenty.
+ */
+export async function getWardrobeMatch(
   sessionId: string
-): Promise<IdentityTryOnStatusResponse> {
+): Promise<IdentityWardrobeMatchResponse> {
   const data = await apiRequest(
-    `/preference-quiz/identity/${sessionId}/tryon-status`
+    `/preference-quiz/identity/${sessionId}/wardrobe-match`,
+    { method: "POST" }
   );
-  return IdentityTryOnStatusResponseSchema.parse(data);
+  return IdentityWardrobeMatchResponseSchema.parse(data);
 }
 
 export async function completeIdentityQuiz(
