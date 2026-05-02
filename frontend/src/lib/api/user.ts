@@ -20,6 +20,12 @@ export async function analyzeUser(input: {
   const data = await apiRequest("/user/analyze", {
     method: "POST",
     form,
+    // Backend pipeline = 3 photos × (rembg + MediaPipe pose +
+    // color/depth/contrast extraction) + Kibbe inference + S3 upload.
+    // Easily 20–60s on a cold worker; the default 30s timeout was
+    // cutting some users off in the middle. 2 min is a safe ceiling
+    // that still surfaces real network problems quickly.
+    timeoutMs: 120_000,
   });
   return UserAnalysisSchema.parse(data);
 }
