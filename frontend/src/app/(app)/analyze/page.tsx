@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
-import { useMutation } from "@tanstack/react-query";
+import { useEffect, useMemo, useState } from "react";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/Button";
 import { Card, CardSubtitle, CardTitle } from "@/components/ui/Card";
 import { ErrorState } from "@/components/ui/ErrorState";
@@ -11,22 +11,90 @@ import { SectionHeader } from "@/components/ui/SectionHeader";
 import { PhotoSlot } from "@/components/analysis/PhotoSlot";
 import { AnalysisResultCard } from "@/components/analysis/AnalysisResultCard";
 import { IdentityDNACard } from "@/components/analysis/IdentityDNACard";
-import { analyzeUser } from "@/lib/api/user";
+import { analyzeUser, listUserPhotos } from "@/lib/api/user";
 import { trackEvent } from "@/lib/api/events";
 import { saveLastAnalysis } from "@/lib/local-store";
-import type { UserAnalysis } from "@/lib/schemas";
+import type { AnalysisPhoto, UserAnalysis } from "@/lib/schemas";
+
+/**
+ * Resolve a slot's payload to a real ``File`` for ``POST /user/analyze``.
+ *
+ * - Fresh pick (``file``)     → use as-is.
+ * - Preloaded URL only        → ``fetch`` it back into a ``Blob`` and wrap
+ *                                into a ``File`` so the multipart contract
+ *                                is preserved without bothering the user
+ *                                to re-upload identical bytes.
+ *
+ * The backend always extracts CV features from raw pixels, so we cannot
+ * "re-analyze" by reference (no ``image_key``-based endpoint exists).
+ * Re-uploading the same bytes is a small price for the much better UX.
+ */
+async function resolveSlotFile(
+  slotName: string,
+  file: File | null,
+  preloadedUrl: string | null,
+): Promise<File> {
+  if (file) return file;
+  if (!preloadedUrl) {
+    throw new Error(`Слот «${slotName}» пуст`);
+  }
+  const r = await fetch(preloadedUrl, { credentials: "omit" });
+  if (!r.ok) {
+    throw new Error(`Не удалось загрузить сохранённое фото (${slotName})`);
+  }
+  const blob = await r.blob();
+  const ext = (blob.type.split("/")[1] || "jpg").replace("jpeg", "jpg");
+  return new File([blob], `${slotName}.${ext}`, {
+    type: blob.type || "image/jpeg",
+  });
+}
+
+function pickPreloaded(
+  photos: AnalysisPhoto[] | undefined,
+  slot: string,
+): string | null {
+  if (!photos || photos.length === 0) return null;
+  // ``listUserPhotos`` returns rows freshest-first, so the first match
+  // for the slot is the most recent upload.
+  const hit = photos.find((p) => p.slot === slot);
+  return hit?.image_url ?? null;
+}
 
 export default function AnalyzePage() {
   const [front, setFront] = useState<File | null>(null);
   const [side, setSide] = useState<File | null>(null);
   const [portrait, setPortrait] = useState<File | null>(null);
 
+  // Pull persisted photos from the backend so a returning user sees
+  // their existing analysis photos in the slots instead of empty
+  // dropzones. They can keep them, replace any one, or replace all.
+  const photosQuery = useQuery({
+    queryKey: ["user-photos"],
+    queryFn: listUserPhotos,
+    staleTime: 60_000,
+  });
+
+  const preloaded = useMemo(
+    () => ({
+      front: pickPreloaded(photosQuery.data, "front"),
+      side: pickPreloaded(photosQuery.data, "side"),
+      portrait: pickPreloaded(photosQuery.data, "portrait"),
+    }),
+    [photosQuery.data],
+  );
+
   const mutation = useMutation<UserAnalysis>({
-    mutationFn: () => {
-      if (!front || !side || !portrait) {
-        throw new Error("Загрузите все три фото");
-      }
-      return analyzeUser({ front, side, portrait });
+    mutationFn: async () => {
+      const [frontFile, sideFile, portraitFile] = await Promise.all([
+        resolveSlotFile("Анфас", front, preloaded.front),
+        resolveSlotFile("Профиль", side, preloaded.side),
+        resolveSlotFile("Портрет", portrait, preloaded.portrait),
+      ]);
+      return analyzeUser({
+        front: frontFile,
+        side: sideFile,
+        portrait: portraitFile,
+      });
     },
     onSuccess: (data) => {
       saveLastAnalysis(data);
@@ -34,11 +102,26 @@ export default function AnalyzePage() {
         kibbe_type: data.kibbe?.main_type ?? null,
         season: data.color?.season_top_1 ?? null,
       });
+      // Refresh persisted photo list so a follow-up reload shows the
+      // new uploads, not the previous ones.
+      photosQuery.refetch();
     },
   });
 
-  const filledCount = [front, side, portrait].filter(Boolean).length;
+  const slotFilled = (file: File | null, url: string | null) =>
+    Boolean(file || url);
+  const filledCount = [
+    slotFilled(front, preloaded.front),
+    slotFilled(side, preloaded.side),
+    slotFilled(portrait, preloaded.portrait),
+  ].filter(Boolean).length;
   const ready = filledCount === 3;
+  const allFromServer =
+    ready &&
+    !front &&
+    !side &&
+    !portrait &&
+    Boolean(preloaded.front && preloaded.side && preloaded.portrait);
 
   return (
     <>
@@ -59,6 +142,7 @@ export default function AnalyzePage() {
             label="Анфас"
             hint="Спереди, в полный рост"
             file={front}
+            preloadedUrl={preloaded.front}
             onChange={setFront}
           />
           <PhotoSlot
@@ -66,6 +150,7 @@ export default function AnalyzePage() {
             label="Профиль"
             hint="Сбоку, в полный рост"
             file={side}
+            preloadedUrl={preloaded.side}
             onChange={setSide}
           />
           <PhotoSlot
@@ -73,6 +158,7 @@ export default function AnalyzePage() {
             label="Портрет"
             hint="Лицо, нейтральный свет"
             file={portrait}
+            preloadedUrl={preloaded.portrait}
             onChange={setPortrait}
           />
         </div>
@@ -82,11 +168,17 @@ export default function AnalyzePage() {
         <div className="flex flex-col items-stretch gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <CardTitle>
-              {ready ? "Готово к анализу" : `${filledCount} из 3 фото добавлено`}
+              {ready
+                ? allFromServer
+                  ? "Фото из прошлого анализа уже здесь"
+                  : "Готово к анализу"
+                : `${filledCount} из 3 фото добавлено`}
             </CardTitle>
             <CardSubtitle className="mt-1">
               {ready
-                ? "Определим ваш Kibbe-тип, сезонную палитру и стилевой вектор."
+                ? allFromServer
+                  ? "Можно перезапустить анализ на тех же фото или заменить любое из них на свежее."
+                  : "Определим ваш Kibbe-тип, сезонную палитру и стилевой вектор."
                 : "Добавьте оставшиеся фото, чтобы запустить анализ."}
             </CardSubtitle>
           </div>
@@ -98,7 +190,7 @@ export default function AnalyzePage() {
             size="lg"
             className="sm:flex-shrink-0"
           >
-            Запустить анализ
+            {allFromServer ? "Перезапустить анализ" : "Запустить анализ"}
           </Button>
         </div>
       </Card>

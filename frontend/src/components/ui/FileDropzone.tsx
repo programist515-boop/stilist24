@@ -1,12 +1,18 @@
 "use client";
 
-import { useCallback, useRef, useState, type DragEvent } from "react";
+import { useCallback, useEffect, useRef, useState, type DragEvent } from "react";
 import { cn } from "@/lib/cn";
 
 interface FileDropzoneProps {
   label: string;
   accept?: string;
   file: File | null;
+  /**
+   * Preloaded image URL shown when no fresh `file` has been picked.
+   * Used to render persisted server-side photos so users don't have
+   * to re-upload them every time they re-open the page.
+   */
+  preloadedUrl?: string | null;
   onChange: (file: File | null) => void;
   className?: string;
 }
@@ -15,13 +21,27 @@ export function FileDropzone({
   label,
   accept = "image/*",
   file,
+  preloadedUrl = null,
   onChange,
   className,
 }: FileDropzoneProps) {
   const [hover, setHover] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const previewUrl = file ? URL.createObjectURL(file) : null;
+  // Build object URL for fresh File picks, and revoke it on cleanup
+  // so we don't leak blobs when the user replaces the photo.
+  const [objectUrl, setObjectUrl] = useState<string | null>(null);
+  useEffect(() => {
+    if (!file) {
+      setObjectUrl(null);
+      return;
+    }
+    const url = URL.createObjectURL(file);
+    setObjectUrl(url);
+    return () => URL.revokeObjectURL(url);
+  }, [file]);
+
+  const previewUrl = objectUrl ?? preloadedUrl;
 
   const handleDrop = useCallback(
     (e: DragEvent<HTMLDivElement>) => {
