@@ -16,6 +16,7 @@ feature gated by a paid third-party API it's part of the feature.
 
 from __future__ import annotations
 
+import base64
 import time
 
 import httpx
@@ -128,4 +129,63 @@ def cv_classifier_probe_proxy(timeout_s: float = 5.0) -> dict:
                  "у proxy-seller, креды login/password, оплачен ли план"
         ),
         "schemes": results,
+    }
+
+
+# 1×1 пиксель белый JPEG — минимальная валидная картинка для OpenAI Vision.
+# Достаточно чтобы убедиться что end-to-end pipeline (auth + прокси-каскад +
+# OpenAI Vision API) реально работает; модель вернёт что-то типа
+# "category": "tops" с низким confidence, но это уже не наша забота.
+_TEST_JPEG_B64 = (
+    "/9j/4AAQSkZJRgABAQEASABIAAD/2wBDAAEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEB"
+    "AQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAf/AABEIAAEAAQMBIgACEQEDEQH/"
+    "xAAVAAEBAAAAAAAAAAAAAAAAAAAACf/EABQQAQAAAAAAAAAAAAAAAAAAAAD/xAAUAQEAAAAA"
+    "AAAAAAAAAAAAAAAA/8QAFBEBAAAAAAAAAAAAAAAAAAAAAP/aAAwDAQACEQMRAD8AfwD/2Q=="
+)
+
+
+@router.get("/probe-vision")
+def cv_classifier_probe_vision() -> dict:
+    """End-to-end smoke: реальный analyze() с тестовой картинкой.
+
+    Шлёт 1×1 JPEG в OpenAI Vision через настроенный прокси и каскад,
+    возвращает либо успешный VisionAnalysisResult (как dict), либо
+    {ok: false, error_type, error_message} с диагностикой. Это
+    единственный способ верифицировать end-to-end vision-pipeline без
+    авторизованного юзера и реального upload.
+
+    Тратит ~1 vision-вызов (≈$0.001 на gpt-5-mini). Намеренно держим
+    публичным без auth — так же как probe-proxy. Если злоупотребляют,
+    rate-limit добавится отдельно.
+    """
+    if not settings.enable_vision_analysis:
+        return {"ok": False, "reason": "ENABLE_VISION_ANALYSIS is False"}
+    if not settings.openai_api_key:
+        return {"ok": False, "reason": "OPENAI_API_KEY is not set"}
+    analyzer = get_vision_analyzer(settings)
+    if analyzer is None:
+        return {"ok": False, "reason": "vision_analyzer factory returned None"}
+
+    image_bytes = base64.b64decode(_TEST_JPEG_B64)
+    t0 = time.perf_counter()
+    try:
+        result = analyzer.analyze(image_bytes)
+    except Exception as exc:  # noqa: BLE001
+        return {
+            "ok": False,
+            "latency_s": round(time.perf_counter() - t0, 2),
+            "error_type": type(exc).__name__,
+            "error_message": str(exc)[:400],
+            "proxy_resolved_to": (analyzer._proxy or "").split("://", 1)[0] if analyzer._proxy else None,
+        }
+    return {
+        "ok": True,
+        "latency_s": round(time.perf_counter() - t0, 2),
+        "category": result.category,
+        "confidence": result.confidence,
+        "name": result.name,
+        "primary_color": result.primary_color,
+        "source": result.source,
+        "attrs_keys": sorted(result.attrs.keys()) if result.attrs else [],
+        "proxy_resolved_to": (analyzer._proxy or "").split("://", 1)[0] if analyzer._proxy else None,
     }
