@@ -406,18 +406,224 @@ _ATTR_LABELS_RU: dict[str, str] = {
     "length": "длина",
 }
 
+# Переводы значений атрибутов и категорий для shopping_hint.
+# Покрывают то, что реально живёт в config/rules/reference_looks/*.yaml
+# и в category_rules. Для не покрытых ключей `_humanize` делает простой
+# fallback ``foo_bar`` → ``foo bar`` — так пользователь хотя бы не видит
+# подчёркиваний, а копирайт можно поправить точечно по мере роста YAML.
+
+_CATEGORY_LABELS_RU: dict[str, str] = {
+    # верх / платья
+    "top": "верх",
+    "blouse": "блуза",
+    "ruffled_top": "топ с воланами",
+    "fitted_tshirt": "футболка приталенная",
+    "fine_knit_top": "тонкий трикотаж",
+    "fine_knit": "тонкий трикотаж",
+    "knit_sweater": "вязаный свитер",
+    "knit_top": "вязаный топ",
+    "silk_shell": "шёлковый топ",
+    "silk_top": "шёлковый топ",
+    "silk_shirt": "шёлковая рубашка",
+    "button_blouse": "блуза на пуговицах",
+    "button_shirt": "рубашка на пуговицах",
+    "fitted_shirt": "приталенная рубашка",
+    "wrap_blouse": "блуза на запах",
+    "draped_knit_top": "трикотаж с драпировкой",
+    "twinset": "твинсет",
+    "longsleeve": "лонгслив",
+    "sweater": "свитер",
+    "bodysuit_fitted": "приталенное боди",
+    "bustier_top": "топ-бюстье",
+    "corset_top_soft": "мягкий корсетный топ",
+    "denim_shirt_soft": "мягкая джинсовая рубашка",
+    "chambray_shirt": "рубашка из шамбре",
+    "western_shirt": "рубашка в стиле вестерн",
+    "utility_shirt": "рубашка-карго",
+    "overshirt": "оверширт",
+    # платья
+    "dress": "платье",
+    "wrap_dress": "платье на запах",
+    "slip_dress_evening": "вечернее платье-комбинация",
+    "gown": "вечернее платье",
+    # низ
+    "bottom": "низ",
+    "jeans": "джинсы",
+    "trousers": "брюки",
+    "cigarette_pants": "брюки-сигареты",
+    "cropped_jeans": "укороченные джинсы",
+    "cropped_straight": "прямые укороченные брюки",
+    "leather_trousers": "кожаные брюки",
+    "coated_trousers": "брюки с напылением",
+    "midi_skirt": "юбка миди",
+    "circle_skirt": "юбка-солнце",
+    "a_line_skirt": "юбка А-силуэта",
+    "a_line_skirt_short": "короткая юбка А-силуэта",
+    "circle_skirt_short": "короткая юбка-солнце",
+    "mini_skirt": "мини-юбка",
+    # обувь
+    "shoes": "обувь",
+    "heels": "каблуки",
+    "heels_rounded_toe": "каблуки с округлым мысом",
+    "kitten_heels": "низкий каблук «китти»",
+    "ballet_flats": "балетки",
+    "ballet_flats_curved": "балетки с мягким мысом",
+    "pumps": "лодочки",
+    "slim_pumps": "тонкие лодочки",
+    "pointed_pumps": "лодочки с острым мысом",
+    "pointed_flats": "балетки с острым мысом",
+    "pointed_heels": "каблуки с острым мысом",
+    "block_heels_soft": "устойчивый каблук",
+    "low_block_heels": "невысокий устойчивый каблук",
+    "low_heels": "невысокий каблук",
+    "mary_janes": "туфли мэри-джейн",
+    "mary_janes_heel": "мэри-джейн на каблуке",
+    "loafers": "лоферы",
+    "oxford_shoes": "оксфорды",
+    "oxfords": "оксфорды",
+    "ankle_boots": "ботильоны",
+    "ankle_boots_sharp": "острые ботильоны",
+    "ankle_boots_slim": "узкие ботильоны",
+    "ankle_boots_soft": "мягкие ботильоны",
+    "ankle_boots_mod": "ботильоны в стиле мод",
+    "knee_boots": "сапоги до колена",
+    "knee_boots_short": "сапоги ниже колена",
+    "knee_high_boots": "высокие сапоги",
+    "combat_boots": "армейские ботинки",
+    "western_boots": "ковбойские сапоги",
+    "chunky_sneakers": "массивные кроссовки",
+    "espadrilles": "эспадрильи",
+    "mules": "мюли",
+    "sandals": "босоножки",
+    # верхняя одежда / куртки
+    "outerwear": "верхняя одежда",
+    "coat": "пальто",
+    "long_coat": "длинное пальто",
+    "wool_coat": "шерстяное пальто",
+    "trench": "тренч",
+    "leather_jacket": "кожаная куртка",
+    "suede_jacket": "замшевая куртка",
+    "blazer": "пиджак",
+    "blazer_short": "короткий пиджак",
+    "cropped_jacket": "укороченная куртка",
+    "denim_jacket": "джинсовая куртка",
+    "trucker_jacket": "куртка-тракер",
+    "jacket": "куртка",
+    # сеты
+    "top_bottom_set": "костюм-двойка",
+    # аксессуары и доп. слоты
+    "accessory:bag": "сумка",
+    "accessory:jewelry": "украшения",
+    "accessory:belt": "ремень",
+    "accessory:scarf": "платок",
+    "accessory:hat": "головной убор",
+    "headwear": "головной убор",
+    "bag": "сумка",
+    "belt": "ремень",
+    "jewelry": "украшения",
+    "scarf": "платок",
+}
+
+_VALUE_LABELS_RU: dict[str, str] = {
+    # cut_lines
+    "angular": "угловатые",
+    "straight": "прямые",
+    "soft_flowing": "мягко-плавные",
+    "flowing": "плавные",
+    "curved": "плавные",
+    # structure
+    "structured": "структурный крой",
+    "semi_structured": "полу-структурный крой",
+    "semi_structured_curved": "мягкий полу-структурный крой",
+    "unstructured": "без структуры",
+    # fabric_finish / fabric_rigidity
+    "matte": "матовая",
+    "glossy": "глянцевая",
+    "metallic": "металлик",
+    "sequin": "пайетки",
+    "brocade": "парча",
+    "soft": "мягкая",
+    "rigid": "жёсткая",
+    # pattern_scale / detail_scale
+    "small": "мелкий",
+    "medium": "средний",
+    "large": "крупный",
+    # pattern_character
+    "geometric": "геометрия",
+    "abstract": "абстракция",
+    "floral_soft": "мягкие цветы",
+    "floral_bold": "крупные цветы",
+    "watercolor": "акварель",
+    "animal": "анималистика",
+    "stripe": "полоска",
+    "dots": "горошек",
+    "checks": "клетка",
+    "asymmetric": "ассиметрия",
+    "symmetric": "симметрия",
+    # neckline_type
+    "v": "V-вырез",
+    "boat": "лодочка",
+    "round": "круглый",
+    "sweetheart": "сердечко",
+    "halter": "халтер",
+    "turtleneck": "водолазка",
+    "off_shoulder": "с открытыми плечами",
+    # sleeve_length / length
+    "short": "короткая",
+    "three_quarter": "3/4",
+    "long_wrist": "до запястья",
+    "long": "длинный",
+    "ankle": "до щиколотки",
+    "midi": "миди",
+    "just_below_knee": "чуть ниже колена",
+    "knee": "до колена",
+    "mini": "мини",
+    "maxi": "макси",
+    "floor": "в пол",
+    # shoulder_emphasis
+    "required": "обязателен",
+    "neutral": "нейтрально",
+    "avoided": "нет",
+    # occasion
+    "day": "день",
+    "work": "работа",
+    "smart_casual": "smart casual",
+    "evening": "вечер",
+    "sport": "спорт",
+    "casual": "повседневный",
+}
+
+
+def _humanize(token: str) -> str:
+    """Fallback для значений без явного перевода: ``foo_bar`` → ``foo bar``."""
+    return str(token).replace("_", " ")
+
+
+def _localize_category(token: str) -> str:
+    return _CATEGORY_LABELS_RU.get(str(token), _humanize(token))
+
+
+def _localize_value(token: str) -> str:
+    return _VALUE_LABELS_RU.get(str(token), _humanize(token))
+
 
 def _build_shopping_hint(slot: str, requires: dict) -> str:
-    """Собрать короткую подсказку «что докупить» по блоку requires."""
+    """Собрать короткую подсказку «что докупить» по блоку requires.
+
+    Возвращает строку для UI на русском языке. Категории и значения
+    атрибутов переводятся через `_CATEGORY_LABELS_RU` / `_VALUE_LABELS_RU`;
+    непокрытые токены проходят через `_humanize` (`foo_bar` → `foo bar`),
+    чтобы в UI не светились подчёркивания.
+    """
     parts: list[str] = []
 
     cat = requires.get("category")
     if cat is not None:
         cat_list = _as_list(cat)
         if len(cat_list) == 1:
-            parts.append(str(cat_list[0]))
+            parts.append(_localize_category(cat_list[0]))
         elif cat_list:
-            parts.append("/".join(str(c) for c in cat_list[:3]))
+            parts.append("/".join(_localize_category(c) for c in cat_list[:3]))
 
     for raw_key, expected in requires.items():
         if raw_key == "category":
@@ -430,9 +636,11 @@ def _build_shopping_hint(slot: str, requires: dict) -> str:
         if not exp_list:
             continue
         if len(exp_list) == 1:
-            parts.append(f"{label}: {exp_list[0]}")
+            parts.append(f"{label}: {_localize_value(exp_list[0])}")
         else:
-            parts.append(f"{label}: {'/'.join(str(x) for x in exp_list[:3])}")
+            parts.append(
+                f"{label}: {'/'.join(_localize_value(x) for x in exp_list[:3])}"
+            )
 
     if not parts:
         return f"вещь в слот {slot}"

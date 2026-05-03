@@ -116,11 +116,11 @@ class TestPartialMatch:
         result = matcher.match_wardrobe([], "flamboyant_gamine")
         sheath = next(r for r in result if r.look_id == "fg_sheath_dress")
         shoes_missing = next(ms for ms in sheath.missing_slots if ms.slot == "shoes")
-        # shopping_hint должен упоминать категорию обуви.
+        # shopping_hint должен упоминать категорию обуви на русском.
         assert shoes_missing.shopping_hint
         assert any(
             cat in shoes_missing.shopping_hint
-            for cat in ("heels", "pointed_flats")
+            for cat in ("каблук", "лодочки", "балетки", "ботильон")
         )
 
 

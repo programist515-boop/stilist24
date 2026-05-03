@@ -6,6 +6,11 @@ import { Card, CardSubtitle, CardTitle } from "@/components/ui/Card";
 import { ErrorState } from "@/components/ui/ErrorState";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import { formatKibbeFamily } from "@/lib/i18n/analysis";
+import {
+  formatCategory,
+  formatOccasion,
+  formatSlot,
+} from "@/lib/i18n/wardrobe";
 import type { IdentityLookMatch } from "@/lib/schemas/preferenceQuiz";
 
 interface IdentityMatchStepProps {
@@ -93,7 +98,7 @@ function LookMatchCard({ look }: { look: IdentityLookMatch }) {
             <CardTitle>{look.title}</CardTitle>
             <Badge tone="neutral">{formatKibbeFamily(look.subtype)}</Badge>
             {look.occasion ? (
-              <Badge tone="neutral">{look.occasion}</Badge>
+              <Badge tone="neutral">{formatOccasion(look.occasion)}</Badge>
             ) : null}
           </div>
           <CardSubtitle>
@@ -123,19 +128,19 @@ function LookMatchCard({ look }: { look: IdentityLookMatch }) {
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
                     src={m.image_url}
-                    alt={m.category ?? m.slot}
+                    alt={formatCategory(m.category) || formatSlot(m.slot)}
                     loading="lazy"
                     className="h-24 w-full rounded-lg bg-canvas-soft object-cover"
                   />
                 ) : (
                   <div className="flex h-24 w-full items-center justify-center rounded-lg bg-canvas-soft text-xs text-ink-muted">
-                    {m.category ?? m.slot}
+                    {formatCategory(m.category) || formatSlot(m.slot)}
                   </div>
                 )}
                 <div className="text-xs">
-                  <p className="font-medium text-ink">{m.slot}</p>
+                  <p className="font-medium text-ink">{formatSlot(m.slot)}</p>
                   {m.category ? (
-                    <p className="text-ink-muted">{m.category}</p>
+                    <p className="text-ink-muted">{formatCategory(m.category)}</p>
                   ) : null}
                   {m.match_quality < 0.7 ? (
                     <p className="text-amber-700">подойдёт, но можно лучше</p>
@@ -159,7 +164,7 @@ function LookMatchCard({ look }: { look: IdentityLookMatch }) {
                 className="flex flex-col gap-1 rounded-xl border border-red-100 bg-red-50/40 p-3"
               >
                 <p className="text-xs font-medium uppercase tracking-[0.12em] text-red-700">
-                  {s.slot}
+                  {formatSlot(s.slot)}
                 </p>
                 <p className="text-ink">{s.shopping_hint}</p>
               </li>

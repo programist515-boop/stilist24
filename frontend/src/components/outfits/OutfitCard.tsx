@@ -1,5 +1,6 @@
 import { Card, CardSubtitle, CardTitle } from "@/components/ui/Card";
 import { ScoreBadge } from "./ScoreBadge";
+import { formatCategory } from "@/lib/i18n/wardrobe";
 import type { Outfit } from "@/lib/schemas";
 
 const OVERALL_KEY = "overall";
@@ -78,12 +79,12 @@ export function OutfitCard({ outfit, imageById }: OutfitCardProps) {
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
                     src={image}
-                    alt={item.name ?? item.category ?? ""}
+                    alt={item.name ?? formatCategory(item.category) ?? ""}
                     className="h-full w-full object-cover"
                   />
                 ) : (
                   <div className="flex h-full w-full items-center justify-center px-1 text-center text-[10px] capitalize text-ink-muted">
-                    {item.name ?? item.category ?? "вещь"}
+                    {item.name ?? formatCategory(item.category) ?? "вещь"}
                   </div>
                 )}
               </div>

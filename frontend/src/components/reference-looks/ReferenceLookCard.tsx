@@ -2,6 +2,7 @@
 
 import { Card, CardSubtitle, CardTitle } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
+import { formatOccasion, formatSlot } from "@/lib/i18n/wardrobe";
 import type { ReferenceLook } from "@/lib/schemas/referenceLooks";
 
 interface Props {
@@ -25,7 +26,9 @@ export function ReferenceLookCard({ look }: Props) {
         <div className="min-w-0">
           <CardTitle className="truncate">{look.title}</CardTitle>
           {look.occasion ? (
-            <CardSubtitle className="mt-1">{look.occasion}</CardSubtitle>
+            <CardSubtitle className="mt-1">
+              {formatOccasion(look.occasion)}
+            </CardSubtitle>
           ) : null}
         </div>
         <Badge tone={completenessPct === 100 ? "success" : "default"}>
@@ -59,7 +62,7 @@ export function ReferenceLookCard({ look }: Props) {
             <ul className="space-y-1.5">
               {look.matched_items.map((mi) => (
                 <li key={`${mi.slot}-${mi.item_id}`} className="text-sm">
-                  <span className="font-medium">{mi.slot}:</span>{" "}
+                  <span className="font-medium">{formatSlot(mi.slot)}:</span>{" "}
                   <span className="text-ink-muted">
                     #{mi.item_id.slice(0, 8)} (
                     {Math.round(mi.match_quality * 100)}%)
@@ -80,7 +83,7 @@ export function ReferenceLookCard({ look }: Props) {
             <ul className="space-y-1.5">
               {look.missing_slots.map((ms) => (
                 <li key={ms.slot} className="text-sm">
-                  <span className="font-medium">{ms.slot}:</span>{" "}
+                  <span className="font-medium">{formatSlot(ms.slot)}:</span>{" "}
                   <span className="text-ink-muted">{ms.shopping_hint}</span>
                 </li>
               ))}
