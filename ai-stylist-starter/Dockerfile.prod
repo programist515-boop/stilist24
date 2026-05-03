@@ -23,6 +23,5 @@ RUN chmod +x /app/entrypoint.sh
 
 # Стартовая команда: alembic upgrade head + uvicorn на 0.0.0.0:8002.
 # В docker-compose.prod.yml сервис api переопределяет это через `command:`
-# идентичной строкой — поведение не меняется. На Amvera CMD используется
-# напрямую, иначе контейнер сразу exit 0.
+# идентичной строкой — поведение не меняется.
 CMD ["sh", "/app/entrypoint.sh"]

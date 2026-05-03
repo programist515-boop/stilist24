@@ -24,12 +24,12 @@ class Settings(BaseSettings):
     s3_force_path_style: bool = True
     s3_public_base_url: str | None = None
     s3_presign_expires: int = 3600
-    # Canned ACL для каждого PUT object. Нужен для провайдеров, где
-    # bucket-level public-read недоступен через bucket policy без admin-роли
-    # (Yandex Object Storage: storage.editor может ставить per-object ACL,
-    # но не bucket policy). Значения: "public-read" — публичные объекты
-    # после bucket setting «Чтение объектов: С авторизацией»; None — не
-    # передавать ACL (поведение MinIO/AWS с Block Public Access).
+    # Canned ACL для каждого PUT object. Опциональное поле для S3-провайдеров,
+    # которые не дают менять bucket policy в обычной роли и требуют
+    # per-object ACL вместо bucket-level public-read. None — не передавать
+    # ACL: поведение MinIO/AWS с Block Public Access. На текущем VPS-деплое
+    # с MinIO public-read настроен на bucket'е (`mc anonymous set download`),
+    # поле остаётся None.
     s3_object_acl: str | None = None
 
     # Storage validation
@@ -54,10 +54,11 @@ class Settings(BaseSettings):
     # the browser silently aborts the real request.
     #
     # ``NoDecode`` отключает JSON pre-parsing pydantic-settings'а для list-полей
-    # из process environment. Без него Amvera (передающий env через ОС, не
-    # .env-файлом) падает на старте: SettingsError → JSONDecodeError, потому
-    # что "https://a,https://b" — не валидный JSON. На VPS с .env-файлом
-    # JSON-парсинг не запускается, поэтому баг не проявлялся до миграции.
+    # из process environment. Нужен на случай, если CORS_ALLOW_ORIGINS приходит
+    # из process env (а не из .env-файла) как CSV: без NoDecode pydantic
+    # пытается парсить строку как JSON и падает SettingsError на запятой.
+    # На текущем VPS-деплое CORS не используется (всё на одном origin через
+    # хостовой nginx), но защита остаётся — безвредный fallback.
     cors_allow_origins: Annotated[list[str], NoDecode] = [
         "http://localhost:3000",
         "http://127.0.0.1:3000",
@@ -66,7 +67,7 @@ class Settings(BaseSettings):
     @field_validator("cors_allow_origins", mode="before")
     @classmethod
     def _split_cors_csv(cls, v):
-        # Принимаем CSV из env (Amvera/process-env) и list из .env-файла.
+        # Принимаем CSV из process env и list из .env-файла.
         # Пример env: CORS_ALLOW_ORIGINS=https://a.com,https://b.com
         if isinstance(v, str):
             return [origin.strip() for origin in v.split(",") if origin.strip()]

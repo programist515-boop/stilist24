@@ -418,9 +418,9 @@ class S3StorageBackend:
             "Body": data,
             "ContentType": content_type,
         }
-        # Per-object ACL для провайдеров без bucket-policy public-read (Yandex
-        # с ролью storage.editor). Если settings.s3_object_acl задан —
-        # каждый объект становится publicly readable.
+        # Опциональный per-object ACL для S3-провайдеров без bucket-policy
+        # public-read. На текущем VPS-деплое с MinIO settings.s3_object_acl
+        # пустой — поле остаётся как safety hatch на случай смены провайдера.
         if settings.s3_object_acl:
             kwargs["ACL"] = settings.s3_object_acl
         try:

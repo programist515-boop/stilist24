@@ -5,7 +5,7 @@
 FROM node:20-alpine AS deps
 WORKDIR /app
 
-# Build context is the repo root (both Amvera and docker-compose.prod.yml).
+# Build context is the repo root (docker-compose.prod.yml uses `context: .`).
 COPY frontend/package.json frontend/package-lock.json* ./
 
 # Use `npm ci` when a lockfile is present (reproducible), `npm install`
@@ -21,11 +21,11 @@ RUN if [ -f package-lock.json ]; then \
 FROM node:20-alpine AS builder
 WORKDIR /app
 
-# NEXT_PUBLIC_* vars are inlined at build time. Amvera does not support
-# --build-arg, so the default here IS the production value for Amvera.
-# VPS deploy (docker-compose.prod.yml) overrides via build.args.
-# Phase 2: technical domain; Phase 4: change to https://api.stilist24.com
-ARG NEXT_PUBLIC_API_URL=https://stilist24-api-expertgds.amvera.io
+# NEXT_PUBLIC_* vars are inlined at build time. Default here is for local
+# dev; prod deploy (docker-compose.prod.yml) overrides via build.args from
+# the NEXT_PUBLIC_API_URL env var (set by CI from a GitHub Secret —
+# typically https://stilist24.com/api).
+ARG NEXT_PUBLIC_API_URL=http://localhost:8002
 ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
 
 COPY --from=deps /app/node_modules ./node_modules
@@ -56,10 +56,8 @@ COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 USER nextjs
 EXPOSE 3000
 
-# ENTRYPOINT в exec-форме защищает от Amvera UI, который может вписать
-# в поле "Команда запуска" / "Аргументы" строку вида
-# `NEXT_PUBLIC_API_URL=https://...`. С CMD такая строка перебивала бы
-# `node server.js` и улетала первым аргументом → Node искал её как файл
-# (`Cannot find module '/app/NEXT_PUBLIC_API_URL=...'`). С ENTRYPOINT
-# любые UI-args приклеиваются ПОСЛЕ `server.js` — Node их игнорирует.
+# ENTRYPOINT в exec-форме фиксирует команду запуска: любые trailing args,
+# которые могут прилететь от рантайм-окружения, приклеиваются ПОСЛЕ
+# `server.js` и Node их игнорирует, не пытаясь интерпретировать как путь
+# к модулю.
 ENTRYPOINT ["node", "server.js"]
