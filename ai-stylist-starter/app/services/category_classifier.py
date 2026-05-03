@@ -166,33 +166,45 @@ def _proxy_creds(proxy: str) -> str:
     return proxy
 
 
-def _next_proxy_scheme(current_proxy: str) -> str | None:
-    """Дать следующий вариант proxy URL по каскаду.
+def _build_proxy_attempts_order(start_proxy: str) -> list[str]:
+    """Порядок попыток прокси-схем для одного vision-запроса.
 
-    Перебор циклический: после ``socks5://`` возвращаемся к ``http://``.
-    Это позволяет коду подобрать рабочую схему независимо от того,
-    с какого префикса стартовал секрет ``OPENAI_HTTP_PROXY``. Количество
-    реальных попыток в одном запросе ограничено циклом
-    ``for _ in range(len(_PROXY_SCHEMES_CASCADE))`` в
-    ``_post_with_proxy_fallback`` — то есть максимум 3 разных префикса.
+    1. Стартовая схема (то, что задал юзер в секрете) — первая попытка.
+    2. Остальные из ``_PROXY_SCHEMES_CASCADE`` в исходном порядке
+       (``http`` → ``https`` → ``socks5``), исключая стартовую.
 
-    None возвращается только если префикс не входит в каскад
-    (например, ``socks5h://``) — такие схемы не трогаем.
+    Так ``socks5://`` (медленный handshake, 60s timeout у proxy-seller)
+    никогда не оказывается в середине каскада — он либо первый
+    (если юзер сам выбрал), либо последний. Юзер с ``https://``
+    как стартовой получит: https (быстрый SSL fail) → http (рабочая)
+    = ~1.8s до успеха, без 60s провисания на socks5 в середине.
     """
-    creds = _proxy_creds(current_proxy)
-    for idx, prefix in enumerate(_PROXY_SCHEMES_CASCADE):
-        if current_proxy.startswith(prefix):
-            next_idx = (idx + 1) % len(_PROXY_SCHEMES_CASCADE)
-            return _PROXY_SCHEMES_CASCADE[next_idx] + creds
-    # Префикс не из каскада (например, socks5h://) — не трогаем.
-    return None
+    creds = _proxy_creds(start_proxy)
+    order: list[str] = []
+    for prefix in _PROXY_SCHEMES_CASCADE:
+        if start_proxy.startswith(prefix):
+            order.append(start_proxy)
+            break
+    if not order:
+        # Стартовый префикс не из каскада (например, socks5h://) —
+        # пробуем только его, не трогаем.
+        return [start_proxy]
+    for prefix in _PROXY_SCHEMES_CASCADE:
+        candidate = prefix + creds
+        if candidate not in order:
+            order.append(candidate)
+    return order
 
 
 # Низко-уровневые ошибки прокси, которые имеют смысл обработать через
 # каскад. Реальные сетевые проблемы (Timeout, общий ConnectError до
 # OpenAI) пусть всплывают как раньше — fallback на эвристики.
+#
+# ``ProtocolError`` (base) ловит и ``RemoteProtocolError``, и
+# ``LocalProtocolError`` — встречалось на проде с сообщением
+# "Malformed reply" от socks5-handshake.
 _PROXY_HANDSHAKE_ERRORS: tuple[type[Exception], ...] = (
-    httpx.RemoteProtocolError,
+    httpx.ProtocolError,
     httpx.ProxyError,
 )
 
@@ -370,17 +382,30 @@ class OpenAICategoryClassifier:
         json_body: dict,
         timeout: float,
     ) -> httpx.Response:
-        """POST с авто-fallback ``http://`` → ``https://`` для proxy URL.
+        """POST с каскадным auto-fallback по схемам прокси.
 
-        ISP/residential-провайдеры обычно отдают TLS-обёрнутый прокси.
-        Если URL начинается с http:// — httpx коннектится открытым TCP,
-        прокси шлёт TLS Alert, ловим ``RemoteProtocolError``. Один раз
-        пересоздаём клиент с https:// и повторяем запрос; следующий
-        запрос инстанции уйдёт сразу с правильной схемой.
+        Порядок попыток собирается ``_build_proxy_attempts_order`` — сначала
+        стартовая схема (что задал юзер), потом остальные из каскада в
+        порядке ``http → https → socks5``. Так медленный socks5 не
+        попадает в середину каскада: в худшем случае он лишь последний,
+        а юзер с быстрыми http/https получает рабочую схему за 1-2 секунды.
+
+        После первого успешного запроса флаг ``_proxy_resolved`` фиксирует
+        правильную схему, дальше ошибки уходят как обычно (fallback на
+        heuristic в вызывающем коде).
         """
         last_exc: Exception | None = None
-        last_idx = len(_PROXY_SCHEMES_CASCADE) - 1
-        for attempt_idx in range(len(_PROXY_SCHEMES_CASCADE)):
+        attempts_order = _build_proxy_attempts_order(self._proxy or "")
+        last_idx = len(attempts_order) - 1
+        for attempt_idx, candidate_proxy in enumerate(attempts_order):
+            if attempt_idx > 0 and candidate_proxy != self._proxy:
+                logger.warning(
+                    "category_classifier: %s on proxy %r — switching to %r and retrying",
+                    last_exc,
+                    _safe_proxy_for_log(self._proxy),
+                    _safe_proxy_for_log(candidate_proxy),
+                )
+                self._rebuild_client_with_proxy(candidate_proxy)
             attempt_timeout = timeout if self._proxy_resolved else min(
                 timeout, _PROXY_HANDSHAKE_TIMEOUT_S,
             )
@@ -397,27 +422,14 @@ class OpenAICategoryClassifier:
                 if "ssl" not in msg and "tls" not in msg:
                     raise
                 last_exc = exc
-            except httpx.TimeoutException as exc:
+            except (httpx.NetworkError, httpx.TimeoutException) as exc:
                 if self._proxy_resolved:
                     raise
                 last_exc = exc
             if self._proxy_resolved:
                 raise last_exc
             if attempt_idx == last_idx:
-                # Каскад исчерпан: не делаем лишний rebuild, чтобы
-                # ``self._proxy`` указывал на последнюю реально
-                # попробованную схему — упрощает разбор в логах.
                 break
-            next_proxy = _next_proxy_scheme(self._proxy or "")
-            if next_proxy is None:
-                break
-            logger.warning(
-                "category_classifier: %s on proxy %r — switching to %r and retrying",
-                last_exc,
-                _safe_proxy_for_log(self._proxy),
-                _safe_proxy_for_log(next_proxy),
-            )
-            self._rebuild_client_with_proxy(next_proxy)
         raise last_exc if last_exc else RuntimeError("proxy cascade exhausted")
 
     def classify(
@@ -794,11 +806,10 @@ class OpenAIVisionAnalyzer:
     ) -> httpx.Response:
         """POST с каскадным auto-fallback по схемам прокси.
 
-        Каскад: ``http://`` → ``https://`` → ``socks5://``. При первом
-        запросе если httpx ловит handshake-ошибку прокси (RemoteProtocolError,
-        ProxyError, либо TLS-сбой через ConnectError) — переключаем
-        схему и повторяем. Так одна и та же конфигурация работает с
-        plain HTTP / HTTPS / SOCKS5 провайдерами без изменения секрета.
+        Порядок попыток собирается ``_build_proxy_attempts_order`` — сначала
+        стартовая схема (что задал юзер), потом остальные из каскада в
+        порядке ``http → https → socks5``. Так медленный socks5 не
+        попадает в середину каскада: в худшем случае он лишь последний.
 
         После первого успешного запроса флаг ``_proxy_resolved`` фиксирует
         правильную схему, дальше ошибки уходят как обычно (fallback на
@@ -808,11 +819,17 @@ class OpenAIVisionAnalyzer:
         сохраняем side_effect mock'а; меняем только ``self._proxy``.
         """
         last_exc: Exception | None = None
-        # Защита от бесконечного цикла: каскад максимум 3 уровня.
-        last_idx = len(_PROXY_SCHEMES_CASCADE) - 1
-        for attempt_idx in range(len(_PROXY_SCHEMES_CASCADE)):
-            # Если схема ещё не зарезолвилась — короткий timeout, чтобы
-            # перебор всех трёх укладывался в ~15s до 504 от nginx.
+        attempts_order = _build_proxy_attempts_order(self._proxy or "")
+        last_idx = len(attempts_order) - 1
+        for attempt_idx, candidate_proxy in enumerate(attempts_order):
+            if attempt_idx > 0 and candidate_proxy != self._proxy:
+                logger.warning(
+                    "vision_analyzer: %s on proxy %r — switching to %r and retrying",
+                    last_exc,
+                    _safe_proxy_for_log(self._proxy),
+                    _safe_proxy_for_log(candidate_proxy),
+                )
+                self._rebuild_client_with_proxy(candidate_proxy)
             attempt_timeout = timeout if self._proxy_resolved else min(
                 timeout, _PROXY_HANDSHAKE_TIMEOUT_S,
             )
@@ -829,9 +846,7 @@ class OpenAIVisionAnalyzer:
                 if "ssl" not in msg and "tls" not in msg:
                     raise
                 last_exc = exc
-            except httpx.TimeoutException as exc:
-                # Короткий timeout на handshake-фазе: считаем что прокси
-                # мёртв в этой схеме, идём к следующей.
+            except (httpx.NetworkError, httpx.TimeoutException) as exc:
                 if self._proxy_resolved:
                     raise
                 last_exc = exc
@@ -839,16 +854,6 @@ class OpenAIVisionAnalyzer:
                 raise last_exc
             if attempt_idx == last_idx:
                 break
-            next_proxy = _next_proxy_scheme(self._proxy or "")
-            if next_proxy is None:
-                break
-            logger.warning(
-                "vision_analyzer: %s on proxy %r — switching to %r and retrying",
-                last_exc,
-                _safe_proxy_for_log(self._proxy),
-                _safe_proxy_for_log(next_proxy),
-            )
-            self._rebuild_client_with_proxy(next_proxy)
         raise last_exc if last_exc else RuntimeError("proxy cascade exhausted")
 
     def analyze(
