@@ -186,6 +186,13 @@ _PROXY_HANDSHAKE_ERRORS: tuple[type[Exception], ...] = (
     httpx.ProxyError,
 )
 
+# Таймаут на этап подбора прокси-схемы. Каскад из 3 уровней с обычным
+# 30s даст p95 ~90s — фронт (60s) словит 504 от nginx раньше, чем
+# fallback запишется в БД. Короткий timeout на handshake-фазу
+# гарантирует что вся цепочка укладывается в ~15s в худшем случае,
+# успевая дойти до heuristic-fallback'а.
+_PROXY_HANDSHAKE_TIMEOUT_S = 5.0
+
 
 def _safe_proxy_for_log(proxy: str | None) -> str:
     """Маскированный proxy URL для логов — без login/password."""
@@ -363,9 +370,12 @@ class OpenAICategoryClassifier:
         """
         last_exc: Exception | None = None
         for _ in range(len(_PROXY_SCHEMES_CASCADE)):
+            attempt_timeout = timeout if self._proxy_resolved else min(
+                timeout, _PROXY_HANDSHAKE_TIMEOUT_S,
+            )
             try:
                 response = self._get_client().post(
-                    url, headers=headers, json=json_body, timeout=timeout,
+                    url, headers=headers, json=json_body, timeout=attempt_timeout,
                 )
                 self._proxy_resolved = True
                 return response
@@ -374,6 +384,10 @@ class OpenAICategoryClassifier:
             except httpx.ConnectError as exc:
                 msg = str(exc).lower()
                 if "ssl" not in msg and "tls" not in msg:
+                    raise
+                last_exc = exc
+            except httpx.TimeoutException as exc:
+                if self._proxy_resolved:
                     raise
                 last_exc = exc
             if self._proxy_resolved:
@@ -780,24 +794,30 @@ class OpenAIVisionAnalyzer:
         last_exc: Exception | None = None
         # Защита от бесконечного цикла: каскад максимум 3 уровня.
         for _ in range(len(_PROXY_SCHEMES_CASCADE)):
+            # Если схема ещё не зарезолвилась — короткий timeout, чтобы
+            # перебор всех трёх укладывался в ~15s до 504 от nginx.
+            attempt_timeout = timeout if self._proxy_resolved else min(
+                timeout, _PROXY_HANDSHAKE_TIMEOUT_S,
+            )
             try:
                 response = self._get_client().post(
-                    url, headers=headers, json=json_body, timeout=timeout,
+                    url, headers=headers, json=json_body, timeout=attempt_timeout,
                 )
                 self._proxy_resolved = True
                 return response
             except _PROXY_HANDSHAKE_ERRORS as exc:
                 last_exc = exc
             except httpx.ConnectError as exc:
-                # Чистый ConnectError может быть и не про прокси (DNS,
-                # firewall до OpenAI). Считаем proxy-related только если
-                # сообщение упоминает SSL/TLS — это сигнатура HTTPS-прокси
-                # без TLS на той стороне.
                 msg = str(exc).lower()
                 if "ssl" not in msg and "tls" not in msg:
                     raise
                 last_exc = exc
-            # Уже резолвились раньше → ошибка не от подбора схемы.
+            except httpx.TimeoutException as exc:
+                # Короткий timeout на handshake-фазе: считаем что прокси
+                # мёртв в этой схеме, идём к следующей.
+                if self._proxy_resolved:
+                    raise
+                last_exc = exc
             if self._proxy_resolved:
                 raise last_exc
             next_proxy = _next_proxy_scheme(self._proxy or "")
@@ -810,7 +830,6 @@ class OpenAIVisionAnalyzer:
                 _safe_proxy_for_log(next_proxy),
             )
             self._rebuild_client_with_proxy(next_proxy)
-        # Каскад исчерпан — пробрасываем последнюю ошибку.
         raise last_exc if last_exc else RuntimeError("proxy cascade exhausted")
 
     def analyze(
