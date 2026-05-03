@@ -110,11 +110,18 @@ class Settings(BaseSettings):
     openai_api_key: str = ""
     openai_base_url: str = "https://api.openai.com"
     openai_model: str = "gpt-5-mini"
-    # Сетевой HTTP/HTTPS/SOCKS прокси для исходящих запросов к OpenAI.
-    # Формат: ``http://user:pass@host:port`` (HTTP), ``http://host:port``
-    # (без auth), ``socks5://user:pass@host:port`` (SOCKS — требует
-    # пакета ``httpx[socks]``). Пустая строка — без прокси.
-    # Применяется только к классификатору и vision-анализатору.
+    # Сетевой прокси для исходящих запросов к OpenAI. Применяется только
+    # к классификатору и vision-анализатору; проброшен в httpx.Client(proxy=...).
+    #
+    # СХЕМА URL ВАЖНА — описывает транспорт ДО прокси, не до OpenAI:
+    # * ``http://user:pass@host:port`` — plain HTTP-прокси (CONNECT по TCP).
+    # * ``https://user:pass@host:port`` — HTTPS-прокси (TLS до прокси,
+    #   потом CONNECT). Это формат у proxy-seller "TXT (https)" и
+    #   подобных residential/ISP-провайдеров. Если ошибочно указать
+    #   ``http://`` для HTTPS-прокси, httpx упадёт с
+    #   ``RemoteProtocolError('illegal request line')``.
+    # * ``socks5://user:pass@host:port`` — SOCKS, требует ``httpx[socks]``.
+    # Пустая строка — без прокси.
     openai_http_proxy: str = ""
 
     # --- FASHN / Auth (unchanged) -----------------------------------------
