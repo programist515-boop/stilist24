@@ -935,9 +935,8 @@ def test_vision_retries_on_remote_protocol_error_with_https():
     assert client.post.call_count == 2
 
 
-def test_vision_does_not_loop_when_https_already_attempted():
-    """Повторный RemoteProtocolError после переключения на https:// не
-    запускает бесконечную петлю — пробрасываем наружу."""
+def test_vision_does_not_loop_when_cascade_exhausted():
+    """Каскад http → https → socks5: после трёх попыток сдаёмся."""
     client = MagicMock(spec=httpx.Client)
     client.post.side_effect = httpx.RemoteProtocolError("illegal request line")
 
@@ -950,26 +949,80 @@ def test_vision_does_not_loop_when_https_already_attempted():
     with pytest.raises(RuntimeError):
         analyzer.analyze(b"fake-jpeg")
 
-    # Точно два POST'а: исходный http + retry с https.
-    # Третий бы залип в бесконечный retry — этого не должно быть.
-    assert client.post.call_count == 2
-    assert analyzer._proxy.startswith("https://")
+    # Каскад из трёх схем — три POST'а.
+    assert client.post.call_count == 3
+    assert analyzer._proxy.startswith("socks5://")
 
 
-def test_vision_does_not_rewrite_https_proxy():
-    """Если proxy уже https:// — RemoteProtocolError не приводит к retry."""
+def test_vision_does_not_rewrite_socks5_proxy():
+    """Если proxy уже socks5:// — каскад на нём заканчивается, retry нет."""
     client = MagicMock(spec=httpx.Client)
     client.post.side_effect = httpx.RemoteProtocolError("illegal request line")
 
     analyzer = OpenAIVisionAnalyzer(
         api_key="sk-test",
-        proxy="https://user:pass@host:8080",
+        proxy="socks5://user:pass@host:8080",
         client=client,
     )
 
     with pytest.raises(RuntimeError):
         analyzer.analyze(b"fake-jpeg")
 
-    # Только один POST: схема уже https, переключать некуда.
     assert client.post.call_count == 1
-    assert analyzer._proxy_https_attempted is False
+    assert analyzer._proxy.startswith("socks5://")
+
+
+def test_vision_cascade_http_to_https_to_socks5_succeeds():
+    """proxy-seller сценарий: http даёт illegal request line, https даёт
+    SSL record layer failure, socks5 наконец отвечает 200."""
+    success_body = _vision_response_body()
+    success_response = MagicMock(spec=httpx.Response)
+    success_response.status_code = 200
+    success_response.json.return_value = success_body
+    success_response.raise_for_status = MagicMock()
+
+    call_count = {"n": 0}
+
+    def fake_post(*args, **kwargs):
+        call_count["n"] += 1
+        if call_count["n"] == 1:
+            raise httpx.RemoteProtocolError("illegal request line")
+        if call_count["n"] == 2:
+            raise httpx.ConnectError("[SSL] record layer failure (_ssl.c:1016)")
+        return success_response
+
+    client = MagicMock(spec=httpx.Client)
+    client.post.side_effect = fake_post
+
+    analyzer = OpenAIVisionAnalyzer(
+        api_key="sk-test",
+        proxy="http://user:pass@host:8080",
+        client=client,
+    )
+
+    result = analyzer.analyze(b"fake-jpeg")
+
+    assert result.category == "blouses"
+    assert client.post.call_count == 3
+    assert analyzer._proxy == "socks5://user:pass@host:8080"
+    assert analyzer._proxy_resolved is True
+
+
+def test_vision_cascade_does_not_eat_unrelated_connect_errors():
+    """ConnectError без SSL/TLS в сообщении — это сетевая проблема до
+    OpenAI, не дело каскада. Схема прокси не должна меняться."""
+    client = MagicMock(spec=httpx.Client)
+    client.post.side_effect = httpx.ConnectError("Name or service not known")
+
+    analyzer = OpenAIVisionAnalyzer(
+        api_key="sk-test",
+        proxy="http://user:pass@host:8080",
+        client=client,
+    )
+
+    with pytest.raises(RuntimeError):
+        analyzer.analyze(b"fake-jpeg")
+
+    # Каскад НЕ активирован: схема прокси осталась исходной.
+    assert analyzer._proxy.startswith("http://")
+    assert analyzer._proxy_resolved is False

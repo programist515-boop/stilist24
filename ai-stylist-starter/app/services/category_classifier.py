@@ -152,6 +152,53 @@ _BREAKER_COOLDOWN_S = 300.0  # 5 minutes
 # and letting the wrapper fall through to heuristic.
 _TRANSIENT_RETRIES = 1
 
+# Каскад схем прокси: при ошибке handshake пробуем следующую. Реальные
+# креды (user:pass@host:port) не меняются, только префикс схемы. Так
+# код адаптируется к любому из трёх типов прокси-провайдеров без
+# вмешательства пользователя в секреты.
+_PROXY_SCHEMES_CASCADE: tuple[str, ...] = ("http://", "https://", "socks5://")
+
+
+def _proxy_creds(proxy: str) -> str:
+    """Return ``user:pass@host:port`` part — без префикса схемы."""
+    if "://" in proxy:
+        return proxy.split("://", 1)[1]
+    return proxy
+
+
+def _next_proxy_scheme(current_proxy: str) -> str | None:
+    """Дать следующий вариант proxy URL по каскаду или None если выдохлись."""
+    creds = _proxy_creds(current_proxy)
+    for idx, prefix in enumerate(_PROXY_SCHEMES_CASCADE):
+        if current_proxy.startswith(prefix):
+            if idx + 1 < len(_PROXY_SCHEMES_CASCADE):
+                return _PROXY_SCHEMES_CASCADE[idx + 1] + creds
+            return None
+    # Префикс не из каскада (например, socks5h://) — не трогаем.
+    return None
+
+
+# Низко-уровневые ошибки прокси, которые имеют смысл обработать через
+# каскад. Реальные сетевые проблемы (Timeout, общий ConnectError до
+# OpenAI) пусть всплывают как раньше — fallback на эвристики.
+_PROXY_HANDSHAKE_ERRORS: tuple[type[Exception], ...] = (
+    httpx.RemoteProtocolError,
+    httpx.ProxyError,
+)
+
+
+def _safe_proxy_for_log(proxy: str | None) -> str:
+    """Маскированный proxy URL для логов — без login/password."""
+    if not proxy:
+        return ""
+    if "://" not in proxy:
+        return proxy
+    scheme, rest = proxy.split("://", 1)
+    if "@" in rest:
+        host_port = rest.rsplit("@", 1)[1]
+        return f"{scheme}://***@{host_port}"
+    return proxy
+
 # Single-step downscale before encoding. With ``detail:"low"`` OpenAI
 # resizes to 512×512 on its side and bills a fixed 85 input tokens
 # regardless of source resolution, so anything above ~1024px is wasted
@@ -271,11 +318,23 @@ class OpenAICategoryClassifier:
         self._model = model
         self._timeout_s = timeout_s
         self._proxy = proxy or None
-        self._proxy_https_attempted = False
+        self._proxy_https_attempted = False  # legacy, для тестов
+        self._proxy_resolved = False
         self._client = client  # injected for tests; lazy-built otherwise
         self._client_injected = client is not None
         self._breaker = breaker or _CircuitBreaker()
         self._fallback = fallback or HeuristicCategoryClassifier()
+
+    def _rebuild_client_with_proxy(self, new_proxy: str) -> None:
+        self._proxy = new_proxy
+        self._proxy_https_attempted = True
+        if not self._client_injected:
+            try:
+                if self._client is not None:
+                    self._client.close()
+            except Exception:  # noqa: BLE001
+                pass
+            self._client = None
 
     def _get_client(self) -> httpx.Client:
         if self._client is not None:
@@ -302,33 +361,34 @@ class OpenAICategoryClassifier:
         пересоздаём клиент с https:// и повторяем запрос; следующий
         запрос инстанции уйдёт сразу с правильной схемой.
         """
-        try:
-            return self._get_client().post(
-                url, headers=headers, json=json_body, timeout=timeout,
-            )
-        except httpx.RemoteProtocolError as exc:
-            if (
-                self._proxy
-                and self._proxy.startswith("http://")
-                and not self._proxy_https_attempted
-            ):
-                logger.warning(
-                    "category_classifier: %s — switching proxy scheme to https:// and retrying",
-                    exc,
-                )
-                self._proxy = "https://" + self._proxy[len("http://"):]
-                self._proxy_https_attempted = True
-                if not self._client_injected:
-                    try:
-                        if self._client is not None:
-                            self._client.close()
-                    except Exception:  # noqa: BLE001
-                        pass
-                    self._client = None
-                return self._get_client().post(
+        last_exc: Exception | None = None
+        for _ in range(len(_PROXY_SCHEMES_CASCADE)):
+            try:
+                response = self._get_client().post(
                     url, headers=headers, json=json_body, timeout=timeout,
                 )
-            raise
+                self._proxy_resolved = True
+                return response
+            except _PROXY_HANDSHAKE_ERRORS as exc:
+                last_exc = exc
+            except httpx.ConnectError as exc:
+                msg = str(exc).lower()
+                if "ssl" not in msg and "tls" not in msg:
+                    raise
+                last_exc = exc
+            if self._proxy_resolved:
+                raise last_exc
+            next_proxy = _next_proxy_scheme(self._proxy or "")
+            if next_proxy is None:
+                break
+            logger.warning(
+                "category_classifier: %s on proxy %r — switching to %r and retrying",
+                last_exc,
+                _safe_proxy_for_log(self._proxy),
+                _safe_proxy_for_log(next_proxy),
+            )
+            self._rebuild_client_with_proxy(next_proxy)
+        raise last_exc if last_exc else RuntimeError("proxy cascade exhausted")
 
     def classify(
         self,
@@ -667,7 +727,8 @@ class OpenAIVisionAnalyzer:
         self._model = model
         self._timeout_s = timeout_s
         self._proxy = proxy or None
-        self._proxy_https_attempted = False
+        self._proxy_https_attempted = False  # legacy flag, kept for tests
+        self._proxy_resolved = False  # True после первого успешного запроса
         self._client = client
         self._client_injected = client is not None
         self._breaker = breaker or _CircuitBreaker()
@@ -681,6 +742,18 @@ class OpenAIVisionAnalyzer:
         )
         return self._client
 
+    def _rebuild_client_with_proxy(self, new_proxy: str) -> None:
+        """Подменить self._proxy и пересобрать httpx.Client (если не injected)."""
+        self._proxy = new_proxy
+        self._proxy_https_attempted = True  # совместимость с прежними тестами
+        if not self._client_injected:
+            try:
+                if self._client is not None:
+                    self._client.close()
+            except Exception:  # noqa: BLE001
+                pass
+            self._client = None
+
     def _post_with_proxy_fallback(
         self,
         url: str,
@@ -689,46 +762,56 @@ class OpenAIVisionAnalyzer:
         json_body: dict,
         timeout: float,
     ) -> httpx.Response:
-        """POST с авто-fallback с http:// на https:// для прокси.
+        """POST с каскадным auto-fallback по схемам прокси.
 
-        Большинство ISP/residential-провайдеров отдают **HTTPS-прокси**
-        (TLS-обёрнутый CONNECT). Если URL начинается с http:// — httpx
-        коннектится открытым TCP, прокси шлёт TLS Alert и httpx ловит
-        ``RemoteProtocolError('illegal request line')``. В этом случае
-        однократно перезапускаем клиента с https:// — следующий запрос
-        в этой же инстанции пойдёт сразу по правильной схеме.
+        Каскад: ``http://`` → ``https://`` → ``socks5://``. При первом
+        запросе если httpx ловит handshake-ошибку прокси (RemoteProtocolError,
+        ProxyError, либо TLS-сбой через ConnectError) — переключаем
+        схему и повторяем. Так одна и та же конфигурация работает с
+        plain HTTP / HTTPS / SOCKS5 провайдерами без изменения секрета.
 
-        Injected клиент (тесты) не закрываем и не пересобираем — это
-        сломало бы side_effect mock'а. Только меняем self._proxy и
-        флаг — реальный switch произойдёт при запуске в проде.
+        После первого успешного запроса флаг ``_proxy_resolved`` фиксирует
+        правильную схему, дальше ошибки уходят как обычно (fallback на
+        heuristic в вызывающем коде).
+
+        Injected клиент (тесты) не закрываем и не пересобираем —
+        сохраняем side_effect mock'а; меняем только ``self._proxy``.
         """
-        try:
-            return self._get_client().post(
-                url, headers=headers, json=json_body, timeout=timeout,
-            )
-        except httpx.RemoteProtocolError as exc:
-            if (
-                self._proxy
-                and self._proxy.startswith("http://")
-                and not self._proxy_https_attempted
-            ):
-                logger.warning(
-                    "vision_analyzer: %s — switching proxy scheme to https:// and retrying",
-                    exc,
-                )
-                self._proxy = "https://" + self._proxy[len("http://"):]
-                self._proxy_https_attempted = True
-                if not self._client_injected:
-                    try:
-                        if self._client is not None:
-                            self._client.close()
-                    except Exception:  # noqa: BLE001
-                        pass
-                    self._client = None
-                return self._get_client().post(
+        last_exc: Exception | None = None
+        # Защита от бесконечного цикла: каскад максимум 3 уровня.
+        for _ in range(len(_PROXY_SCHEMES_CASCADE)):
+            try:
+                response = self._get_client().post(
                     url, headers=headers, json=json_body, timeout=timeout,
                 )
-            raise
+                self._proxy_resolved = True
+                return response
+            except _PROXY_HANDSHAKE_ERRORS as exc:
+                last_exc = exc
+            except httpx.ConnectError as exc:
+                # Чистый ConnectError может быть и не про прокси (DNS,
+                # firewall до OpenAI). Считаем proxy-related только если
+                # сообщение упоминает SSL/TLS — это сигнатура HTTPS-прокси
+                # без TLS на той стороне.
+                msg = str(exc).lower()
+                if "ssl" not in msg and "tls" not in msg:
+                    raise
+                last_exc = exc
+            # Уже резолвились раньше → ошибка не от подбора схемы.
+            if self._proxy_resolved:
+                raise last_exc
+            next_proxy = _next_proxy_scheme(self._proxy or "")
+            if next_proxy is None:
+                break
+            logger.warning(
+                "vision_analyzer: %s on proxy %r — switching to %r and retrying",
+                last_exc,
+                _safe_proxy_for_log(self._proxy),
+                _safe_proxy_for_log(next_proxy),
+            )
+            self._rebuild_client_with_proxy(next_proxy)
+        # Каскад исчерпан — пробрасываем последнюю ошибку.
+        raise last_exc if last_exc else RuntimeError("proxy cascade exhausted")
 
     def analyze(
         self,
