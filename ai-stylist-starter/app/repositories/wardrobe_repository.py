@@ -2,6 +2,7 @@ import uuid
 from sqlalchemy import select, update
 from sqlalchemy.orm import Session
 
+from app.models.item_attributes import NEW_ATTRIBUTE_NAMES
 from app.models.wardrobe_item import WardrobeItem
 
 
@@ -16,7 +17,9 @@ class WardrobeRepository:
         *,
         persona_id: uuid.UUID | None = None,
         category: str | None = None,
+        name: str | None = None,
         attributes: dict | None = None,
+        structured_attrs: dict | None = None,
         scores: dict | None = None,
         is_verified: bool = False,
         image_key: str | None = None,
@@ -27,6 +30,11 @@ class WardrobeRepository:
         ``persona_id`` can be omitted by legacy callers: we then resolve
         (or create on first use) the user's primary persona so the
         NOT NULL FK is satisfied without rewriting every route at once.
+
+        ``structured_attrs`` принимает плоский dict из 14 Phase-0 атрибутов
+        (fabric_rigidity, ..., style_tags). Чужие ключи игнорируются.
+        Валидация значений — на уровне SQLAlchemy ``@validates`` в
+        ``WardrobeItem``.
         """
         if persona_id is None:
             from app.repositories.persona_repository import PersonaRepository
@@ -36,12 +44,17 @@ class WardrobeRepository:
             user_id=user_id,
             persona_id=persona_id,
             category=category,
+            name=name,
             attributes_json=attributes or {},
             scores_json=scores or {},
             image_key=image_key,
             image_url=image_url,
             is_verified=is_verified,
         )
+        if structured_attrs:
+            for key, value in structured_attrs.items():
+                if key in NEW_ATTRIBUTE_NAMES:
+                    setattr(item, key, value)
         if item_id is not None:
             item.id = item_id
         self.db.add(item)

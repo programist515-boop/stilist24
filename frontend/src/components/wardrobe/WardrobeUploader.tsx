@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/Button";
 import { Card, CardSubtitle, CardTitle } from "@/components/ui/Card";
@@ -8,9 +8,8 @@ import { Badge } from "@/components/ui/Badge";
 import { ErrorState } from "@/components/ui/ErrorState";
 import { FileDropzone } from "@/components/ui/FileDropzone";
 import { Label } from "@/components/ui/Label";
-import { Select } from "@/components/ui/Select";
 import {
-  updateWardrobeItemCategory,
+  updateWardrobeItem,
   uploadWardrobeItem,
 } from "@/lib/api/wardrobe";
 import { trackEvent } from "@/lib/api/events";
@@ -48,21 +47,19 @@ const CATEGORY_LABEL: Record<string, string> = {
   ...LEGACY_CATEGORY_LABEL,
 };
 
+const PROGRESS_STEPS = [
+  "Определяем по фото",
+  "Вырезаем фон",
+  "Загружаем в гардероб",
+] as const;
+
 export function WardrobeUploader() {
   const queryClient = useQueryClient();
   const [file, setFile] = useState<File | null>(null);
-  // "" = «Угадай по фото» — backend определит категорию по CV.
-  const [category, setCategory] = useState("");
   const [lastUploaded, setLastUploaded] = useState<WardrobeItem | null>(null);
 
   const mutation = useMutation({
-    mutationFn: () => {
-      if (!file) throw new Error("Сначала выберите изображение");
-      return uploadWardrobeItem({
-        image: file,
-        category: category || undefined,
-      });
-    },
+    mutationFn: (image: File) => uploadWardrobeItem({ image }),
     onSuccess: (item) => {
       setFile(null);
       setLastUploaded(item);
@@ -74,20 +71,14 @@ export function WardrobeUploader() {
     },
   });
 
-  const updateCategoryMutation = useMutation({
-    mutationFn: (newCategory: string) => {
-      if (!lastUploaded) throw new Error("Нет последней загруженной вещи");
-      return updateWardrobeItemCategory(lastUploaded.id, newCategory);
-    },
-    onSuccess: (item) => {
-      setLastUploaded(item);
-      queryClient.invalidateQueries({ queryKey: ["wardrobe"] });
-      trackEvent("wardrobe_item_category_corrected", {
-        item_id: item.id,
-        category: item.category,
-      });
-    },
-  });
+  // Автозапуск: как только пользователь выбрал файл, сразу шлём на бэк.
+  // Никакой кнопки «Загрузить» — uploader работает по факту выбора.
+  const handleFile = (next: File | null) => {
+    setFile(next);
+    if (next) {
+      mutation.mutate(next);
+    }
+  };
 
   return (
     <Card>
@@ -95,7 +86,7 @@ export function WardrobeUploader() {
         <div>
           <CardTitle>Добавить вещь</CardTitle>
           <CardSubtitle className="mt-1">
-            Загрузите фото — мы уберём фон, определим категорию и атрибуты.
+            Перетащите фото — мы определим по фото и уберём фон.
           </CardSubtitle>
         </div>
         {mutation.isSuccess ? (
@@ -104,43 +95,17 @@ export function WardrobeUploader() {
       </div>
 
       <div className="mt-6 grid gap-5 sm:grid-cols-[200px,1fr]">
-        <FileDropzone label="Фото вещи" file={file} onChange={setFile} />
-        <div className="space-y-4">
-          <div className="space-y-1.5">
-            <Label htmlFor="category">Категория (необязательно)</Label>
-            <Select
-              id="category"
-              value={category}
-              onChange={(e) => setCategory(e.target.value)}
-            >
-              <option value="">Угадаем по фото</option>
-              {CATEGORIES.map((c) => (
-                <option key={c.value} value={c.value}>
-                  {c.label}
-                </option>
-              ))}
-            </Select>
-            <p className="text-xs text-ink-muted">
-              Можно оставить «Угадаем по фото» — поправить можно после
-              загрузки.
-            </p>
-          </div>
-          <Button
-            onClick={() => mutation.mutate()}
-            disabled={!file}
-            loading={mutation.isPending}
-            loadingText="Идёт CV-анализ…"
-            fullWidth
-            className="sm:w-auto"
-          >
-            Загрузить вещь
-          </Button>
+        <FileDropzone label="Фото вещи" file={file} onChange={handleFile} />
+        <div className="space-y-3">
           {mutation.isPending ? (
-            <p className="text-xs text-ink-muted">
-              Загружаем фото, убираем фон и распознаём вещь — на первом
-              фото это может занять до минуты.
+            <UploadProgressStepper />
+          ) : (
+            <p className="text-sm text-ink-muted">
+              После выбора фото мы автоматически определим вещь, обрежем
+              фон и сохраним в гардероб. Категорию и название сможете
+              поправить в карточке после распознавания.
             </p>
-          ) : null}
+          )}
         </div>
       </div>
 
@@ -149,20 +114,78 @@ export function WardrobeUploader() {
           <ErrorState
             title="Не удалось загрузить"
             error={mutation.error}
-            onRetry={() => mutation.mutate()}
+            onRetry={() => file && mutation.mutate(file)}
           />
         </div>
       ) : null}
 
       {lastUploaded && !mutation.isPending && !mutation.isError ? (
         <LastUploadedReview
+          key={lastUploaded.id}
           item={lastUploaded}
-          onChangeCategory={(c) => updateCategoryMutation.mutate(c)}
-          isUpdating={updateCategoryMutation.isPending}
-          updateError={updateCategoryMutation.error}
+          onClose={() => setLastUploaded(null)}
         />
       ) : null}
     </Card>
+  );
+}
+
+/**
+ * Псевдо-stepper «Определяем → Вырезаем фон → Загружаем». Один POST
+ * под капотом длится ~5–30s, мы переключаем step по таймеру каждые
+ * 2.5s. Реальная цепочка идёт ровно в этом порядке (vision-вызов,
+ * затем save nobg, затем DB), поэтому подписи не лгут.
+ */
+function UploadProgressStepper() {
+  const [step, setStep] = useState(0);
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      setStep((s) => (s + 1 < PROGRESS_STEPS.length ? s + 1 : s));
+    }, 2500);
+    return () => clearInterval(id);
+  }, []);
+
+  return (
+    <ul className="space-y-2">
+      {PROGRESS_STEPS.map((label, idx) => {
+        const isDone = idx < step;
+        const isActive = idx === step;
+        return (
+          <li
+            key={label}
+            className="flex items-center gap-2 text-sm text-ink"
+          >
+            <span
+              className={
+                isDone
+                  ? "inline-flex h-5 w-5 items-center justify-center rounded-full bg-emerald-500 text-[11px] text-white"
+                  : isActive
+                  ? "inline-flex h-5 w-5 animate-spin rounded-full border-2 border-ink/40 border-t-ink"
+                  : "inline-flex h-5 w-5 rounded-full border border-canvas-border"
+              }
+              aria-hidden
+            >
+              {isDone ? "✓" : ""}
+            </span>
+            <span
+              className={
+                isActive
+                  ? "font-medium"
+                  : isDone
+                  ? "text-ink-muted line-through"
+                  : "text-ink-muted"
+              }
+            >
+              {label}…
+            </span>
+          </li>
+        );
+      })}
+      <p className="pt-1 text-xs text-ink-muted">
+        На первом фото может занять до минуты.
+      </p>
+    </ul>
   );
 }
 
@@ -186,86 +209,115 @@ function readCategoryMeta(item: WardrobeItem): CategoryMeta {
   return {};
 }
 
+/**
+ * Карточка после успешной загрузки. Поля имени и категории заполнены
+ * vision-анализатором — пользователь либо сразу жмёт «ОК», либо
+ * правит inline и тогда жмёт «ОК». Никакого auto-save.
+ */
 function LastUploadedReview({
   item,
-  onChangeCategory,
-  isUpdating,
-  updateError,
+  onClose,
 }: {
   item: WardrobeItem;
-  onChangeCategory: (category: string) => void;
-  isUpdating: boolean;
-  updateError: unknown;
+  onClose: () => void;
 }) {
-  const currentCategory = item.category ?? "";
+  const queryClient = useQueryClient();
+  const [editName, setEditName] = useState<string>(item.name ?? "");
+  const [editCategory, setEditCategory] = useState<string>(item.category ?? "");
+
   const meta = readCategoryMeta(item);
   const isAutoDetected = meta.source === "cloud_llm" || meta.source === "heuristic";
   const confidencePct =
     typeof meta.confidence === "number" ? Math.round(meta.confidence * 100) : null;
-  const isLowConfidence =
-    isAutoDetected && (confidencePct ?? 100) < 75;
-  const isUndetected = !currentCategory; // backend сохранил None при низком confidence
+  const isUndetected = !item.category;
 
-  const currentLabel =
-    CATEGORY_LABEL[currentCategory] ?? currentCategory ?? "не определена";
+  const headline = isUndetected
+    ? "Не получилось определить категорию — выберите сами"
+    : isAutoDetected && confidencePct !== null && confidencePct < 75
+    ? `Похоже на это — уверенность ${confidencePct}%, поправьте при желании`
+    : "Распознали — проверьте и нажмите ОК";
 
-  let headline: string;
-  let dropdownLabel: string;
-  if (isUndetected) {
-    headline = "Не получилось определить категорию";
-    dropdownLabel = "Выбери категорию:";
-  } else if (isLowConfidence) {
-    headline = `Похоже на ${currentLabel}${
-      confidencePct !== null ? ` — уверенность ${confidencePct}%` : ""
-    }`;
-    dropdownLabel = "Поправить?";
-  } else {
-    headline = `Категория: ${currentLabel}`;
-    dropdownLabel = "Не та?";
-  }
+  const updateMutation = useMutation({
+    mutationFn: () => {
+      const payload: { category?: string; name?: string } = {};
+      const trimmedName = editName.trim();
+      const originalName = (item.name ?? "").trim();
+      const originalCategory = item.category ?? "";
+      if (trimmedName !== originalName) {
+        payload.name = trimmedName;
+      }
+      if (editCategory !== originalCategory && editCategory) {
+        payload.category = editCategory;
+      }
+      // Никаких изменений → resolve с текущим item (no-op на сети).
+      if (Object.keys(payload).length === 0) {
+        return Promise.resolve(item);
+      }
+      return updateWardrobeItem(item.id, payload);
+    },
+    onSuccess: (updated) => {
+      queryClient.invalidateQueries({ queryKey: ["wardrobe"] });
+      if (updated.id !== item.id) {
+        // На всякий случай — апдейт-функция не должна менять id.
+        return;
+      }
+      if (
+        (updated.category ?? "") !== (item.category ?? "") ||
+        (updated.name ?? "") !== (item.name ?? "")
+      ) {
+        trackEvent("wardrobe_item_corrected", {
+          item_id: updated.id,
+          category: updated.category,
+          name_changed: (updated.name ?? "") !== (item.name ?? ""),
+        });
+      }
+      onClose();
+    },
+  });
 
   return (
-    <div className="mt-5 flex flex-col gap-3 rounded-xl border border-canvas-border bg-canvas-card p-4 sm:flex-row sm:items-center">
+    <div className="mt-5 flex flex-col gap-4 rounded-xl border border-canvas-border bg-canvas-card p-4 sm:flex-row">
       {item.image_url ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img
           src={item.image_url}
-          alt="Загруженная вещь"
-          className="h-20 w-20 flex-shrink-0 rounded-lg object-cover"
+          alt={editName || "Загруженная вещь"}
+          className="h-28 w-28 flex-shrink-0 rounded-lg object-cover"
         />
       ) : null}
-      <div className="flex-1 space-y-1.5">
-        <p className="text-sm text-ink">
-          {isUndetected ? (
-            <span className="font-medium text-amber-700">{headline}</span>
-          ) : (
-            <>
-              {isLowConfidence ? "Похоже на: " : "Категория: "}
-              <span className="font-medium">{currentLabel}</span>
-              {isLowConfidence && confidencePct !== null ? (
-                <span className="ml-1 text-ink-muted">
-                  · уверенность {confidencePct}%
-                </span>
-              ) : null}
-            </>
-          )}
-        </p>
-        <div className="flex flex-wrap items-center gap-2">
-          <Label htmlFor="fix-category" className="!normal-case">
-            {dropdownLabel}
-          </Label>
+      <div className="flex-1 space-y-3">
+        <p className="text-sm font-medium text-ink">{headline}</p>
+
+        <div className="space-y-1.5">
+          <Label htmlFor="item-name">Название</Label>
+          <input
+            id="item-name"
+            type="text"
+            value={editName}
+            onChange={(e) => setEditName(e.target.value)}
+            placeholder="например, белая блузка с пышными рукавами"
+            disabled={updateMutation.isPending}
+            className="h-9 w-full rounded-lg border border-canvas-border bg-canvas-card px-3 text-sm text-ink disabled:opacity-60"
+          />
+        </div>
+
+        <div className="space-y-1.5">
+          <Label htmlFor="item-category">Категория</Label>
           <select
-            id="fix-category"
-            value={currentCategory}
-            onChange={(e) => onChangeCategory(e.target.value)}
-            disabled={isUpdating}
+            id="item-category"
+            value={editCategory}
+            onChange={(e) => setEditCategory(e.target.value)}
+            disabled={updateMutation.isPending}
             autoFocus={isUndetected}
-            className="h-9 rounded-lg border border-canvas-border bg-canvas-card px-3 text-sm text-ink disabled:opacity-60"
+            className="h-9 w-full rounded-lg border border-canvas-border bg-canvas-card px-3 text-sm text-ink disabled:opacity-60"
           >
             {isUndetected ? (
               <option value="" disabled>
-                — выбери категорию —
+                — выберите категорию —
               </option>
+            ) : null}
+            {item.category && CATEGORY_LABEL[item.category] && !CATEGORIES.find((c) => c.value === item.category) ? (
+              <option value={item.category}>{CATEGORY_LABEL[item.category]}</option>
             ) : null}
             {CATEGORIES.map((c) => (
               <option key={c.value} value={c.value}>
@@ -273,15 +325,23 @@ function LastUploadedReview({
               </option>
             ))}
           </select>
-          {isUpdating ? (
-            <span className="text-xs text-ink-muted">Обновляем…</span>
+        </div>
+
+        <div className="flex items-center gap-3 pt-1">
+          <Button
+            onClick={() => updateMutation.mutate()}
+            loading={updateMutation.isPending}
+            loadingText="Сохраняем…"
+            disabled={isUndetected && !editCategory}
+          >
+            ОК
+          </Button>
+          {updateMutation.isError ? (
+            <span className="text-xs text-red-600">
+              Не удалось сохранить — попробуйте ещё раз.
+            </span>
           ) : null}
         </div>
-        {updateError ? (
-          <p className="text-xs text-red-600">
-            Не удалось изменить категорию.
-          </p>
-        ) : null}
       </div>
     </div>
   );

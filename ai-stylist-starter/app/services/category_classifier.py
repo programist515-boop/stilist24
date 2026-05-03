@@ -33,6 +33,13 @@ from typing import Any, Literal, Protocol
 import httpx
 
 from app.core.config import Settings
+from app.models.item_attributes import (
+    ATTRIBUTE_WHITELISTS,
+    NEW_ATTRIBUTE_NAMES,
+    STYLE_TAG_VALUES,
+    validate_scalar,
+    validate_style_tags,
+)
 from app.services.categories import WARDROBE_CATEGORIES
 
 logger = logging.getLogger(__name__)
@@ -457,6 +464,332 @@ class OpenAICategoryClassifier:
         )
 
 
+# ---------------------------------------------------------------------------
+# OpenAIVisionAnalyzer — расширенный vision-вызов: за один запрос возвращает
+# категорию, короткое имя, primary_color и 14 структурных атрибутов Phase 0.
+# Используется при включённом флаге ``settings.enable_vision_analysis``.
+# Делит инфру с ``OpenAICategoryClassifier``: тот же httpx-клиент,
+# circuit breaker, retry-policy, downscale.
+# ---------------------------------------------------------------------------
+
+
+@dataclass(frozen=True)
+class VisionAnalysisResult:
+    """Полный результат vision-анализа одной фотки.
+
+    ``attrs`` хранит 14 атрибутов Phase 0 — по ключам из
+    ``NEW_ATTRIBUTE_NAMES``. Невозможно определённые атрибуты — None
+    (никаких guess'ов из system-prompt). ``style_tags`` — список или None.
+    """
+
+    category: str
+    confidence: float
+    name: str | None
+    primary_color: str | None
+    attrs: dict[str, Any]
+    source: CategorySource = "cloud_llm"
+    reasoning: str | None = None
+
+
+# Лимит на длину `name` — короткое русское описание для UI-карточки. Если
+# модель отдала слишком длинное — урезаем по слову.
+_NAME_MAX_LEN = 60
+
+
+def _build_vision_prompt() -> str:
+    """Собрать system-prompt с whitelist'ами всех 14 атрибутов.
+
+    Whitelist'ы читаются из ``app.models.item_attributes`` — единственного
+    источника истины. Если завтра туда добавится новое значение — промпт
+    автоматически расскажет о нём модели.
+    """
+    lines: list[str] = [_SYSTEM_PROMPT.rstrip()]
+    lines.append("")
+    lines.append(
+        "Дополнительно к категории и confidence верни 14 структурных "
+        "атрибутов одежды и короткое русское название. Если атрибут "
+        "не виден на фото или сомневаешься — возвращай null. "
+        "Никаких догадок не делай — лучше null, чем неверное значение."
+    )
+    lines.append("")
+    lines.append(f'name: краткое русское название вещи (до {_NAME_MAX_LEN} символов), '
+                 'например "белая блузка с пышными рукавами".')
+    lines.append("primary_color: одно англ. слово из палитры "
+                 "(white, black, navy, beige, ivory, gray, brown, "
+                 "burgundy, red, pink, coral, orange, yellow, olive, "
+                 "green, mint, teal, blue, sky_blue, lavender, purple) "
+                 "или null.")
+    lines.append("")
+    lines.append("Атрибуты (whitelist значений):")
+    for name in NEW_ATTRIBUTE_NAMES:
+        whitelist = ATTRIBUTE_WHITELISTS.get(name) or frozenset()
+        values = sorted(whitelist)
+        lines.append(f"- {name}: {', '.join(values) or '(no values)'}")
+    lines.append("")
+    lines.append("Reply with a single JSON object — no markdown, no commentary:")
+    lines.append('{"category":"<one of the 15 above>","confidence":<0..1>,'
+                 '"name":"<short ru name>","primary_color":"<color or null>",'
+                 '"attrs":{"fabric_rigidity":<value or null>,'
+                 '"fabric_finish":<value or null>,"occasion":<value or null>,'
+                 '"neckline_type":<value or null>,"sleeve_type":<value or null>,'
+                 '"sleeve_length":<value or null>,"pattern_scale":<value or null>,'
+                 '"pattern_character":<value or null>,'
+                 '"pattern_symmetry":<value or null>,'
+                 '"detail_scale":<value or null>,"structure":<value or null>,'
+                 '"cut_lines":<value or null>,"shoulder_emphasis":<value or null>,'
+                 '"style_tags":[...] or null},'
+                 '"reasoning":"<1 short sentence>"}')
+    return "\n".join(lines)
+
+
+_VISION_SYSTEM_PROMPT = _build_vision_prompt()
+
+
+def _coerce_name(value: Any) -> str | None:
+    """Очистка короткого имени: trim, обрезание до _NAME_MAX_LEN."""
+    if not isinstance(value, str):
+        return None
+    cleaned = value.strip()
+    if not cleaned:
+        return None
+    if len(cleaned) <= _NAME_MAX_LEN:
+        return cleaned
+    # Урезаем по последнему пробелу до лимита, чтобы не рвать слова.
+    truncated = cleaned[:_NAME_MAX_LEN].rsplit(" ", 1)[0]
+    return truncated or cleaned[:_NAME_MAX_LEN]
+
+
+def _coerce_primary_color(value: Any) -> str | None:
+    """Простая нормализация имени цвета — lowercase + строка."""
+    if not isinstance(value, str):
+        return None
+    cleaned = value.strip().lower()
+    return cleaned or None
+
+
+def _coerce_vision_attrs(raw: Any) -> dict[str, Any]:
+    """Прогнать сырые attrs через whitelist'ы из ``item_attributes``.
+
+    Возвращает плоский dict с теми же 14 ключами, что в ``NEW_ATTRIBUTE_NAMES``.
+    Каждое скалярное значение либо валидное (in whitelist), либо None.
+    ``style_tags`` — отфильтрованный список или None.
+    """
+    out: dict[str, Any] = {name: None for name in NEW_ATTRIBUTE_NAMES}
+    if not isinstance(raw, dict):
+        return out
+    for name in NEW_ATTRIBUTE_NAMES:
+        value = raw.get(name)
+        if name == "style_tags":
+            if isinstance(value, list):
+                out[name] = validate_style_tags([v for v in value if isinstance(v, str)])
+            else:
+                out[name] = None
+            continue
+        if isinstance(value, str):
+            out[name] = validate_scalar(name, value)
+        else:
+            out[name] = None
+    return out
+
+
+class OpenAIVisionAnalyzer:
+    """Расширенный vision-анализатор: один запрос → category + name + attrs.
+
+    Делит инфру с ``OpenAICategoryClassifier`` (единый httpx-клиент,
+    breaker, retry, downscale). Если анализ упал по сети/таймауту — поднимает
+    исключение, вызывающий код откатывается на эвристики ``recognize_extended()``.
+    """
+
+    def __init__(
+        self,
+        *,
+        api_key: str,
+        base_url: str = _DEFAULT_BASE_URL,
+        model: str = _DEFAULT_MODEL,
+        timeout_s: float = _DEFAULT_TIMEOUT_S,
+        client: httpx.Client | None = None,
+        breaker: _CircuitBreaker | None = None,
+    ) -> None:
+        self._api_key = api_key
+        self._base_url = base_url.rstrip("/")
+        self._model = model
+        self._timeout_s = timeout_s
+        self._client = client
+        self._breaker = breaker or _CircuitBreaker()
+
+    def _get_client(self) -> httpx.Client:
+        if self._client is not None:
+            return self._client
+        self._client = httpx.Client(timeout=self._timeout_s)
+        return self._client
+
+    def analyze(
+        self,
+        image_bytes: bytes,
+        *,
+        media_type: str = "image/jpeg",
+    ) -> VisionAnalysisResult:
+        log_entry: dict[str, Any] = {
+            "ts": time.time(),
+            "image_bytes": len(image_bytes),
+            "media_type": media_type,
+            "breaker_open": self._breaker.is_open(),
+            "attempts": 0,
+            "kind": "vision_analysis",
+        }
+
+        if self._breaker.is_open():
+            log_entry["outcome"] = "breaker_open"
+            _record_attempt(log_entry)
+            raise RuntimeError("vision_analyzer: breaker open")
+
+        last_exc: Exception | None = None
+        for attempt_idx in range(_TRANSIENT_RETRIES + 1):
+            log_entry["attempts"] = attempt_idx + 1
+            try:
+                result = self._call_openai(image_bytes, media_type, log_entry)
+                log_entry["outcome"] = "cloud_ok"
+                log_entry["prediction"] = {
+                    "category": result.category,
+                    "confidence": result.confidence,
+                    "name": result.name,
+                    "primary_color": result.primary_color,
+                }
+                _record_attempt(log_entry)
+                self._breaker.record_success()
+                return result
+            except (httpx.TimeoutException, httpx.NetworkError) as exc:
+                last_exc = exc
+                logger.warning(
+                    "vision_analyzer: transient %s on attempt %d/%d",
+                    type(exc).__name__,
+                    attempt_idx + 1,
+                    _TRANSIENT_RETRIES + 1,
+                )
+                continue
+            except Exception as exc:  # noqa: BLE001
+                last_exc = exc
+                logger.warning(
+                    "vision_analyzer: openai call failed (%s: %s)",
+                    type(exc).__name__,
+                    exc,
+                )
+                break
+
+        self._breaker.record_failure()
+        log_entry["outcome"] = "fallback_after_failure"
+        log_entry["error"] = repr(last_exc) if last_exc else None
+        _record_attempt(log_entry)
+        raise RuntimeError(
+            f"vision_analyzer: exhausted retries ({last_exc!r})"
+        ) from last_exc
+
+    def _call_openai(
+        self,
+        image_bytes: bytes,
+        media_type: str,
+        log_entry: dict[str, Any],
+    ) -> VisionAnalysisResult:
+        shrunk_bytes, shrunk_type = _shrink_for_upload(image_bytes, media_type)
+        log_entry["shrunk_bytes"] = len(shrunk_bytes)
+        b64 = base64.b64encode(shrunk_bytes).decode("ascii")
+        data_url = f"data:{shrunk_type};base64,{b64}"
+
+        body = {
+            "model": self._model,
+            "max_completion_tokens": 600,
+            "response_format": {"type": "json_object"},
+            "messages": [
+                {"role": "system", "content": _VISION_SYSTEM_PROMPT},
+                {
+                    "role": "user",
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": (
+                                "Analyze the garment in this photo and reply "
+                                "with the JSON object only."
+                            ),
+                        },
+                        {
+                            "type": "image_url",
+                            "image_url": {"url": data_url, "detail": "low"},
+                        },
+                    ],
+                },
+            ],
+        }
+
+        client = self._get_client()
+        t0 = time.perf_counter()
+        response = client.post(
+            f"{self._base_url}/v1/chat/completions",
+            headers={
+                "Content-Type": "application/json",
+                "Authorization": f"Bearer {self._api_key}",
+            },
+            json=body,
+            timeout=self._timeout_s,
+        )
+        log_entry["http_status"] = response.status_code
+        log_entry["latency_s"] = round(time.perf_counter() - t0, 2)
+        response.raise_for_status()
+        data = response.json()
+        if isinstance(data, dict):
+            choices = data.get("choices") or []
+            if choices and isinstance(choices[0], dict):
+                log_entry["finish_reason"] = choices[0].get("finish_reason")
+            usage = data.get("usage") or {}
+            log_entry["completion_tokens"] = usage.get("completion_tokens")
+            log_entry["prompt_tokens"] = usage.get("prompt_tokens")
+
+        text = _extract_openai_text(data)
+        log_entry["text_block"] = text
+        if not text:
+            raise ValueError("openai response had no text content")
+
+        payload = _parse_json_object(text)
+        log_entry["parsed_json"] = payload
+        if payload is None:
+            raise ValueError(f"openai text was not parseable JSON: {text!r}")
+
+        category = payload.get("category")
+        if not isinstance(category, str) or category not in WARDROBE_CATEGORIES:
+            raise ValueError(f"openai returned unknown category: {category!r}")
+
+        confidence = payload.get("confidence")
+        if not isinstance(confidence, (int, float)):
+            raise ValueError(f"openai confidence missing or not numeric: {confidence!r}")
+        confidence = float(confidence)
+
+        reasoning = payload.get("reasoning")
+        if reasoning is not None and not isinstance(reasoning, str):
+            reasoning = None
+
+        return VisionAnalysisResult(
+            category=category,
+            confidence=max(0.0, min(1.0, confidence)),
+            name=_coerce_name(payload.get("name")),
+            primary_color=_coerce_primary_color(payload.get("primary_color")),
+            attrs=_coerce_vision_attrs(payload.get("attrs")),
+            source="cloud_llm",
+            reasoning=reasoning,
+        )
+
+
+def get_vision_analyzer(settings: Settings) -> OpenAIVisionAnalyzer | None:
+    """Build a vision analyzer or None if disabled / not configured."""
+    if not settings.enable_vision_analysis:
+        return None
+    if not settings.openai_api_key:
+        return None
+    return OpenAIVisionAnalyzer(
+        api_key=settings.openai_api_key,
+        base_url=settings.openai_base_url,
+        model=settings.openai_model,
+    )
+
+
 def _shrink_for_upload(image_bytes: bytes, media_type: str) -> tuple[bytes, str]:
     """Downscale to ~1024px max-dim before encoding.
 
@@ -675,6 +1008,9 @@ __all__ = [
     "CategoryPrediction",
     "CategorySource",
     "OpenAICategoryClassifier",
+    "OpenAIVisionAnalyzer",
+    "VisionAnalysisResult",
     "HeuristicCategoryClassifier",
     "get_category_classifier",
+    "get_vision_analyzer",
 ]

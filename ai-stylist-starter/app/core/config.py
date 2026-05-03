@@ -85,22 +85,27 @@ class Settings(BaseSettings):
 
     # --- CV category classifier ------------------------------------------
     # Включает автоопределение категории вещи при загрузке через OpenAI
-    # vision (gpt-5-nano). Off — поведение как раньше: либо category из
-    # формы, либо None (фронт попросит уточнить).
+    # vision. Off — поведение как раньше: либо category из формы, либо
+    # None (фронт попросит уточнить).
     use_cv_category_classifier: bool = False
-    # "openai" (gpt-5-nano vision) | "heuristic" (rule-based на Phase-0
-    # атрибутах) | "disabled". При "heuristic" платные вызовы не
-    # делаются даже если флаг включён.
+    # "openai" (vision) | "heuristic" (rule-based на Phase-0 атрибутах)
+    # | "disabled". При "heuristic" платные вызовы не делаются.
     category_classifier_provider: str = "heuristic"
     # Минимальный confidence от классификатора, ниже которого category
     # сохраняется как None — фронт показывает «уточни категорию».
     category_confidence_threshold: float = 0.6
+    # Расширенный vision-анализ: один vision-вызов возвращает категорию,
+    # короткое имя, primary_color и 14 структурных атрибутов разом.
+    # Off — pipeline остаётся на эвристиках recognize_extended() + старом
+    # OpenAICategoryClassifier (категория без атрибутов).
+    enable_vision_analysis: bool = False
     # OpenAI endpoint config. Default — api.openai.com напрямую.
     # Bearer-auth с sk-ключом, vision через image_url+detail=low (фикс
     # 85 input-токенов на изображение, t-shirt vs coat читаются с запасом).
+    # base_url переопределяется через прокси (OpenRouter, kie.ai и т.п.).
     openai_api_key: str = ""
     openai_base_url: str = "https://api.openai.com"
-    openai_model: str = "gpt-5-nano"
+    openai_model: str = "gpt-5-mini"
 
     # --- FASHN / Auth (unchanged) -----------------------------------------
     fashn_api_key: str = ""

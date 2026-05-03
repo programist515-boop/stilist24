@@ -41,6 +41,9 @@ class WardrobeItem(Base):
         UUID(as_uuid=True), ForeignKey("personas.id"), nullable=False, index=True
     )
     category: Mapped[str | None] = mapped_column(String, nullable=True)
+    # Короткое русское имя вещи, заполняется vision-анализатором при
+    # загрузке. NULL, если vision выключен или не смог определить.
+    name: Mapped[str | None] = mapped_column(String, nullable=True)
     attributes_json: Mapped[dict] = mapped_column(JSONB, default=dict)
     scores_json: Mapped[dict] = mapped_column(JSONB, default=dict)
     # image_key is the canonical storage reference. image_url is kept for

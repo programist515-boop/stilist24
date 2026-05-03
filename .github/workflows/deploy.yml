@@ -104,20 +104,20 @@ jobs:
             S3_BUCKET=ai-stylist
             FASHN_API_KEY=${FASHN_API_KEY}
             FASHN_BASE_URL=https://api.fashn.ai
-            # CV-классификатор категории при загрузке вещи. ВЫКЛЮЧЕН —
-            # OpenAI direct отдаёт 403 с RU-IP прода (geo-block на
-            # network edge, latency 60ms). Код миграции на gpt-5-nano
-            # в репо, ждём решения по прокси (kie.ai OpenAI-endpoint /
-            # OpenRouter / EU-relay) или возврата на Claude/kie.ai.
-            # При flag=false классификатор возвращается на heuristic,
-            # category=None, фронт показывает ручной dropdown — UX тот же
-            # что был при первом релизе категорий.
+            # CV-классификатор + расширенный vision-анализ.
+            # Оба выключены по умолчанию — OpenAI direct отдаёт 403 с RU-IP
+            # прода. Включение требует настроенного OPENAI_BASE_URL на
+            # прокси (OpenRouter/kie.ai/западный VPN) и валидного ключа.
+            # При выключенном ENABLE_VISION_ANALYSIS pipeline остаётся на
+            # эвристиках recognize_extended() — фронт показывает dropdown
+            # для ручной правки категории.
             USE_CV_CATEGORY_CLASSIFIER=false
+            ENABLE_VISION_ANALYSIS=false
             CATEGORY_CLASSIFIER_PROVIDER=heuristic
             CATEGORY_CONFIDENCE_THRESHOLD=0.6
             OPENAI_API_KEY=${OPENAI_API_KEY}
             OPENAI_BASE_URL=https://api.openai.com
-            OPENAI_MODEL=gpt-5-nano
+            OPENAI_MODEL=gpt-5-mini
             JWT_SECRET=${JWT_SECRET}
             JWT_ALGORITHM=HS256
             JWT_ACCESS_MINUTES=60

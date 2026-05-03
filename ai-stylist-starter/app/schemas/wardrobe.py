@@ -43,6 +43,7 @@ class WardrobeItemOut(BaseModel):
 
     id: str = Field(..., description="Wardrobe item id (UUID as string)")
     category: str | None
+    name: str | None = None
     attributes: dict[str, Any]
     image_key: str | None
     image_url: str
@@ -121,6 +122,33 @@ class WardrobeCategoryPatchIn(BaseModel):
         )
 
 
+class WardrobeItemPatchIn(BaseModel):
+    """Payload для ``PATCH /wardrobe/{item_id}``.
+
+    Любое поле опционально: фронт шлёт только то, что реально поменял
+    юзер. ``category`` валидируется через тот же путь, что и
+    ``WardrobeCategoryPatchIn`` (legacy → detailed mapping).
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    category: str | None = None
+    name: str | None = None
+
+    def model_post_init(self, _context) -> None:
+        if self.category is None or self.category in WARDROBE_CATEGORIES:
+            return
+        if is_legacy_category(self.category):
+            mapped = legacy_to_detailed(self.category)
+            if mapped is not None:
+                self.category = mapped
+                return
+        raise ValueError(
+            f"category должен быть одним из {WARDROBE_CATEGORIES}, "
+            f"получено '{self.category}'"
+        )
+
+
 class WardrobeConfirmOut(BaseModel):
     """Success body for ``POST /wardrobe/confirm``.
 
@@ -140,5 +168,6 @@ __all__ = [
     "WardrobeConfirmIn",
     "WardrobeConfirmOut",
     "WardrobeItemOut",
+    "WardrobeItemPatchIn",
     "WardrobeListOut",
 ]

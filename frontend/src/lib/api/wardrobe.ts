@@ -50,3 +50,19 @@ export async function updateWardrobeItemCategory(
   });
   return WardrobeItemSchema.parse(data);
 }
+
+/**
+ * Расширенный PATCH: подменить имя и/или категорию одним запросом.
+ * Любое поле опционально. Используется на экране подтверждения после
+ * автоматического распознавания (`LastUploadedReview` → кнопка «ОК»).
+ */
+export async function updateWardrobeItem(
+  itemId: string,
+  payload: { category?: string; name?: string }
+): Promise<WardrobeItem> {
+  const data = await apiRequest(`/wardrobe/${itemId}`, {
+    method: "PATCH",
+    json: payload,
+  });
+  return WardrobeItemSchema.parse(data);
+}

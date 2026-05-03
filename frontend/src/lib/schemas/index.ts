@@ -50,6 +50,7 @@ export const WardrobeItemSchema = z
   .object({
     id: z.string(),
     category: z.string().nullable().optional(),
+    name: z.string().nullable().optional(),
     attributes: z.record(z.unknown()).default({}),
     image_key: z.string().nullable().optional(),
     image_url: z.string().nullable().optional(),

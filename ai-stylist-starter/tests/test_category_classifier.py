@@ -24,8 +24,11 @@ from app.services.category_classifier import (
     CategoryPrediction,
     HeuristicCategoryClassifier,
     OpenAICategoryClassifier,
+    OpenAIVisionAnalyzer,
+    VisionAnalysisResult,
     _CircuitBreaker,
     get_category_classifier,
+    get_vision_analyzer,
 )
 
 
@@ -583,9 +586,10 @@ def _settings(**overrides):
     """
     base = {
         "use_cv_category_classifier": False,
+        "enable_vision_analysis": False,
         "openai_api_key": "",
         "openai_base_url": "https://api.openai.com",
-        "openai_model": "gpt-5-nano",
+        "openai_model": "gpt-5-mini",
         "category_classifier_provider": "heuristic",
     }
     base.update(overrides)
@@ -653,3 +657,197 @@ def test_category_prediction_is_immutable():
     pred = CategoryPrediction(category="blouses", confidence=0.9, source="cloud_llm")
     with pytest.raises((AttributeError, Exception)):
         pred.category = "pants"  # type: ignore[misc]
+
+
+# ---------------------------------------------------------------------------
+# OpenAIVisionAnalyzer — расширенный анализ за один запрос
+# ---------------------------------------------------------------------------
+
+
+def _vision_response_body(
+    *,
+    category: str = "blouses",
+    confidence: float = 0.9,
+    name: str | None = "белая блузка",
+    primary_color: str | None = "white",
+    attrs: dict | None = None,
+    reasoning: str | None = "white silk",
+    decoration: str = "",
+) -> dict:
+    """Build a Chat-Completions response carrying a vision JSON payload."""
+    payload: dict = {
+        "category": category,
+        "confidence": confidence,
+        "name": name,
+        "primary_color": primary_color,
+        "attrs": attrs if attrs is not None else {},
+        "reasoning": reasoning,
+    }
+    json_str = json.dumps(payload, ensure_ascii=False)
+    text = decoration.replace("{}", json_str) if decoration else json_str
+    return {
+        "id": "chatcmpl-vision",
+        "object": "chat.completion",
+        "model": "gpt-5-mini",
+        "usage": {"prompt_tokens": 250, "completion_tokens": 120, "total_tokens": 370},
+        "choices": [
+            {
+                "index": 0,
+                "finish_reason": "stop",
+                "message": {"role": "assistant", "content": text},
+            }
+        ],
+    }
+
+
+def test_vision_returns_full_result_with_attrs():
+    body = _vision_response_body(
+        attrs={
+            "fabric_rigidity": "soft",
+            "fabric_finish": "matte",
+            "occasion": "smart_casual",
+            "neckline_type": "v",
+            "sleeve_type": "puff_sharp",
+            "sleeve_length": "long_wrist",
+            "pattern_scale": None,
+            "pattern_character": None,
+            "pattern_symmetry": None,
+            "detail_scale": "medium",
+            "structure": "semi_structured",
+            "cut_lines": "soft_flowing",
+            "shoulder_emphasis": "neutral",
+            "style_tags": ["romantic", "smart_casual"],
+        }
+    )
+    analyzer = OpenAIVisionAnalyzer(
+        api_key="sk-test", client=_mock_httpx_client(body)
+    )
+
+    result = analyzer.analyze(b"fake-jpeg")
+
+    assert isinstance(result, VisionAnalysisResult)
+    assert result.category == "blouses"
+    assert 0.0 <= result.confidence <= 1.0
+    assert result.name == "белая блузка"
+    assert result.primary_color == "white"
+    assert result.source == "cloud_llm"
+    assert result.attrs["fabric_rigidity"] == "soft"
+    assert result.attrs["sleeve_type"] == "puff_sharp"
+    assert result.attrs["style_tags"] == ["romantic", "smart_casual"]
+
+
+def test_vision_strips_invalid_attribute_values():
+    """Если модель отдала значение вне whitelist — оно нормализуется в None."""
+    body = _vision_response_body(
+        attrs={
+            "fabric_rigidity": "invented_value",  # не в whitelist
+            "occasion": "smart_casual",  # валидно
+            "style_tags": ["romantic", "fakeStyle"],  # отфильтруется
+        }
+    )
+    analyzer = OpenAIVisionAnalyzer(
+        api_key="sk-test", client=_mock_httpx_client(body)
+    )
+
+    result = analyzer.analyze(b"x")
+
+    assert result.attrs["fabric_rigidity"] is None
+    assert result.attrs["occasion"] == "smart_casual"
+    assert result.attrs["style_tags"] == ["romantic"]
+
+
+def test_vision_truncates_long_name():
+    long_name = "очень длинное название платья в розовый горошек " * 5
+    body = _vision_response_body(name=long_name)
+    analyzer = OpenAIVisionAnalyzer(
+        api_key="sk-test", client=_mock_httpx_client(body)
+    )
+
+    result = analyzer.analyze(b"x")
+
+    assert result.name is not None
+    assert len(result.name) <= 60
+
+
+def test_vision_handles_null_name_and_color():
+    body = _vision_response_body(name=None, primary_color=None, attrs={})
+    analyzer = OpenAIVisionAnalyzer(
+        api_key="sk-test", client=_mock_httpx_client(body)
+    )
+
+    result = analyzer.analyze(b"x")
+
+    assert result.name is None
+    assert result.primary_color is None
+    # Все 14 атрибутов в attrs со значением None — не падаем.
+    assert result.attrs["fabric_rigidity"] is None
+    assert result.attrs["style_tags"] is None
+
+
+def test_vision_uses_max_completion_tokens_not_max_tokens():
+    """gpt-5-mini требует ``max_completion_tokens``; ``max_tokens`` устарело."""
+    body = _vision_response_body()
+    client = _mock_httpx_client(body)
+    analyzer = OpenAIVisionAnalyzer(api_key="sk-test", client=client)
+
+    analyzer.analyze(b"x")
+
+    posted = client.post.call_args.kwargs["json"]
+    assert "max_completion_tokens" in posted
+    assert "max_tokens" not in posted
+
+
+def test_vision_uses_response_format_json_object():
+    body = _vision_response_body()
+    client = _mock_httpx_client(body)
+    analyzer = OpenAIVisionAnalyzer(api_key="sk-test", client=client)
+
+    analyzer.analyze(b"x")
+
+    posted = client.post.call_args.kwargs["json"]
+    assert posted["response_format"] == {"type": "json_object"}
+
+
+def test_vision_unparseable_response_raises():
+    body = _vision_response_body()
+    body["choices"][0]["message"]["content"] = "not a json"
+    analyzer = OpenAIVisionAnalyzer(
+        api_key="sk-test", client=_mock_httpx_client(body)
+    )
+
+    with pytest.raises(RuntimeError):
+        analyzer.analyze(b"x")
+
+
+def test_vision_unknown_category_raises():
+    body = _vision_response_body(category="unknown_garment")
+    analyzer = OpenAIVisionAnalyzer(
+        api_key="sk-test", client=_mock_httpx_client(body)
+    )
+
+    with pytest.raises(RuntimeError):
+        analyzer.analyze(b"x")
+
+
+def test_vision_factory_returns_none_when_disabled():
+    assert get_vision_analyzer(_settings(enable_vision_analysis=False)) is None
+
+
+def test_vision_factory_returns_none_without_api_key():
+    assert (
+        get_vision_analyzer(
+            _settings(enable_vision_analysis=True, openai_api_key="")
+        )
+        is None
+    )
+
+
+def test_vision_factory_returns_analyzer_when_configured():
+    analyzer = get_vision_analyzer(
+        _settings(
+            enable_vision_analysis=True,
+            openai_api_key="sk-test",
+            openai_model="gpt-5-mini",
+        )
+    )
+    assert isinstance(analyzer, OpenAIVisionAnalyzer)
