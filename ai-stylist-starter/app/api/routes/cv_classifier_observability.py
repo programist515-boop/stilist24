@@ -16,7 +16,7 @@ feature gated by a paid third-party API it's part of the feature.
 
 from __future__ import annotations
 
-import base64
+import io
 import time
 
 import httpx
@@ -132,27 +132,37 @@ def cv_classifier_probe_proxy(timeout_s: float = 5.0) -> dict:
     }
 
 
-# 1×1 пиксель белый JPEG — минимальная валидная картинка для OpenAI Vision.
-# Достаточно чтобы убедиться что end-to-end pipeline (auth + прокси-каскад +
-# OpenAI Vision API) реально работает; модель вернёт что-то типа
-# "category": "tops" с низким confidence, но это уже не наша забота.
-_TEST_JPEG_B64 = (
-    "/9j/4AAQSkZJRgABAQEASABIAAD/2wBDAAEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEB"
-    "AQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAf/AABEIAAEAAQMBIgACEQEDEQH/"
-    "xAAVAAEBAAAAAAAAAAAAAAAAAAAACf/EABQQAQAAAAAAAAAAAAAAAAAAAAD/xAAUAQEAAAAA"
-    "AAAAAAAAAAAAAAAA/8QAFBEBAAAAAAAAAAAAAAAAAAAAAP/aAAwDAQACEQMRAD8AfwD/2Q=="
-)
+def _make_test_jpeg() -> bytes:
+    """Сгенерировать 256×256 RGB JPEG для smoke-теста OpenAI Vision.
+
+    OpenAI Vision API отвергает картинки меньше ~32×32 как 400 Bad
+    Request. Генерируем простой синий квадрат с тёмной точкой —
+    модель вернёт low-confidence guess (типа category="bottoms"), это
+    не важно: цель — проверить что pipeline (прокси → API) даёт 200,
+    а не что распознавание точное.
+    """
+    from PIL import Image  # rembg уже тянет PIL — не отдельная зависимость
+
+    img = Image.new("RGB", (256, 256), color=(70, 130, 180))
+    # Тёмный прямоугольник в центре — даёт модели хоть какой-то сигнал.
+    pixels = img.load()
+    for y in range(80, 180):
+        for x in range(80, 180):
+            pixels[x, y] = (40, 40, 40)
+    buf = io.BytesIO()
+    img.save(buf, format="JPEG", quality=85)
+    return buf.getvalue()
 
 
 @router.get("/probe-vision")
 def cv_classifier_probe_vision() -> dict:
-    """End-to-end smoke: реальный analyze() с тестовой картинкой.
+    """End-to-end smoke: реальный analyze() с синтетической 256×256 картинкой.
 
-    Шлёт 1×1 JPEG в OpenAI Vision через настроенный прокси и каскад,
-    возвращает либо успешный VisionAnalysisResult (как dict), либо
-    {ok: false, error_type, error_message} с диагностикой. Это
+    Шлёт сгенерированный JPEG в OpenAI Vision через настроенный прокси
+    и каскад, возвращает либо успешный VisionAnalysisResult (как dict),
+    либо {ok: false, error_type, error_message} с диагностикой. Это
     единственный способ верифицировать end-to-end vision-pipeline без
-    авторизованного юзера и реального upload.
+    авторизованного юзера и реального upload через UI.
 
     Тратит ~1 vision-вызов (≈$0.001 на gpt-5-mini). Намеренно держим
     публичным без auth — так же как probe-proxy. Если злоупотребляют,
@@ -166,7 +176,7 @@ def cv_classifier_probe_vision() -> dict:
     if analyzer is None:
         return {"ok": False, "reason": "vision_analyzer factory returned None"}
 
-    image_bytes = base64.b64decode(_TEST_JPEG_B64)
+    image_bytes = _make_test_jpeg()
     t0 = time.perf_counter()
     try:
         result = analyzer.analyze(image_bytes)
