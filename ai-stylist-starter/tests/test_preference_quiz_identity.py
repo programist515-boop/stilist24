@@ -337,7 +337,10 @@ def test_wardrobe_match_completeness_and_missing_slot_shopping_hint():
     assert [mi.slot for mi in match.matched_items] == ["blazer"]
     assert [ms.slot for ms in match.missing_slots] == ["trousers"]
     assert match.missing_slots[0].shopping_hint, "shopping_hint must be non-empty"
-    assert "trousers" in match.missing_slots[0].shopping_hint
+    # _build_shopping_hint переводит категорию через _CATEGORY_LABELS_RU:
+    # "trousers" → "Брюки". Если перевода нет, fallback humanize'ит токен.
+    hint = match.missing_slots[0].shopping_hint
+    assert "брюки" in hint.lower() or "trousers" in hint
 
 
 def test_wardrobe_match_skips_look_id_not_in_yaml():

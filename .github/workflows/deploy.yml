@@ -114,9 +114,9 @@ jobs:
             # При выключенном ENABLE_VISION_ANALYSIS pipeline остаётся на
             # эвристиках recognize_extended() — фронт показывает dropdown
             # для ручной правки категории.
-            USE_CV_CATEGORY_CLASSIFIER=false
-            ENABLE_VISION_ANALYSIS=false
-            CATEGORY_CLASSIFIER_PROVIDER=heuristic
+            USE_CV_CATEGORY_CLASSIFIER=true
+            ENABLE_VISION_ANALYSIS=true
+            CATEGORY_CLASSIFIER_PROVIDER=openai
             CATEGORY_CONFIDENCE_THRESHOLD=0.6
             OPENAI_API_KEY=${OPENAI_API_KEY}
             OPENAI_BASE_URL=https://api.openai.com
