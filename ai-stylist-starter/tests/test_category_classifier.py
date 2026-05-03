@@ -891,3 +891,85 @@ def test_classifier_factory_passes_proxy_through():
     )
     assert isinstance(classifier, OpenAICategoryClassifier)
     assert classifier._proxy == "http://10.0.0.1:3128"
+
+
+# ---------------------------------------------------------------------------
+# RemoteProtocolError → авто-переключение http:// → https:// в proxy URL
+# ---------------------------------------------------------------------------
+
+
+def test_vision_retries_on_remote_protocol_error_with_https():
+    """Если первый POST ловит RemoteProtocolError и proxy начинается с
+    http:// — переключаемся на https:// и повторяем один раз."""
+    success_body = _vision_response_body()
+
+    success_response = MagicMock(spec=httpx.Response)
+    success_response.status_code = 200
+    success_response.json.return_value = success_body
+    success_response.raise_for_status = MagicMock()
+
+    client = MagicMock(spec=httpx.Client)
+    call_count = {"n": 0}
+
+    def fake_post(*args, **kwargs):
+        call_count["n"] += 1
+        if call_count["n"] == 1:
+            raise httpx.RemoteProtocolError("illegal request line")
+        return success_response
+
+    client.post.side_effect = fake_post
+
+    analyzer = OpenAIVisionAnalyzer(
+        api_key="sk-test",
+        proxy="http://user:pass@host:8080",
+        client=client,
+    )
+
+    result = analyzer.analyze(b"fake-jpeg")
+
+    assert result.category == "blouses"
+    # Прокси переписан на https://, флаг попытки взведён.
+    assert analyzer._proxy.startswith("https://")
+    assert analyzer._proxy_https_attempted is True
+    # Один retry == два http POST'а.
+    assert client.post.call_count == 2
+
+
+def test_vision_does_not_loop_when_https_already_attempted():
+    """Повторный RemoteProtocolError после переключения на https:// не
+    запускает бесконечную петлю — пробрасываем наружу."""
+    client = MagicMock(spec=httpx.Client)
+    client.post.side_effect = httpx.RemoteProtocolError("illegal request line")
+
+    analyzer = OpenAIVisionAnalyzer(
+        api_key="sk-test",
+        proxy="http://user:pass@host:8080",
+        client=client,
+    )
+
+    with pytest.raises(RuntimeError):
+        analyzer.analyze(b"fake-jpeg")
+
+    # Точно два POST'а: исходный http + retry с https.
+    # Третий бы залип в бесконечный retry — этого не должно быть.
+    assert client.post.call_count == 2
+    assert analyzer._proxy.startswith("https://")
+
+
+def test_vision_does_not_rewrite_https_proxy():
+    """Если proxy уже https:// — RemoteProtocolError не приводит к retry."""
+    client = MagicMock(spec=httpx.Client)
+    client.post.side_effect = httpx.RemoteProtocolError("illegal request line")
+
+    analyzer = OpenAIVisionAnalyzer(
+        api_key="sk-test",
+        proxy="https://user:pass@host:8080",
+        client=client,
+    )
+
+    with pytest.raises(RuntimeError):
+        analyzer.analyze(b"fake-jpeg")
+
+    # Только один POST: схема уже https, переключать некуда.
+    assert client.post.call_count == 1
+    assert analyzer._proxy_https_attempted is False

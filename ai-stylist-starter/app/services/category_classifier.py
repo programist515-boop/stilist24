@@ -271,7 +271,9 @@ class OpenAICategoryClassifier:
         self._model = model
         self._timeout_s = timeout_s
         self._proxy = proxy or None
+        self._proxy_https_attempted = False
         self._client = client  # injected for tests; lazy-built otherwise
+        self._client_injected = client is not None
         self._breaker = breaker or _CircuitBreaker()
         self._fallback = fallback or HeuristicCategoryClassifier()
 
@@ -283,6 +285,50 @@ class OpenAICategoryClassifier:
             proxy=self._proxy,
         )
         return self._client
+
+    def _post_with_proxy_fallback(
+        self,
+        url: str,
+        *,
+        headers: dict,
+        json_body: dict,
+        timeout: float,
+    ) -> httpx.Response:
+        """POST с авто-fallback ``http://`` → ``https://`` для proxy URL.
+
+        ISP/residential-провайдеры обычно отдают TLS-обёрнутый прокси.
+        Если URL начинается с http:// — httpx коннектится открытым TCP,
+        прокси шлёт TLS Alert, ловим ``RemoteProtocolError``. Один раз
+        пересоздаём клиент с https:// и повторяем запрос; следующий
+        запрос инстанции уйдёт сразу с правильной схемой.
+        """
+        try:
+            return self._get_client().post(
+                url, headers=headers, json=json_body, timeout=timeout,
+            )
+        except httpx.RemoteProtocolError as exc:
+            if (
+                self._proxy
+                and self._proxy.startswith("http://")
+                and not self._proxy_https_attempted
+            ):
+                logger.warning(
+                    "category_classifier: %s — switching proxy scheme to https:// and retrying",
+                    exc,
+                )
+                self._proxy = "https://" + self._proxy[len("http://"):]
+                self._proxy_https_attempted = True
+                if not self._client_injected:
+                    try:
+                        if self._client is not None:
+                            self._client.close()
+                    except Exception:  # noqa: BLE001
+                        pass
+                    self._client = None
+                return self._get_client().post(
+                    url, headers=headers, json=json_body, timeout=timeout,
+                )
+            raise
 
     def classify(
         self,
@@ -408,20 +454,20 @@ class OpenAICategoryClassifier:
             ],
         }
 
-        client = self._get_client()
         t0 = time.perf_counter()
-        response = client.post(
+        response = self._post_with_proxy_fallback(
             f"{self._base_url}/v1/chat/completions",
             headers={
                 "Content-Type": "application/json",
                 "Authorization": f"Bearer {self._api_key}",
             },
-            json=body,
+            json_body=body,
             timeout=self._timeout_s,
         )
         if log_entry is not None:
             log_entry["http_status"] = response.status_code
             log_entry["latency_s"] = round(time.perf_counter() - t0, 2)
+            log_entry["proxy_https_attempted"] = self._proxy_https_attempted
         response.raise_for_status()
         data = response.json()
         if log_entry is not None and isinstance(data, dict):
@@ -621,7 +667,9 @@ class OpenAIVisionAnalyzer:
         self._model = model
         self._timeout_s = timeout_s
         self._proxy = proxy or None
+        self._proxy_https_attempted = False
         self._client = client
+        self._client_injected = client is not None
         self._breaker = breaker or _CircuitBreaker()
 
     def _get_client(self) -> httpx.Client:
@@ -632,6 +680,55 @@ class OpenAIVisionAnalyzer:
             proxy=self._proxy,
         )
         return self._client
+
+    def _post_with_proxy_fallback(
+        self,
+        url: str,
+        *,
+        headers: dict,
+        json_body: dict,
+        timeout: float,
+    ) -> httpx.Response:
+        """POST с авто-fallback с http:// на https:// для прокси.
+
+        Большинство ISP/residential-провайдеров отдают **HTTPS-прокси**
+        (TLS-обёрнутый CONNECT). Если URL начинается с http:// — httpx
+        коннектится открытым TCP, прокси шлёт TLS Alert и httpx ловит
+        ``RemoteProtocolError('illegal request line')``. В этом случае
+        однократно перезапускаем клиента с https:// — следующий запрос
+        в этой же инстанции пойдёт сразу по правильной схеме.
+
+        Injected клиент (тесты) не закрываем и не пересобираем — это
+        сломало бы side_effect mock'а. Только меняем self._proxy и
+        флаг — реальный switch произойдёт при запуске в проде.
+        """
+        try:
+            return self._get_client().post(
+                url, headers=headers, json=json_body, timeout=timeout,
+            )
+        except httpx.RemoteProtocolError as exc:
+            if (
+                self._proxy
+                and self._proxy.startswith("http://")
+                and not self._proxy_https_attempted
+            ):
+                logger.warning(
+                    "vision_analyzer: %s — switching proxy scheme to https:// and retrying",
+                    exc,
+                )
+                self._proxy = "https://" + self._proxy[len("http://"):]
+                self._proxy_https_attempted = True
+                if not self._client_injected:
+                    try:
+                        if self._client is not None:
+                            self._client.close()
+                    except Exception:  # noqa: BLE001
+                        pass
+                    self._client = None
+                return self._get_client().post(
+                    url, headers=headers, json=json_body, timeout=timeout,
+                )
+            raise
 
     def analyze(
         self,
@@ -730,19 +827,19 @@ class OpenAIVisionAnalyzer:
             ],
         }
 
-        client = self._get_client()
         t0 = time.perf_counter()
-        response = client.post(
+        response = self._post_with_proxy_fallback(
             f"{self._base_url}/v1/chat/completions",
             headers={
                 "Content-Type": "application/json",
                 "Authorization": f"Bearer {self._api_key}",
             },
-            json=body,
+            json_body=body,
             timeout=self._timeout_s,
         )
         log_entry["http_status"] = response.status_code
         log_entry["latency_s"] = round(time.perf_counter() - t0, 2)
+        log_entry["proxy_https_attempted"] = self._proxy_https_attempted
         response.raise_for_status()
         data = response.json()
         if isinstance(data, dict):
