@@ -113,14 +113,21 @@ class Settings(BaseSettings):
     # Сетевой прокси для исходящих запросов к OpenAI. Применяется только
     # к классификатору и vision-анализатору; проброшен в httpx.Client(proxy=...).
     #
-    # СХЕМА URL ВАЖНА — описывает транспорт ДО прокси, не до OpenAI:
-    # * ``http://user:pass@host:port`` — plain HTTP-прокси (CONNECT по TCP).
-    # * ``https://user:pass@host:port`` — HTTPS-прокси (TLS до прокси,
-    #   потом CONNECT). Это формат у proxy-seller "TXT (https)" и
-    #   подобных residential/ISP-провайдеров. Если ошибочно указать
-    #   ``http://`` для HTTPS-прокси, httpx упадёт с
-    #   ``RemoteProtocolError('illegal request line')``.
-    # * ``socks5://user:pass@host:port`` — SOCKS, требует ``httpx[socks]``.
+    # СХЕМА URL ВАЖНА — описывает транспорт ДО прокси, не до OpenAI.
+    # У proxy-seller IPv4 ISP при экспорте Export → TXT (https) реально
+    # отдаётся SOCKS5-прокси под видом «https». Признаки в логах:
+    # * ``RemoteProtocolError('illegal request line')`` при http:// — прокси
+    #   ответил не-HTTP байтами;
+    # * ``ConnectError('[SSL] record layer failure')`` при https:// —
+    #   прокси не понимает TLS-handshake.
+    # Если получаешь любую из этих ошибок — переключайся на ``socks5://``.
+    #
+    # Допустимые варианты схемы:
+    # * ``http://user:pass@host:port`` — plain HTTP-прокси.
+    # * ``https://user:pass@host:port`` — HTTPS-прокси (TLS до прокси).
+    # * ``socks5://user:pass@host:port`` — SOCKS5 (proxy-seller / большинство
+    #   residential провайдеров). Поддержка идёт через ``httpx[socks]``,
+    #   зависимость уже включена в pyproject.toml.
     # Пустая строка — без прокси.
     openai_http_proxy: str = ""
 
