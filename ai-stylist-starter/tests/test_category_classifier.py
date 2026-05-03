@@ -590,6 +590,7 @@ def _settings(**overrides):
         "openai_api_key": "",
         "openai_base_url": "https://api.openai.com",
         "openai_model": "gpt-5-mini",
+        "openai_http_proxy": "",
         "category_classifier_provider": "heuristic",
     }
     base.update(overrides)
@@ -851,3 +852,42 @@ def test_vision_factory_returns_analyzer_when_configured():
         )
     )
     assert isinstance(analyzer, OpenAIVisionAnalyzer)
+
+
+def test_vision_factory_passes_proxy_through():
+    """``openai_http_proxy`` из Settings должен попасть в analyzer."""
+    analyzer = get_vision_analyzer(
+        _settings(
+            enable_vision_analysis=True,
+            openai_api_key="sk-test",
+            openai_http_proxy="http://user:pass@proxy.example.com:8080",
+        )
+    )
+    assert analyzer is not None
+    assert analyzer._proxy == "http://user:pass@proxy.example.com:8080"
+
+
+def test_vision_factory_empty_proxy_becomes_none():
+    """Пустая строка proxy не должна стать ``proxy=""`` в httpx.Client."""
+    analyzer = get_vision_analyzer(
+        _settings(
+            enable_vision_analysis=True,
+            openai_api_key="sk-test",
+            openai_http_proxy="",
+        )
+    )
+    assert analyzer is not None
+    assert analyzer._proxy is None
+
+
+def test_classifier_factory_passes_proxy_through():
+    classifier = get_category_classifier(
+        _settings(
+            use_cv_category_classifier=True,
+            category_classifier_provider="openai",
+            openai_api_key="sk-test",
+            openai_http_proxy="http://10.0.0.1:3128",
+        )
+    )
+    assert isinstance(classifier, OpenAICategoryClassifier)
+    assert classifier._proxy == "http://10.0.0.1:3128"

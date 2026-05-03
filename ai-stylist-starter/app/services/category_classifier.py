@@ -261,6 +261,7 @@ class OpenAICategoryClassifier:
         base_url: str = _DEFAULT_BASE_URL,
         model: str = _DEFAULT_MODEL,
         timeout_s: float = _DEFAULT_TIMEOUT_S,
+        proxy: str | None = None,
         client: httpx.Client | None = None,
         breaker: _CircuitBreaker | None = None,
         fallback: CategoryClassifier | None = None,
@@ -269,6 +270,7 @@ class OpenAICategoryClassifier:
         self._base_url = base_url.rstrip("/")
         self._model = model
         self._timeout_s = timeout_s
+        self._proxy = proxy or None
         self._client = client  # injected for tests; lazy-built otherwise
         self._breaker = breaker or _CircuitBreaker()
         self._fallback = fallback or HeuristicCategoryClassifier()
@@ -276,7 +278,10 @@ class OpenAICategoryClassifier:
     def _get_client(self) -> httpx.Client:
         if self._client is not None:
             return self._client
-        self._client = httpx.Client(timeout=self._timeout_s)
+        self._client = httpx.Client(
+            timeout=self._timeout_s,
+            proxy=self._proxy,
+        )
         return self._client
 
     def classify(
@@ -607,6 +612,7 @@ class OpenAIVisionAnalyzer:
         base_url: str = _DEFAULT_BASE_URL,
         model: str = _DEFAULT_MODEL,
         timeout_s: float = _DEFAULT_TIMEOUT_S,
+        proxy: str | None = None,
         client: httpx.Client | None = None,
         breaker: _CircuitBreaker | None = None,
     ) -> None:
@@ -614,13 +620,17 @@ class OpenAIVisionAnalyzer:
         self._base_url = base_url.rstrip("/")
         self._model = model
         self._timeout_s = timeout_s
+        self._proxy = proxy or None
         self._client = client
         self._breaker = breaker or _CircuitBreaker()
 
     def _get_client(self) -> httpx.Client:
         if self._client is not None:
             return self._client
-        self._client = httpx.Client(timeout=self._timeout_s)
+        self._client = httpx.Client(
+            timeout=self._timeout_s,
+            proxy=self._proxy,
+        )
         return self._client
 
     def analyze(
@@ -787,6 +797,7 @@ def get_vision_analyzer(settings: Settings) -> OpenAIVisionAnalyzer | None:
         api_key=settings.openai_api_key,
         base_url=settings.openai_base_url,
         model=settings.openai_model,
+        proxy=getattr(settings, "openai_http_proxy", "") or None,
     )
 
 
@@ -998,6 +1009,7 @@ def get_category_classifier(settings: Settings) -> CategoryClassifier:
             api_key=settings.openai_api_key,
             base_url=settings.openai_base_url,
             model=settings.openai_model,
+            proxy=getattr(settings, "openai_http_proxy", "") or None,
         )
 
     return HeuristicCategoryClassifier()

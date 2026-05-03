@@ -102,10 +102,20 @@ class Settings(BaseSettings):
     # OpenAI endpoint config. Default — api.openai.com напрямую.
     # Bearer-auth с sk-ключом, vision через image_url+detail=low (фикс
     # 85 input-токенов на изображение, t-shirt vs coat читаются с запасом).
-    # base_url переопределяется через прокси (OpenRouter, kie.ai и т.п.).
+    # base_url переопределяется при использовании альтернативного API
+    # (Azure OpenAI, OpenRouter и т.п.). Для прохода через сетевой
+    # HTTP/SOCKS-прокси (proxy-seller, Bright Data, собственный VPN-релей)
+    # используется openai_http_proxy — это другая настройка, она про
+    # сетевой путь до api.openai.com, не про сам endpoint.
     openai_api_key: str = ""
     openai_base_url: str = "https://api.openai.com"
     openai_model: str = "gpt-5-mini"
+    # Сетевой HTTP/HTTPS/SOCKS прокси для исходящих запросов к OpenAI.
+    # Формат: ``http://user:pass@host:port`` (HTTP), ``http://host:port``
+    # (без auth), ``socks5://user:pass@host:port`` (SOCKS — требует
+    # пакета ``httpx[socks]``). Пустая строка — без прокси.
+    # Применяется только к классификатору и vision-анализатору.
+    openai_http_proxy: str = ""
 
     # --- FASHN / Auth (unchanged) -----------------------------------------
     fashn_api_key: str = ""

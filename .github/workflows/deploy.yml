@@ -75,12 +75,13 @@ jobs:
           S3_SECRET_KEY: ${{ secrets.S3_SECRET_KEY }}
           FASHN_API_KEY: ${{ secrets.FASHN_API_KEY }}
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          OPENAI_HTTP_PROXY: ${{ secrets.OPENAI_HTTP_PROXY }}
           NEXT_PUBLIC_API_URL: ${{ secrets.NEXT_PUBLIC_API_URL }}
         with:
           host: 194.67.99.214
           username: root
           key: ${{ secrets.DEPLOY_SSH_KEY }}
-          envs: JWT_SECRET,POSTGRES_PASSWORD,S3_ACCESS_KEY,S3_SECRET_KEY,FASHN_API_KEY,OPENAI_API_KEY,NEXT_PUBLIC_API_URL
+          envs: JWT_SECRET,POSTGRES_PASSWORD,S3_ACCESS_KEY,S3_SECRET_KEY,FASHN_API_KEY,OPENAI_API_KEY,OPENAI_HTTP_PROXY,NEXT_PUBLIC_API_URL
           script_stop: true
           script: |
             set -e
@@ -106,8 +107,10 @@ jobs:
             FASHN_BASE_URL=https://api.fashn.ai
             # CV-классификатор + расширенный vision-анализ.
             # Оба выключены по умолчанию — OpenAI direct отдаёт 403 с RU-IP
-            # прода. Включение требует настроенного OPENAI_BASE_URL на
-            # прокси (OpenRouter/kie.ai/западный VPN) и валидного ключа.
+            # прода. Включение требует валидного ключа и одного из двух:
+            #   1. OPENAI_HTTP_PROXY на западный HTTP/SOCKS-прокси
+            #      (proxy-seller, Bright Data, собственный VPN-релей);
+            #   2. OPENAI_BASE_URL на reverse-proxy уже снаружи РФ.
             # При выключенном ENABLE_VISION_ANALYSIS pipeline остаётся на
             # эвристиках recognize_extended() — фронт показывает dropdown
             # для ручной правки категории.
@@ -118,6 +121,7 @@ jobs:
             OPENAI_API_KEY=${OPENAI_API_KEY}
             OPENAI_BASE_URL=https://api.openai.com
             OPENAI_MODEL=gpt-5-mini
+            OPENAI_HTTP_PROXY=${OPENAI_HTTP_PROXY}
             JWT_SECRET=${JWT_SECRET}
             JWT_ALGORITHM=HS256
             JWT_ACCESS_MINUTES=60
