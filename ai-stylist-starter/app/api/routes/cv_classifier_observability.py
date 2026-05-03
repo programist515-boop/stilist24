@@ -22,6 +22,7 @@ from app.core.config import settings
 from app.services.category_classifier import (
     get_category_classifier,
     get_recent_attempts,
+    get_vision_analyzer,
 )
 
 router = APIRouter()
@@ -29,15 +30,21 @@ router = APIRouter()
 
 @router.get("/config")
 def cv_classifier_config() -> dict:
+    vision_analyzer = get_vision_analyzer(settings)
+    proxy = (settings.openai_http_proxy or "").strip()
     return {
         "use_cv_category_classifier": settings.use_cv_category_classifier,
+        "enable_vision_analysis": settings.enable_vision_analysis,
         "category_classifier_provider": settings.category_classifier_provider,
         "category_confidence_threshold": settings.category_confidence_threshold,
         "openai_base_url": settings.openai_base_url,
         "openai_model": settings.openai_model,
         "openai_api_key_set": bool(settings.openai_api_key),
         "openai_api_key_length": len(settings.openai_api_key),
+        "openai_http_proxy_set": bool(proxy),
+        "openai_http_proxy_scheme": proxy.split("://", 1)[0] if "://" in proxy else None,
         "active_classifier_type": type(get_category_classifier(settings)).__name__,
+        "vision_analyzer_active": vision_analyzer is not None,
     }
 
 
