@@ -954,8 +954,14 @@ def test_vision_does_not_loop_when_cascade_exhausted():
     assert analyzer._proxy.startswith("socks5://")
 
 
-def test_vision_does_not_rewrite_socks5_proxy():
-    """Если proxy уже socks5:// — каскад на нём заканчивается, retry нет."""
+def test_vision_cascade_is_cyclic_from_any_starting_scheme():
+    """Любая стартовая схема перебирает все три варианта каскада.
+
+    proxy-seller выдаёт креды без явной схемы — пользователь может
+    задать в секрете любой префикс. Если стартуем с ``socks5://``
+    и она не работает — следующая попытка идёт на ``http://``,
+    потом на ``https://``, и только после трёх неудач сдаёмся.
+    """
     client = MagicMock(spec=httpx.Client)
     client.post.side_effect = httpx.RemoteProtocolError("illegal request line")
 
@@ -968,8 +974,50 @@ def test_vision_does_not_rewrite_socks5_proxy():
     with pytest.raises(RuntimeError):
         analyzer.analyze(b"fake-jpeg")
 
-    assert client.post.call_count == 1
-    assert analyzer._proxy.startswith("socks5://")
+    # Циклический каскад: socks5 → http → https — три попытки.
+    assert client.post.call_count == 3
+    # Последняя попытка осталась в _proxy для дебага.
+    assert analyzer._proxy.startswith("https://")
+
+
+def test_vision_cascade_recovers_on_http_when_starting_from_https():
+    """Регрессия 2026-05-03: стартуем с https:// (как было в проде),
+    https и socks5 падают handshake-ошибками, http отвечает 200.
+
+    Цикл должен пройти https → socks5 → http и вернуть успешный
+    ответ — раньше каскад был линейным и до http не доходил.
+    """
+    success_body = _vision_response_body()
+    success_response = MagicMock(spec=httpx.Response)
+    success_response.status_code = 200
+    success_response.json.return_value = success_body
+    success_response.raise_for_status = MagicMock()
+
+    call_count = {"n": 0}
+
+    def fake_post(*args, **kwargs):
+        call_count["n"] += 1
+        if call_count["n"] == 1:
+            raise httpx.ConnectError("[SSL] record layer failure (_ssl.c:1016)")
+        if call_count["n"] == 2:
+            raise httpx.RemoteProtocolError("Malformed reply")
+        return success_response
+
+    client = MagicMock(spec=httpx.Client)
+    client.post.side_effect = fake_post
+
+    analyzer = OpenAIVisionAnalyzer(
+        api_key="sk-test",
+        proxy="https://user:pass@host:8080",
+        client=client,
+    )
+
+    result = analyzer.analyze(b"fake-jpeg")
+
+    assert result.category == "blouses"
+    assert client.post.call_count == 3
+    assert analyzer._proxy == "http://user:pass@host:8080"
+    assert analyzer._proxy_resolved is True
 
 
 def test_vision_cascade_http_to_https_to_socks5_succeeds():

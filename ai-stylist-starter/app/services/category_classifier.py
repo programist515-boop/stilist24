@@ -167,13 +167,23 @@ def _proxy_creds(proxy: str) -> str:
 
 
 def _next_proxy_scheme(current_proxy: str) -> str | None:
-    """Дать следующий вариант proxy URL по каскаду или None если выдохлись."""
+    """Дать следующий вариант proxy URL по каскаду.
+
+    Перебор циклический: после ``socks5://`` возвращаемся к ``http://``.
+    Это позволяет коду подобрать рабочую схему независимо от того,
+    с какого префикса стартовал секрет ``OPENAI_HTTP_PROXY``. Количество
+    реальных попыток в одном запросе ограничено циклом
+    ``for _ in range(len(_PROXY_SCHEMES_CASCADE))`` в
+    ``_post_with_proxy_fallback`` — то есть максимум 3 разных префикса.
+
+    None возвращается только если префикс не входит в каскад
+    (например, ``socks5h://``) — такие схемы не трогаем.
+    """
     creds = _proxy_creds(current_proxy)
     for idx, prefix in enumerate(_PROXY_SCHEMES_CASCADE):
         if current_proxy.startswith(prefix):
-            if idx + 1 < len(_PROXY_SCHEMES_CASCADE):
-                return _PROXY_SCHEMES_CASCADE[idx + 1] + creds
-            return None
+            next_idx = (idx + 1) % len(_PROXY_SCHEMES_CASCADE)
+            return _PROXY_SCHEMES_CASCADE[next_idx] + creds
     # Префикс не из каскада (например, socks5h://) — не трогаем.
     return None
 
@@ -369,7 +379,8 @@ class OpenAICategoryClassifier:
         запрос инстанции уйдёт сразу с правильной схемой.
         """
         last_exc: Exception | None = None
-        for _ in range(len(_PROXY_SCHEMES_CASCADE)):
+        last_idx = len(_PROXY_SCHEMES_CASCADE) - 1
+        for attempt_idx in range(len(_PROXY_SCHEMES_CASCADE)):
             attempt_timeout = timeout if self._proxy_resolved else min(
                 timeout, _PROXY_HANDSHAKE_TIMEOUT_S,
             )
@@ -392,6 +403,11 @@ class OpenAICategoryClassifier:
                 last_exc = exc
             if self._proxy_resolved:
                 raise last_exc
+            if attempt_idx == last_idx:
+                # Каскад исчерпан: не делаем лишний rebuild, чтобы
+                # ``self._proxy`` указывал на последнюю реально
+                # попробованную схему — упрощает разбор в логах.
+                break
             next_proxy = _next_proxy_scheme(self._proxy or "")
             if next_proxy is None:
                 break
@@ -793,7 +809,8 @@ class OpenAIVisionAnalyzer:
         """
         last_exc: Exception | None = None
         # Защита от бесконечного цикла: каскад максимум 3 уровня.
-        for _ in range(len(_PROXY_SCHEMES_CASCADE)):
+        last_idx = len(_PROXY_SCHEMES_CASCADE) - 1
+        for attempt_idx in range(len(_PROXY_SCHEMES_CASCADE)):
             # Если схема ещё не зарезолвилась — короткий timeout, чтобы
             # перебор всех трёх укладывался в ~15s до 504 от nginx.
             attempt_timeout = timeout if self._proxy_resolved else min(
@@ -820,6 +837,8 @@ class OpenAIVisionAnalyzer:
                 last_exc = exc
             if self._proxy_resolved:
                 raise last_exc
+            if attempt_idx == last_idx:
+                break
             next_proxy = _next_proxy_scheme(self._proxy or "")
             if next_proxy is None:
                 break
