@@ -54,8 +54,6 @@ services:
     build:
       context: .
       dockerfile: frontend/Dockerfile
-      args:
-        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
     environment:
       NODE_ENV: production
     ports:
