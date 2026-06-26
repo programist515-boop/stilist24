@@ -1,8 +1,11 @@
 import { getAccessToken, getActivePersonaId } from "@/lib/session";
 import { getUserId } from "@/lib/user-id";
 
+// In production nginx maps /api/* → FastAPI on the same origin, so a
+// relative path avoids CORS entirely. In local dev the env var points to
+// http://localhost:8000 (or wherever the API runs).
 const BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "") || "http://localhost:8000";
+  process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "") || "/api";
 
 export class ApiError extends Error {
   status: number;
@@ -36,12 +39,23 @@ type RequestOptions = {
 const DEFAULT_TIMEOUT_MS = 30_000;
 
 function buildUrl(path: string, query?: RequestOptions["query"]): string {
-  const url = new URL(`${BASE_URL}${path.startsWith("/") ? path : `/${path}`}`);
+  const fullPath = `${BASE_URL}${path.startsWith("/") ? path : `/${path}`}`;
+  // Relative BASE_URL ("/api") → build query string manually; absolute → use URL.
+  if (fullPath.startsWith("/")) {
+    if (!query) return fullPath;
+    const params = new URLSearchParams();
+    for (const [key, value] of Object.entries(query)) {
+      if (value === undefined || value === null) continue;
+      if (typeof value === "string" && value.length === 0) continue;
+      params.set(key, String(value));
+    }
+    const qs = params.toString();
+    return qs ? `${fullPath}?${qs}` : fullPath;
+  }
+  const url = new URL(fullPath);
   if (query) {
     for (const [key, value] of Object.entries(query)) {
       if (value === undefined || value === null) continue;
-      // Drop empty strings — backend treats them as truthy and we never
-      // want to send `?weather=` as a "no filter" signal.
       if (typeof value === "string" && value.length === 0) continue;
       url.searchParams.set(key, String(value));
     }
