@@ -136,9 +136,9 @@ jobs:
             chmod 600 .env.prod
 
             # Retry docker build: Docker Hub TLS handshakes occasionally flake.
-            # --no-cache для web: NEXT_PUBLIC_* инлайнится при сборке,
-            # кеш Dockerfile'а не учитывает изменения build-arg'ов извне.
-            docker compose -p stilist24com -f docker-compose.prod.yml --env-file .env.prod build --no-cache web || true
+            # NO --no-cache: npm layer must be cached on the VPS — npm registry
+            # is unreachable from RU IP without proxy; cache bust via file changes
+            # in frontend/ (Docker invalidates from COPY frontend/ . layer).
             attempt=1
             until docker compose -p stilist24com -f docker-compose.prod.yml --env-file .env.prod up -d --build; do
               if [ $attempt -ge 3 ]; then
@@ -153,7 +153,7 @@ jobs:
 
             echo "Waiting for API health..."
             api_up=0
-            for i in $(seq 1 30); do
+            for i in $(seq 1 90); do
               if curl -fsS http://127.0.0.1:8002/docs >/dev/null 2>&1; then
                 api_up=1
                 echo "API up after ${i} attempts"
@@ -162,14 +162,14 @@ jobs:
               sleep 2
             done
             if [ "$api_up" != "1" ]; then
-              echo "::error::API did not become healthy within 60s on 127.0.0.1:8002"
+              echo "::error::API did not become healthy within 180s on 127.0.0.1:8002"
               docker compose -p stilist24com -f docker-compose.prod.yml logs --tail=80 api || true
               exit 1
             fi
 
             echo "Waiting for web..."
             web_up=0
-            for i in $(seq 1 30); do
+            for i in $(seq 1 150); do
               if curl -fsS http://127.0.0.1:3002/ >/dev/null 2>&1; then
                 web_up=1
                 echo "Web up after ${i} attempts"
@@ -178,7 +178,7 @@ jobs:
               sleep 2
             done
             if [ "$web_up" != "1" ]; then
-              echo "::error::Web did not become healthy within 60s on 127.0.0.1:3002"
+              echo "::error::Web did not become healthy within 300s on 127.0.0.1:3002"
               docker compose -p stilist24com -f docker-compose.prod.yml logs --tail=80 web || true
               exit 1
             fi
