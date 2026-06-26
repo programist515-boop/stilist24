@@ -126,6 +126,10 @@ jobs:
             JWT_ALGORITHM=HS256
             JWT_ACCESS_MINUTES=60
             NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
+            # Browser sends Origin header even on same-origin multipart/Authorization
+            # requests; Starlette CORS middleware checks it and returns 400 if the
+            # origin is not in the list. stilist24.com must be here unconditionally.
+            CORS_ALLOW_ORIGINS=https://stilist24.com
             # Must include the bucket — nginx strips /s3/ and forwards the
             # remainder straight to MinIO, which then needs /<bucket>/<key>.
             S3_PUBLIC_BASE_URL=https://stilist24.com/s3/ai-stylist

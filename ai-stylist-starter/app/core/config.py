@@ -57,8 +57,9 @@ class Settings(BaseSettings):
     # из process environment. Нужен на случай, если CORS_ALLOW_ORIGINS приходит
     # из process env (а не из .env-файла) как CSV: без NoDecode pydantic
     # пытается парсить строку как JSON и падает SettingsError на запятой.
-    # На текущем VPS-деплое CORS не используется (всё на одном origin через
-    # хостовой nginx), но защита остаётся — безвредный fallback.
+    # ВАЖНО: браузер шлёт Origin на non-simple запросы (multipart + Authorization)
+    # даже для same-origin. Starlette возвращает 400 если origin не в списке.
+    # В проде CORS_ALLOW_ORIGINS=https://stilist24.com (см. deploy.yml).
     cors_allow_origins: Annotated[list[str], NoDecode] = [
         "http://localhost:3000",
         "http://127.0.0.1:3000",
