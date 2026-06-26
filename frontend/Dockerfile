@@ -21,11 +21,10 @@ RUN if [ -f package-lock.json ]; then \
 FROM node:20-alpine AS builder
 WORKDIR /app
 
-# NEXT_PUBLIC_* vars are inlined at build time. Default here is for local
-# dev; prod deploy (docker-compose.prod.yml) overrides via build.args from
-# the NEXT_PUBLIC_API_URL env var (set by CI from a GitHub Secret —
-# typically https://stilist24.com/api).
-ARG NEXT_PUBLIC_API_URL=http://localhost:8002
+# NEXT_PUBLIC_* vars are inlined at build time. Default is the production
+# URL so the Docker build cache bust happens automatically when this line
+# changes. For local dev override with: docker build --build-arg NEXT_PUBLIC_API_URL=http://localhost:8000
+ARG NEXT_PUBLIC_API_URL=https://stilist24.com/api
 ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
 
 COPY --from=deps /app/node_modules ./node_modules
