@@ -76,12 +76,11 @@ jobs:
           FASHN_API_KEY: ${{ secrets.FASHN_API_KEY }}
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           OPENAI_HTTP_PROXY: ${{ secrets.OPENAI_HTTP_PROXY }}
-          NEXT_PUBLIC_API_URL: ${{ secrets.NEXT_PUBLIC_API_URL }}
         with:
           host: 194.67.99.214
           username: root
           key: ${{ secrets.DEPLOY_SSH_KEY }}
-          envs: JWT_SECRET,POSTGRES_PASSWORD,S3_ACCESS_KEY,S3_SECRET_KEY,FASHN_API_KEY,OPENAI_API_KEY,OPENAI_HTTP_PROXY,NEXT_PUBLIC_API_URL
+          envs: JWT_SECRET,POSTGRES_PASSWORD,S3_ACCESS_KEY,S3_SECRET_KEY,FASHN_API_KEY,OPENAI_API_KEY,OPENAI_HTTP_PROXY
           script_stop: true
           script: |
             set -e
@@ -125,7 +124,7 @@ jobs:
             JWT_SECRET=${JWT_SECRET}
             JWT_ALGORITHM=HS256
             JWT_ACCESS_MINUTES=60
-            NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
+            NEXT_PUBLIC_API_URL=https://stilist24.com/api
             # Browser sends Origin header even on same-origin multipart/Authorization
             # requests; Starlette CORS middleware checks it and returns 400 if the
             # origin is not in the list. stilist24.com must be here unconditionally.
