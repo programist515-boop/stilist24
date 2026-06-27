@@ -53,7 +53,11 @@ const PROGRESS_STEPS = [
   "Загружаем в гардероб",
 ] as const;
 
-export function WardrobeUploader() {
+export function WardrobeUploader({
+  onNewItem,
+}: {
+  onNewItem?: (id: string) => void;
+}) {
   const queryClient = useQueryClient();
   const [file, setFile] = useState<File | null>(null);
   const [lastUploaded, setLastUploaded] = useState<WardrobeItem | null>(null);
@@ -64,6 +68,7 @@ export function WardrobeUploader() {
       setFile(null);
       setLastUploaded(item);
       queryClient.invalidateQueries({ queryKey: ["wardrobe"] });
+      onNewItem?.(item.id);
       trackEvent("wardrobe_item_uploaded", {
         item_id: item.id,
         category: item.category,

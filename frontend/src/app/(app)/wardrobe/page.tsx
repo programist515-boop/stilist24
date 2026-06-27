@@ -1,6 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import { QueryState } from "@/components/ui/QueryState";
@@ -42,6 +43,13 @@ export default function WardrobePage() {
     queryFn: listWardrobeItems,
   });
 
+  const [newItemId, setNewItemId] = useState<string | null>(null);
+
+  const handleNewItem = (id: string) => {
+    setNewItemId(id);
+    setTimeout(() => setNewItemId(null), 3000);
+  };
+
   const count = query.data?.length ?? 0;
 
   return (
@@ -52,7 +60,7 @@ export default function WardrobePage() {
         subtitle="Добавляйте по одной вещи. Подбор образов учитывает теги, цвет и силуэт."
       />
 
-      <WardrobeUploader />
+      <WardrobeUploader onNewItem={handleNewItem} />
 
       <section>
         <SectionHeader
@@ -75,7 +83,11 @@ export default function WardrobePage() {
         >
           <div className="grid gap-4 grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {query.data?.map((item) => (
-              <WardrobeItemCard key={item.id} item={item} />
+              <WardrobeItemCard
+                key={item.id}
+                item={item}
+                isNew={item.id === newItemId}
+              />
             ))}
           </div>
         </QueryState>

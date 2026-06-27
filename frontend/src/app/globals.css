@@ -20,3 +20,37 @@
     @apply mx-auto w-full max-w-5xl px-4 sm:px-6 lg:px-8;
   }
 }
+
+@keyframes unwrinkle-shape {
+  0%   { transform: perspective(500px) rotateX(10deg) scaleY(0.92) skewX(-2deg) rotate(-0.8deg); filter: blur(0.4px); }
+  55%  { transform: perspective(500px) rotateX(1.5deg) scaleY(1.01) skewX(0.4deg) rotate(0.2deg); filter: blur(0); }
+  80%  { transform: perspective(500px) rotateX(-0.5deg) scaleY(0.995) skewX(-0.1deg) rotate(-0.1deg); }
+  100% { transform: perspective(500px) rotateX(0) scaleY(1) skewX(0) rotate(0); }
+}
+
+@keyframes unwrinkle-creases {
+  0%   { opacity: 0.45; }
+  60%  { opacity: 0.1; }
+  100% { opacity: 0; }
+}
+
+.wrinkle-new {
+  animation: unwrinkle-shape 0.85s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+.wrinkle-new::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  pointer-events: none;
+  border-radius: inherit;
+  background: repeating-linear-gradient(
+    18deg,
+    transparent,
+    transparent 14px,
+    rgba(0, 0, 0, 0.07) 14px,
+    rgba(0, 0, 0, 0.07) 15px
+  );
+  animation: unwrinkle-creases 0.5s ease-out forwards;
+}

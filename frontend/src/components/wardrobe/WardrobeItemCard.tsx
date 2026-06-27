@@ -1,3 +1,6 @@
+"use client";
+
+import { useState } from "react";
 import Link from "next/link";
 import { Badge } from "@/components/ui/Badge";
 import type { WardrobeItem } from "@/lib/schemas";
@@ -21,7 +24,15 @@ function getStringList(
   return [];
 }
 
-export function WardrobeItemCard({ item }: { item: WardrobeItem }) {
+export function WardrobeItemCard({
+  item,
+  isNew,
+}: {
+  item: WardrobeItem;
+  isNew?: boolean;
+}) {
+  const [animating, setAnimating] = useState(isNew ?? false);
+
   const attrs = (item.attributes ?? {}) as Record<string, unknown>;
   const tags = getStringList(attrs, "style_tags");
   const colors = getStringList(attrs, "colors");
@@ -30,7 +41,15 @@ export function WardrobeItemCard({ item }: { item: WardrobeItem }) {
     : "вещь";
 
   return (
-    <div className="group flex h-full flex-col overflow-hidden rounded-2xl border border-canvas-border bg-canvas-card shadow-card transition-shadow hover:shadow-lg">
+    <div
+      className={[
+        "relative group flex h-full flex-col overflow-hidden rounded-2xl border border-canvas-border bg-canvas-card shadow-card transition-shadow hover:shadow-lg",
+        animating ? "wrinkle-new" : "",
+      ]
+        .join(" ")
+        .trim()}
+      onAnimationEnd={() => setAnimating(false)}
+    >
       <div className="relative aspect-square w-full overflow-hidden bg-accent-soft">
         {item.image_url ? (
           // eslint-disable-next-line @next/next/no-img-element
